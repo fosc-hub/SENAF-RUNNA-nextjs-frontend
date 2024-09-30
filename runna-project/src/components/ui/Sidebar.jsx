@@ -1,31 +1,42 @@
 import React from 'react'
 
 const menuItems = [
-  { name: 'Principal', count: 24 },
-  { name: 'Sin Leer', count: 10 },
-  { name: 'Borradores', count: 5 },
-  { name: 'Derivados' },
-  { name: 'Asignados' },
-]
-
-export default function Sidebar() {
-  return (
-    <aside className="w-64 bg-gray-100 p-4">
-      {menuItems.map((item) => (
-        <div
-          key={item.name}
-          className={`flex justify-between items-center py-2 px-4 rounded ${
-            item.name === 'Principal' ? 'bg-sky-100 text-sky-600' : 'text-gray-700'
-          }`}
-        >
-          <span>{item.name}</span>
-          {item.count && (
-            <span className="bg-gray-200 text-gray-700 rounded-full px-2 py-1 text-xs">
-              {item.count}
-            </span>
-          )}
-        </div>
-      ))}
-    </aside>
-  )
-}
+    { name: 'Recepción de Demandas', isHeader: true },
+    { name: 'Principal', count: 24 },
+    { name: 'Sin Leer', count: 10 },
+    { name: 'Borradores', count: 5, hasSeparator: true },
+    { name: 'Derivados', },
+    { name: 'Asignados', belowSeparator: true },
+  ]
+  
+  export default function Sidebar() {
+    return (
+      <aside className="w-64 bg-white border-r border-gray-200">
+        {menuItems.map((item, index) => (
+          <React.Fragment key={index}>
+            {item.isHeader ? (
+              <h2 className="px-4 py-2 text-sm font-semibold text-gray-600">{item.name}</h2>
+            ) : (
+              <>
+                {index === 1 && <hr className="my-2 border-gray-200" />}
+                <div
+                  className={`
+                    flex justify-between items-center px-4 py-2 text-sm text-gray-700
+                    hover:bg-sky-50 hover:text-sky-600 cursor-pointer transition-colors duration-150
+                  `}
+                >
+                  <span>{item.name}</span>
+                  {item.count !== undefined && (
+                    <span className="bg-gray-200 text-gray-600 rounded-full px-2 py-1 text-xs">
+                      {item.count}
+                    </span>
+                  )}
+                </div>
+              </>
+            )}
+          {item.hasSeparator && <hr className="my-2 border-gray-200" />}
+          </React.Fragment>
+        ))}
+      </aside>
+    )
+  }

@@ -7,17 +7,15 @@ export default function MesaDeEntradas() {
   return (
     <div className="flex flex-col h-screen">
       <Header />
+      <div className="bg-white p-4 flex justify-between items-center border-b border-gray-200">
+        <h1 className="text-xl font-semibold text-gray-800">
+          Bienvenido a <span className="text-sky-500">Mesa de Entradas</span>
+        </h1>
+        <span className="text-gray-500">13 de Sept | 17:30 hs.</span>
+      </div>
       <div className="flex-1 flex">
         <Sidebar />
-        <div className="flex-1 flex flex-col">
-          <div className="bg-white p-4 flex justify-between items-center">
-            <h1 className="text-xl font-semibold">
-              Bienvenido a <span className="text-sky-500">Mesa de Entradas</span>
-            </h1>
-            <span className="text-black-900">13 de Sept | 17:30 hs.</span>
-          </div>
-          <MainContent />
-        </div>
+        <MainContent />
       </div>
     </div>
   )
