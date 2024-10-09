@@ -1,36 +1,49 @@
 import React from 'react'
 import { ChevronDown, Search } from 'lucide-react'
 
-export default function MainContent() {
+export default function MainContent({ onNuevoRegistro }) {
   return (
     <main className="flex-1 bg-white p-6">
       <div className="flex justify-between items-center mb-6">
         <div className="flex space-x-2">
-          <button className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded">
+          <button
+            className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-full"
+            onClick={onNuevoRegistro}
+          >
             + Nuevo Registro
           </button>
-          <button className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded">
+          <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded">
             Reasignar
           </button>
-          <button className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded">
+          <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded">
             No Leído
           </button>
-          <button className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded">
+          <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded">
             Asignar
           </button>
         </div>
         <div className="flex space-x-4">
           <div className="flex items-center">
             <span className="text-gray-700 mr-2">Origen</span>
-            <button className="bg-white border border-gray-300 text-gray-700 px-3 py-1 rounded flex items-center">
-              Todos <ChevronDown className="ml-2" size={16} />
-            </button>
+            <div className="relative">
+              <select className="appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
+                <option>Todos</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                <ChevronDown size={16} />
+              </div>
+            </div>
           </div>
           <div className="flex items-center">
             <span className="text-gray-700 mr-2">Estado</span>
-            <button className="bg-white border border-gray-300 text-gray-700 px-3 py-1 rounded flex items-center">
-              Todos <ChevronDown className="ml-2" size={16} />
-            </button>
+            <div className="relative">
+              <select className="appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
+                <option>Todos</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                <ChevronDown size={16} />
+              </div>
+            </div>
           </div>
         </div>
       </div>
