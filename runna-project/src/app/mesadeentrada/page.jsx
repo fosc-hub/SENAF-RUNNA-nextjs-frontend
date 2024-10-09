@@ -8,6 +8,7 @@ import NuevoIngresoModal from '../../components/ui/NuevoIngresoModal'
 
 export default function MesaDeEntradas() {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [demands, setDemands] = useState([])
 
   const user = {
     initials: 'VF',
@@ -18,6 +19,11 @@ export default function MesaDeEntradas() {
 
   const openModal = () => setIsModalOpen(true)
   const closeModal = () => setIsModalOpen(false)
+
+  const addDemand = (newDemand) => {
+    setDemands([...demands, newDemand])
+    closeModal()
+  }
 
   return (
     <div className="flex flex-col h-screen">
@@ -30,9 +36,9 @@ export default function MesaDeEntradas() {
       </div>
       <div className="flex-1 flex">
         <Sidebar />
-        <MainContent onNuevoRegistro={openModal} />
+        <MainContent onNuevoRegistro={openModal} demands={demands} />
       </div>
-      <NuevoIngresoModal isOpen={isModalOpen} onClose={closeModal} />
+      <NuevoIngresoModal isOpen={isModalOpen} onClose={closeModal} onSubmit={addDemand} />
     </div>
   )
 }

@@ -3,29 +3,29 @@ import { X } from 'lucide-react'
 import PurpleOutlineButton from './PurpleOutlineButton'
 
 const InputField = ({ label, ...props }) => (
-  <div className="mb-4">
-    <input
-      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 placeholder-gray-400"
-      placeholder={label}
-      {...props}
-    />
-  </div>
-)
-
-const TextArea = ({ label, ...props }) => (
-  <div className="mb-4">
-    <textarea
-      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 placeholder-gray-400"
-      rows="3"
-      placeholder={label}
-      {...props}
-    />
-  </div>
-)
+    <div className="mb-4">
+      <input
+        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 placeholder-gray-400 text-gray-900"
+        placeholder={label}
+        {...props}
+      />
+    </div>
+  )
+  
+  const TextArea = ({ label, ...props }) => (
+    <div className="mb-4">
+      <textarea
+        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 placeholder-gray-400 text-gray-900"
+        rows="3"
+        placeholder={label}
+        {...props}
+      />
+    </div>
+  )
 
 const RadioGroup = ({ label, options, ...props }) => (
   <div className="mb-4">
-    <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+    <label className="block text-sm font-medium text-gray-900 mb-1">{label}</label>
     <div className="flex space-x-4">
       {options.map((option) => (
         <label key={option} className="inline-flex items-center">
@@ -37,7 +37,7 @@ const RadioGroup = ({ label, options, ...props }) => (
   </div>
 )
 
-export default function Component({ isOpen, onClose }) {
+export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
   const [step, setStep] = useState(1)
   const [formData, setFormData] = useState({})
 
@@ -48,24 +48,31 @@ export default function Component({ isOpen, onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    console.log(formData)
-    onClose()
+    const currentDate = new Date()
+    const newDemand = {
+      ...formData,
+      ultimaActualizacion: `Actualizado el ${currentDate.toLocaleDateString('es-AR')}`,
+      recibido: currentDate.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }),
+    }
+    onSubmit(newDemand)
+    setFormData({})
+    setStep(1)
   }
 
   const handleNext = (e) => {
-    e.preventDefault()
+    e.preventDefault() // Prevent form submission
     setStep((prevStep) => Math.min(prevStep + 1, 3))
   }
 
   const handlePrevious = (e) => {
-    e.preventDefault()
+    e.preventDefault() // Prevent form submission
     setStep((prevStep) => Math.max(prevStep - 1, 1))
   }
 
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex justify-center items-center">
+    <div className="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full flex justify-center items-center">
       <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">Nuevo Ingreso</h2>
@@ -145,6 +152,13 @@ export default function Component({ isOpen, onClose }) {
 
           {step === 3 && (
             <div>
+              <h3 className="text-lg font-medium text-purple-600 mb-4">Presunta Vulneración de Derechos informada</h3>
+              <TextArea label="Motivo" name="motivo" onChange={handleInputChange} />
+              <TextArea label="Ámbito de vulneración" name="ambitoVulneracion" onChange={handleInputChange} />
+              <TextArea label="Principal Derecho vulnerado" name="principalDerechoVulnerado" onChange={handleInputChange} />
+              <TextArea label="Problemática Identificada" name="problematicaIdentificada" onChange={handleInputChange} />
+              <TextArea label="Prioridad sugerida de intervención" name="prioridadIntervencion" onChange={handleInputChange} />
+              <InputField label="Nombre y cargo de Operador/a" name="operador" onChange={handleInputChange} />
 
               <hr className="my-6 border-gray-200" />
 
@@ -184,16 +198,7 @@ export default function Component({ isOpen, onClose }) {
               <InputField label="Institución o programa" name="institucionUsuario" onChange={handleInputChange} />
               <InputField label="Contacto Institución o programa" name="contactoInstitucionUsuario" onChange={handleInputChange} />
               <InputField label="Nombre y cargo del responsable" name="responsableUsuario" onChange={handleInputChange} />
-
-              <h3 className="text-lg font-medium text-purple-600 mb-4">Presunta Vulneración de Derechos informada</h3>
-              <TextArea label="Motivo" name="motivo" onChange={handleInputChange} />
-              <TextArea label="Ámbito de vulneración" name="ambitoVulneracion" onChange={handleInputChange} />
-              <TextArea label="Principal Derecho vulnerado" name="principalDerechoVulnerado" onChange={handleInputChange} />
-              <TextArea label="Problemática Identificada" name="problematicaIdentificada" onChange={handleInputChange} />
-              <TextArea label="Prioridad sugerida de intervención" name="prioridadIntervencion" onChange={handleInputChange} />
-              <InputField label="Nombre y cargo de Operador/a" name="operador" onChange={handleInputChange} />
             </div>
-            
           )}
 
           <div className="mt-8 flex justify-between">
@@ -201,7 +206,7 @@ export default function Component({ isOpen, onClose }) {
               <button
                 type="button"
                 onClick={handlePrevious}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                className="px-4 py-2 bg-gray-200 text-gray-900 rounded hover:bg-gray-300"
               >
                 Anterior
               </button>
