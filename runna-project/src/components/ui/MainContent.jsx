@@ -1,6 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { ChevronDown, Search } from 'lucide-react'
 import DemandaDetalle from './DemandaDetalle'
+import PostConstatacionModal from './PostConstatacionModal'
+import NuevoIngresoModal from './NuevoIngresoModal'
 
 const DemandRow = ({ demand, isEven, onClick }) => (
   <tr className={`${isEven ? 'bg-gray-50' : 'bg-white'} cursor-pointer hover:bg-gray-100`} onClick={onClick}>
@@ -34,15 +36,59 @@ const DemandRow = ({ demand, isEven, onClick }) => (
   </tr>
 )
 
-export default function MainContent({ onNuevoRegistro, demands }) {
+export default function MainContent({ initialDemands, onAddDemand }) {
+  const [demands, setDemands] = useState(initialDemands)
   const [selectedDemand, setSelectedDemand] = useState(null)
+  const [showPostConstatacion, setShowPostConstatacion] = useState(false)
+  const [isNuevoIngresoModalOpen, setIsNuevoIngresoModalOpen] = useState(false)
+
+  useEffect(() => {
+    setDemands(initialDemands)
+  }, [initialDemands])
 
   const handleDemandClick = (demand) => {
-    setSelectedDemand(demand)
+    if (demand.estado === 'En proceso de constatación') {
+      setSelectedDemand(demand)
+      setShowPostConstatacion(true)
+    } else {
+      setSelectedDemand(demand)
+      setShowPostConstatacion(false)
+    }
   }
 
   const handleCloseDetail = () => {
     setSelectedDemand(null)
+    setShowPostConstatacion(false)
+  }
+
+  const handleConstatar = () => {
+    const updatedDemand = {
+      ...selectedDemand,
+      estado: 'En proceso de constatación'
+    }
+    setDemands(prevDemands => prevDemands.map(d => d.id === updatedDemand.id ? updatedDemand : d))
+    setSelectedDemand(updatedDemand)
+    handleCloseDetail()
+  }
+
+  const handleClosePostConstatacion = () => {
+    setShowPostConstatacion(false)
+    setSelectedDemand(null)
+  }
+
+  const handleNuevoRegistro = () => {
+    setIsNuevoIngresoModalOpen(true)
+  }
+
+  const handleCloseNuevoIngreso = () => {
+    setIsNuevoIngresoModalOpen(false)
+  }
+
+  const handleSubmitNuevoIngreso = (newDemand) => {
+    const updatedDemands = [newDemand, ...demands]
+    setDemands(updatedDemands)
+    onAddDemand(newDemand)
+    setIsNuevoIngresoModalOpen(false)
   }
 
   return (
@@ -51,7 +97,7 @@ export default function MainContent({ onNuevoRegistro, demands }) {
         <div className="flex space-x-2">
           <button
             className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-full"
-            onClick={onNuevoRegistro}
+            onClick={handleNuevoRegistro}
           >
             + Nuevo Registro
           </button>
@@ -105,7 +151,7 @@ export default function MainContent({ onNuevoRegistro, demands }) {
             <tbody>
               {demands.map((demand, index) => (
                 <DemandRow 
-                  key={index} 
+                  key={demand.id || index} 
                   demand={demand} 
                   isEven={index % 2 === 0} 
                   onClick={() => handleDemandClick(demand)}
@@ -122,9 +168,27 @@ export default function MainContent({ onNuevoRegistro, demands }) {
           <p className="text-gray-700">Nada por aquí...</p>
         </div>
       )}
-      {selectedDemand && (
-        <DemandaDetalle demanda={selectedDemand} onClose={handleCloseDetail} />
+      
+      {selectedDemand && !showPostConstatacion && (
+        <DemandaDetalle 
+          demanda={selectedDemand} 
+          onClose={handleCloseDetail} 
+          onConstatar={handleConstatar}
+        />
       )}
+      
+      {showPostConstatacion && (
+        <PostConstatacionModal
+          demanda={selectedDemand}
+          onClose={handleClosePostConstatacion}
+        />
+      )}
+
+      <NuevoIngresoModal
+        isOpen={isNuevoIngresoModalOpen}
+        onClose={handleCloseNuevoIngreso}
+        onSubmit={handleSubmitNuevoIngreso}
+      />
     </main>
   )
 }

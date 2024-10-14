@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { X, ChevronDown, ChevronUp } from 'lucide-react'
 
-export default function DemandaDetalle({ demanda, onClose }) {
-    const [sections, setSections] = useState({
+export default function DemandaDetalle({ demanda, onClose, onConstatar }) {
+  const [sections, setSections] = useState({
       datosRequeridos: true,
       datosLocalizacion: true,
       ninasNinos: true,
@@ -262,9 +262,12 @@ export default function DemandaDetalle({ demanda, onClose }) {
           </CollapsibleSection>
 
           <div className="mt-6">
-            <button className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded text-sm w-full">
-              A Proceso de Constatación
-            </button>
+          <button 
+            onClick={onConstatar} 
+            className="bg-blue-500 text-white px-4 py-2 mt-4 rounded-md hover:bg-blue-600"
+          >
+            A proceso de constatación
+          </button>
           </div>
         </div>
       </div>

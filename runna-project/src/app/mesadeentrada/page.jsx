@@ -4,10 +4,8 @@ import React, { useState } from 'react'
 import Header from '../../components/ui/Header'
 import Sidebar from '../../components/ui/Sidebar'
 import MainContent from '../../components/ui/MainContent'
-import NuevoIngresoModal from '../../components/ui/NuevoIngresoModal'
 
 export default function MesaDeEntradas() {
-  const [isModalOpen, setIsModalOpen] = useState(false)
   const [demands, setDemands] = useState([])
 
   const user = {
@@ -17,12 +15,8 @@ export default function MesaDeEntradas() {
     legajo: '29731'
   }
 
-  const openModal = () => setIsModalOpen(true)
-  const closeModal = () => setIsModalOpen(false)
-
-  const addDemand = (newDemand) => {
-    setDemands([...demands, newDemand])
-    closeModal()
+  const handleAddDemand = (newDemand) => {
+    setDemands(prevDemands => [newDemand, ...prevDemands])
   }
 
   return (
@@ -36,9 +30,8 @@ export default function MesaDeEntradas() {
       </div>
       <div className="flex-1 flex">
         <Sidebar />
-        <MainContent onNuevoRegistro={openModal} demands={demands} />
+        <MainContent initialDemands={demands} onAddDemand={handleAddDemand} />
       </div>
-      <NuevoIngresoModal isOpen={isModalOpen} onClose={closeModal} onSubmit={addDemand} />
     </div>
   )
 }
