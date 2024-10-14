@@ -4,39 +4,50 @@ import DemandaDetalle from './DemandaDetalle'
 import PostConstatacionModal from './PostConstatacionModal'
 import NuevoIngresoModal from './NuevoIngresoModal'
 
-const DemandRow = ({ demand, isEven, onClick }) => (
-  <tr className={`${isEven ? 'bg-gray-50' : 'bg-white'} cursor-pointer hover:bg-gray-100`} onClick={onClick}>
-    <td className="py-2 px-4">
-      <input 
-        type="checkbox" 
-        className="form-checkbox h-4 w-4 text-sky-600" 
-        onClick={(e) => e.stopPropagation()}
-      />
-    </td>
-    <td className="py-2 px-4 text-gray-900">
-      {demand.legajo && (
-        <span className="text-sky-700 font-medium mr-2">{demand.legajo}</span>
-      )}
-      {demand.nombre}
-    </td>
-    <td className="py-2 px-4 text-gray-700">{demand.ultimaActualizacion}</td>
-    <td className="py-2 px-4">
-      {demand.colaboradorAsignado ? (
-        <div className="flex items-center">
-          <div className="w-6 h-6 rounded-full bg-sky-500 text-white flex items-center justify-center text-xs font-medium mr-2">
-            {demand.colaboradorAsignado.charAt(0)}
-          </div>
-          {demand.colaboradorAsignado}
-        </div>
-      ) : (
-        <span className="text-gray-700">No asignado</span>
-      )}
-    </td>
-    <td className="py-2 px-4 text-gray-700">{demand.recibido}</td>
-  </tr>
-)
+const DemandRow = ({ demand, isEven, onClick }) => {
+  const getRowColor = () => {
+    if (demand.estado === 'Verificada') {
+      return 'bg-green-100'
+    } else if (demand.estado === 'No verificada') {
+      return 'bg-yellow-100'
+    }
+    return isEven ? 'bg-white' : 'bg-gray-50'
+  }
 
-export default function MainContent({ initialDemands, onAddDemand }) {
+  return (
+    <tr className={`${getRowColor()} cursor-pointer hover:bg-gray-100`} onClick={onClick}>
+      <td className="py-2 px-4">
+        <input 
+          type="checkbox" 
+          className="form-checkbox h-4 w-4 text-sky-600" 
+          onClick={(e) => e.stopPropagation()}
+        />
+      </td>
+      <td className="py-2 px-4 text-gray-900">
+        {demand.legajo && (
+          <span className="text-sky-700 font-medium mr-2">{demand.legajo}</span>
+        )}
+        {demand.nombre}
+      </td>
+      <td className="py-2 px-4 text-gray-700">{demand.ultimaActualizacion}</td>
+      <td className="py-2 px-4">
+        {demand.colaboradorAsignado ? (
+          <div className="flex items-center">
+            <div className="w-6 h-6 rounded-full bg-sky-500 text-white flex items-center justify-center text-xs font-medium mr-2">
+              {demand.colaboradorAsignado.charAt(0)}
+            </div>
+            {demand.colaboradorAsignado}
+          </div>
+        ) : (
+          <span className="text-gray-700">No asignado</span>
+        )}
+      </td>
+      <td className="py-2 px-4 text-gray-700">{demand.recibido}</td>
+    </tr>
+  )
+}
+
+export default function MainContent({ initialDemands, onUpdateDemands }) {
   const [demands, setDemands] = useState(initialDemands)
   const [selectedDemand, setSelectedDemand] = useState(null)
   const [showPostConstatacion, setShowPostConstatacion] = useState(false)
@@ -47,7 +58,7 @@ export default function MainContent({ initialDemands, onAddDemand }) {
   }, [initialDemands])
 
   const handleDemandClick = (demand) => {
-    if (demand.estado === 'En proceso de constatación') {
+    if (demand.estado === 'Verificada') {
       setSelectedDemand(demand)
       setShowPostConstatacion(true)
     } else {
@@ -62,12 +73,11 @@ export default function MainContent({ initialDemands, onAddDemand }) {
   }
 
   const handleConstatar = () => {
-    const updatedDemand = {
-      ...selectedDemand,
-      estado: 'En proceso de constatación'
-    }
-    setDemands(prevDemands => prevDemands.map(d => d.id === updatedDemand.id ? updatedDemand : d))
-    setSelectedDemand(updatedDemand)
+    const updatedDemands = demands.map(d => 
+      d.id === selectedDemand.id ? { ...d, estado: 'Verificada' } : d
+    )
+    setDemands(updatedDemands)
+    onUpdateDemands(updatedDemands)
     handleCloseDetail()
   }
 
@@ -85,9 +95,14 @@ export default function MainContent({ initialDemands, onAddDemand }) {
   }
 
   const handleSubmitNuevoIngreso = (newDemand) => {
-    const updatedDemands = [newDemand, ...demands]
+    const demandWithState = {
+      ...newDemand,
+      id: Date.now().toString(),
+      estado: 'No verificada'
+    }
+    const updatedDemands = [demandWithState, ...demands]
     setDemands(updatedDemands)
-    onAddDemand(newDemand)
+    onUpdateDemands(updatedDemands)
     setIsNuevoIngresoModalOpen(false)
   }
 
@@ -151,7 +166,7 @@ export default function MainContent({ initialDemands, onAddDemand }) {
             <tbody>
               {demands.map((demand, index) => (
                 <DemandRow 
-                  key={demand.id || index} 
+                  key={demand.id} 
                   demand={demand} 
                   isEven={index % 2 === 0} 
                   onClick={() => handleDemandClick(demand)}

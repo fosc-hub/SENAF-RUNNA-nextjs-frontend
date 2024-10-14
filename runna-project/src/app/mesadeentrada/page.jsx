@@ -15,8 +15,8 @@ export default function MesaDeEntradas() {
     legajo: '29731'
   }
 
-  const handleAddDemand = (newDemand) => {
-    setDemands(prevDemands => [newDemand, ...prevDemands])
+  const handleUpdateDemands = (updatedDemands) => {
+    setDemands(updatedDemands)
   }
 
   return (
@@ -30,7 +30,7 @@ export default function MesaDeEntradas() {
       </div>
       <div className="flex-1 flex">
         <Sidebar />
-        <MainContent initialDemands={demands} onAddDemand={handleAddDemand} />
+        <MainContent initialDemands={demands} onUpdateDemands={handleUpdateDemands} />
       </div>
     </div>
   )
