@@ -3,6 +3,7 @@ import { ChevronDown, Search } from 'lucide-react'
 import DemandaDetalle from './DemandaDetalle'
 import PostConstatacionModal from './PostConstatacionModal'
 import NuevoIngresoModal from './NuevoIngresoModal'
+import EvaluacionModal from './EvaluacionModal'
 
 const DemandRow = ({ demand, isEven, onClick }) => {
   const getRowColor = () => {

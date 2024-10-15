@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { X, ChevronDown, ChevronUp, Plus } from 'lucide-react'
+import EvaluacionModal from './EvaluacionModal'
 
 const CollapsibleSection = ({ title, children, isOpen, onToggle }) => (
   <div className="border-t pt-6 mt-6">
@@ -35,13 +36,13 @@ const InputField = ({ label, value, textarea = false, onChange, className = "" }
     )}
   </div>
 )
-
 export default function PostConstatacionModal({ demanda, onClose, onEvaluate }) {
-  const [sections, setSections] = useState({
-    datosRequeridos: true,
-    conexiones: false,
-    derivar: false,
-  })
+    const [sections, setSections] = useState({
+      datosRequeridos: true,
+      conexiones: false,
+      derivar: false,
+    })
+    const [showEvaluacionModal, setShowEvaluacionModal] = useState(false)
 
   const toggleSection = (section) => {
     setSections((prev) => ({ ...prev, [section]: !prev[section] }))
@@ -57,7 +58,7 @@ export default function PostConstatacionModal({ demanda, onClose, onEvaluate }) 
   }
 
   const handleEvaluate = () => {
-    onEvaluate(formData)
+    setShowEvaluacionModal(true)
   }
 
   return (
@@ -280,13 +281,20 @@ export default function PostConstatacionModal({ demanda, onClose, onEvaluate }) 
           </CollapsibleSection>
 
           <div className="mt-6">
-            <button 
-              onClick={handleEvaluate}
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 w-full"
-            >
-              Evaluar Demanda
-            </button>
-          </div>
+          <button 
+            onClick={handleEvaluate}
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 w-full"
+          >
+            Evaluar Demanda
+          </button>
+        </div>
+        {showEvaluacionModal && (
+          <EvaluacionModal
+            isOpen={showEvaluacionModal}
+            onClose={() => setShowEvaluacionModal(false)}
+            demanda={demanda}
+          />
+        )}
         </div>
       </div>
     </div>
