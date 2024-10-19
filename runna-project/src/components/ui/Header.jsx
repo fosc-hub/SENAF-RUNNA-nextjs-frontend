@@ -1,7 +1,7 @@
 import React from 'react'
 import { Bell } from 'lucide-react'
 import UserAvatar from './UserAvatar'
-import SearchBar from './SearchBar'
+import SearchBar from './SearchBar.tsx'
 
 export default function Header({ user }) {
   return (
