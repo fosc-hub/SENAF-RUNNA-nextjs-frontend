@@ -11,6 +11,8 @@ const DemandRow = ({ demand, isEven, onClick }) => {
       return 'bg-green-100'
     } else if (demand.estado === 'No verificada') {
       return 'bg-yellow-100'
+    } else if (demand.estado === 'En evaluación') {
+      return 'bg-purple-100'
     }
     return isEven ? 'bg-white' : 'bg-gray-50'
   }
@@ -52,6 +54,7 @@ export default function MainContent({ initialDemands, onUpdateDemands }) {
   const [demands, setDemands] = useState(initialDemands)
   const [selectedDemand, setSelectedDemand] = useState(null)
   const [showPostConstatacion, setShowPostConstatacion] = useState(false)
+  const [showEvaluacionModal, setShowEvaluacionModal] = useState(false)
   const [isNuevoIngresoModalOpen, setIsNuevoIngresoModalOpen] = useState(false)
 
   useEffect(() => {
@@ -59,18 +62,23 @@ export default function MainContent({ initialDemands, onUpdateDemands }) {
   }, [initialDemands])
 
   const handleDemandClick = (demand) => {
+    setSelectedDemand(demand)
     if (demand.estado === 'Verificada') {
-      setSelectedDemand(demand)
       setShowPostConstatacion(true)
-    } else {
-      setSelectedDemand(demand)
+      setShowEvaluacionModal(false)
+    } else if (demand.estado === 'En evaluación') {
+      setShowEvaluacionModal(true)
       setShowPostConstatacion(false)
+    } else {
+      setShowPostConstatacion(false)
+      setShowEvaluacionModal(false)
     }
   }
 
   const handleCloseDetail = () => {
     setSelectedDemand(null)
     setShowPostConstatacion(false)
+    setShowEvaluacionModal(false)
   }
 
   const handleConstatar = () => {
@@ -82,7 +90,12 @@ export default function MainContent({ initialDemands, onUpdateDemands }) {
     handleCloseDetail()
   }
 
-  const handleClosePostConstatacion = () => {
+  const handleEvaluate = () => {
+    const updatedDemands = demands.map(d => 
+      d.id === selectedDemand.id ? { ...d, estado: 'En evaluación' } : d
+    )
+    setDemands(updatedDemands)
+    onUpdateDemands(updatedDemands)
     setShowPostConstatacion(false)
     setSelectedDemand(null)
   }
@@ -185,7 +198,7 @@ export default function MainContent({ initialDemands, onUpdateDemands }) {
         </div>
       )}
       
-      {selectedDemand && !showPostConstatacion && (
+      {selectedDemand && !showPostConstatacion && !showEvaluacionModal && (
         <DemandaDetalle 
           demanda={selectedDemand} 
           onClose={handleCloseDetail} 
@@ -196,7 +209,16 @@ export default function MainContent({ initialDemands, onUpdateDemands }) {
       {showPostConstatacion && (
         <PostConstatacionModal
           demanda={selectedDemand}
-          onClose={handleClosePostConstatacion}
+          onClose={handleCloseDetail}
+          onEvaluate={handleEvaluate}
+        />
+      )}
+
+      {showEvaluacionModal && (
+        <EvaluacionModal
+          isOpen={showEvaluacionModal}
+          onClose={handleCloseDetail}
+          demanda={selectedDemand}
         />
       )}
 

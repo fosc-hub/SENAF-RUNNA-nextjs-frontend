@@ -37,15 +37,14 @@ const InputField = ({ label, value, textarea = false, onChange, className = "" }
   </div>
 )
 export default function PostConstatacionModal({ demanda, onClose, onEvaluate }) {
-    const [sections, setSections] = useState({
-      datosRequeridos: true,
-      conexiones: false,
-      derivar: false,
-    })
-    const [showEvaluacionModal, setShowEvaluacionModal] = useState(false)
+  const [sections, setSections] = useState({
+    datosRequeridos: true,
+    conexiones: false,
+    derivar: false,
+  })
 
   const toggleSection = (section) => {
-    setSections((prev) => ({ ...prev, [section]: !prev[section] }))
+    setSections(prev => ({ ...prev, [section]: !prev[section] }))
   }
 
   const [formData, setFormData] = useState({
@@ -64,10 +63,9 @@ export default function PostConstatacionModal({ demanda, onClose, onEvaluate }) 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex justify-center items-start pt-10">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative">
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-800 hover:text-gray-900">
+        <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
           <X size={24} />
         </button>
-
         <div className="p-6">
           <div className="flex justify-between items-start mb-4">
             <div>
@@ -75,12 +73,8 @@ export default function PostConstatacionModal({ demanda, onClose, onEvaluate }) 
               <p className="text-gray-700">DNI {demanda.dni} - {demanda.edad} años</p>
             </div>
             <div className="text-right">
-              {demanda.urgente && (
-                <div className="bg-red-500 text-white px-2 py-1 rounded-md mb-2 inline-block">
-                  URGENTE
-                </div>
-              )}
-              <p className="text-gray-700">Actualizado: {demanda.fechaActualizacion}</p>
+              <p className="text-sm text-gray-500">Última actualización</p>
+              <p className="text-gray-700">{demanda.ultimaActualizacion}</p>
             </div>
           </div>
 
@@ -281,20 +275,13 @@ export default function PostConstatacionModal({ demanda, onClose, onEvaluate }) 
           </CollapsibleSection>
 
           <div className="mt-6">
-          <button 
-            onClick={handleEvaluate}
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 w-full"
-          >
-            Evaluar Demanda
-          </button>
-        </div>
-        {showEvaluacionModal && (
-          <EvaluacionModal
-            isOpen={showEvaluacionModal}
-            onClose={() => setShowEvaluacionModal(false)}
-            demanda={demanda}
-          />
-        )}
+            <button 
+              onClick={onEvaluate}
+              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 w-full"
+            >
+              Evaluar Demanda
+            </button>
+          </div>
         </div>
       </div>
     </div>
