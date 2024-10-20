@@ -1,58 +1,83 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { ChevronDown, Search } from 'lucide-react'
 import DemandaDetalle from './DemandaDetalle'
 import PostConstatacionModal from './PostConstatacionModal'
 import NuevoIngresoModal from './NuevoIngresoModal'
 import EvaluacionModal from './EvaluacionModal'
+import { formatDate, formatTime } from './utils'
 
-const DemandRow = ({ demand, isEven, onClick }) => {
-  const getRowColor = () => {
-    if (demand.estado === 'Verificada') {
-      return 'bg-green-100'
-    } else if (demand.estado === 'No verificada') {
-      return 'bg-yellow-100'
-    } else if (demand.estado === 'En evaluación') {
-      return 'bg-purple-100'
-    }
-    return isEven ? 'bg-white' : 'bg-gray-50'
-  }
-
-  return (
-    <tr className={`${getRowColor()} cursor-pointer hover:bg-gray-100`} onClick={onClick}>
-      <td className="py-2 px-4">
-        <input 
-          type="checkbox" 
-          className="form-checkbox h-4 w-4 text-sky-600" 
-          onClick={(e) => e.stopPropagation()}
-        />
-      </td>
-      <td className="py-2 px-4 text-gray-900">
-        {demand.legajo && (
-          <span className="text-sky-700 font-medium mr-2">{demand.legajo}</span>
-        )}
-        {demand.nombre}
-      </td>
-      <td className="py-2 px-4 text-gray-700">{demand.ultimaActualizacion}</td>
-      <td className="py-2 px-4">
-        {demand.colaboradorAsignado ? (
-          <div className="flex items-center">
-            <div className="w-6 h-6 rounded-full bg-sky-500 text-white flex items-center justify-center text-xs font-medium mr-2">
-              {demand.colaboradorAsignado.charAt(0)}
-            </div>
-            {demand.colaboradorAsignado}
-          </div>
-        ) : (
-          <span className="text-gray-700">No asignado</span>
-        )}
-      </td>
-      <td className="py-2 px-4 text-gray-700">{demand.recibido}</td>
-    </tr>
-  )
+interface Demand {
+  id: string
+  nombre: string
+  dni: string
+  edad: number
+  estado: 'No verificada' | 'Verificada' | 'En evaluación'
+  legajo?: string
+  ultimaActualizacion: string
+  colaboradorAsignado?: string
+  recibido: string
 }
 
-export default function MainContent({ initialDemands, onUpdateDemands }) {
-  const [demands, setDemands] = useState(initialDemands)
-  const [selectedDemand, setSelectedDemand] = useState(null)
+interface MainContentProps {
+  initialDemands: Demand[]
+  onUpdateDemands: (demands: Demand[]) => void
+}
+
+const DemandRow: React.FC<{ demand: Demand; isEven: boolean; onClick: () => void }> = React.memo(
+  ({ demand, isEven, onClick }) => {
+    const getRowColor = () => {
+      switch (demand.estado) {
+        case 'Verificada':
+          return 'bg-green-100'
+        case 'No verificada':
+          return 'bg-yellow-100'
+        case 'En evaluación':
+          return 'bg-purple-100'
+        default:
+          return isEven ? 'bg-white' : 'bg-gray-50'
+      }
+    }
+
+    return (
+      <tr className={`${getRowColor()} cursor-pointer hover:bg-gray-100`} onClick={onClick}>
+        <td className="py-2 px-4">
+          <input 
+            type="checkbox" 
+            className="form-checkbox h-4 w-4 text-sky-600" 
+            onClick={(e) => e.stopPropagation()}
+            aria-label={`Seleccionar demanda de ${demand.nombre}`}
+          />
+        </td>
+        <td className="py-2 px-4 text-gray-900">
+          {demand.legajo && (
+            <span className="text-sky-700 font-medium mr-2">{demand.legajo}</span>
+          )}
+          {demand.nombre}
+        </td>
+        <td className="py-2 px-4 text-gray-700">{demand.ultimaActualizacion}</td>
+        <td className="py-2 px-4">
+          {demand.colaboradorAsignado ? (
+            <div className="flex items-center">
+              <div className="w-6 h-6 rounded-full bg-sky-500 text-white flex items-center justify-center text-xs font-medium mr-2" aria-hidden="true">
+                {demand.colaboradorAsignado.charAt(0)}
+              </div>
+              {demand.colaboradorAsignado}
+            </div>
+          ) : (
+            <span className="text-gray-700">No asignado</span>
+          )}
+        </td>
+        <td className="py-2 px-4 text-gray-700">{demand.recibido}</td>
+      </tr>
+    )
+  }
+)
+
+DemandRow.displayName = 'DemandRow'
+
+export default function MainContent({ initialDemands, onUpdateDemands }: MainContentProps) {
+  const [demands, setDemands] = useState<Demand[]>(initialDemands)
+  const [selectedDemand, setSelectedDemand] = useState<Demand | null>(null)
   const [showPostConstatacion, setShowPostConstatacion] = useState(false)
   const [showEvaluacionModal, setShowEvaluacionModal] = useState(false)
   const [isNuevoIngresoModalOpen, setIsNuevoIngresoModalOpen] = useState(false)
@@ -61,7 +86,7 @@ export default function MainContent({ initialDemands, onUpdateDemands }) {
     setDemands(initialDemands)
   }, [initialDemands])
 
-  const handleDemandClick = (demand) => {
+  const handleDemandClick = useCallback((demand: Demand) => {
     setSelectedDemand(demand)
     if (demand.estado === 'Verificada') {
       setShowPostConstatacion(true)
@@ -73,43 +98,47 @@ export default function MainContent({ initialDemands, onUpdateDemands }) {
       setShowPostConstatacion(false)
       setShowEvaluacionModal(false)
     }
-  }
+  }, [])
 
-  const handleCloseDetail = () => {
+  const handleCloseDetail = useCallback(() => {
     setSelectedDemand(null)
     setShowPostConstatacion(false)
     setShowEvaluacionModal(false)
-  }
+  }, [])
 
-  const handleConstatar = () => {
-    const updatedDemands = demands.map(d => 
-      d.id === selectedDemand.id ? { ...d, estado: 'Verificada' } : d
-    )
-    setDemands(updatedDemands)
-    onUpdateDemands(updatedDemands)
-    handleCloseDetail()
-  }
+  const handleConstatar = useCallback(() => {
+    if (selectedDemand) {
+      const updatedDemands = demands.map(d => 
+        d.id === selectedDemand.id ? { ...d, estado: 'Verificada' as const } : d
+      )
+      setDemands(updatedDemands)
+      onUpdateDemands(updatedDemands)
+      handleCloseDetail()
+    }
+  }, [demands, selectedDemand, onUpdateDemands])
 
-  const handleEvaluate = () => {
-    const updatedDemands = demands.map(d => 
-      d.id === selectedDemand.id ? { ...d, estado: 'En evaluación' } : d
-    )
-    setDemands(updatedDemands)
-    onUpdateDemands(updatedDemands)
-    setShowPostConstatacion(false)
-    setSelectedDemand(null)
-  }
+  const handleEvaluate = useCallback(() => {
+    if (selectedDemand) {
+      const updatedDemands = demands.map(d => 
+        d.id === selectedDemand.id ? { ...d, estado: 'En evaluación' as const } : d
+      )
+      setDemands(updatedDemands)
+      onUpdateDemands(updatedDemands)
+      setShowPostConstatacion(false)
+      setSelectedDemand(null)
+    }
+  }, [demands, selectedDemand, onUpdateDemands])
 
-  const handleNuevoRegistro = () => {
+  const handleNuevoRegistro = useCallback(() => {
     setIsNuevoIngresoModalOpen(true)
-  }
+  }, [])
 
-  const handleCloseNuevoIngreso = () => {
+  const handleCloseNuevoIngreso = useCallback(() => {
     setIsNuevoIngresoModalOpen(false)
-  }
+  }, [])
 
-  const handleSubmitNuevoIngreso = (newDemand) => {
-    const demandWithState = {
+  const handleSubmitNuevoIngreso = useCallback((newDemand: Omit<Demand, 'id' | 'estado'>) => {
+    const demandWithState: Demand = {
       ...newDemand,
       id: Date.now().toString(),
       estado: 'No verificada'
@@ -118,10 +147,10 @@ export default function MainContent({ initialDemands, onUpdateDemands }) {
     setDemands(updatedDemands)
     onUpdateDemands(updatedDemands)
     setIsNuevoIngresoModalOpen(false)
-  }
+  }, [demands, onUpdateDemands])
 
   return (
-    <main className="flex-1 bg-white p-6">
+    <main className="flex-1 bg-white p-6 overflow-auto">
       <div className="flex justify-between items-center mb-6">
         <div className="flex space-x-2">
           <button
@@ -206,7 +235,7 @@ export default function MainContent({ initialDemands, onUpdateDemands }) {
         />
       )}
       
-      {showPostConstatacion && (
+      {showPostConstatacion && selectedDemand && (
         <PostConstatacionModal
           demanda={selectedDemand}
           onClose={handleCloseDetail}
@@ -214,7 +243,7 @@ export default function MainContent({ initialDemands, onUpdateDemands }) {
         />
       )}
 
-      {showEvaluacionModal && (
+      {showEvaluacionModal && selectedDemand && (
         <EvaluacionModal
           isOpen={showEvaluacionModal}
           onClose={handleCloseDetail}
