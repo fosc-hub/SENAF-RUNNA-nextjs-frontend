@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { Search } from 'lucide-react'
-import { Button } from './button'
+import { Button } from './Button'
 import { Select } from './Select'
 import { Modal } from './Modal'
 import { Table } from './Table'

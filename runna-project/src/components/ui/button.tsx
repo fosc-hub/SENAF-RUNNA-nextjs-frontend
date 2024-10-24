@@ -2,9 +2,10 @@ import React from 'react'
 import { cn } from './utils'
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline'
-  size?: 'sm' | 'md' | 'lg'
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'link'
+  size?: 'sm' | 'md' | 'lg' | 'icon'
 }
+
 
 export const Button: React.FC<ButtonProps> = ({
   children,
