@@ -9,6 +9,8 @@ import PostConstatacionModal from './PostConstatacionModal'
 import NuevoIngresoModal from './NuevoIngresoModal'
 import EvaluacionModal from './EvaluacionModal'
 import { formatDate, formatTime } from './utils'
+import { CustomSelect } from './CustomSelect'
+
 
 interface Demand {
   id: string
@@ -34,6 +36,18 @@ export default function MainContent({ initialDemands, onUpdateDemands }: MainCon
   const [showPostConstatacion, setShowPostConstatacion] = useState(false)
   const [showEvaluacionModal, setShowEvaluacionModal] = useState(false)
   const [isNuevoIngresoModalOpen, setIsNuevoIngresoModalOpen] = useState(false)
+  const [origen, setOrigen] = useState('todos')
+  const [estado, setEstado] = useState('todos')
+
+  const origenOptions = [
+    { value: 'todos', label: 'Todos' },
+    // Add more options as needed
+  ]
+
+  const estadoOptions = [
+    { value: 'todos', label: 'Todos' },
+    // Add more options as needed
+  ]
 
   useEffect(() => {
     setDemands(initialDemands)
@@ -167,24 +181,48 @@ export default function MainContent({ initialDemands, onUpdateDemands }: MainCon
 
   return (
     <main className="flex-1 bg-white p-6 overflow-auto">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex space-x-2">
-          <Button onClick={handleNuevoRegistro}>+ Nuevo Registro</Button>
-          <Button variant="secondary">Reasignar</Button>
-          <Button variant="secondary">No Leído</Button>
-          <Button variant="secondary">Asignar</Button>
-        </div>
-        <div className="flex space-x-4">
-          <Select 
-            label="Origen" 
-            options={[{ value: 'todos', label: 'Todos' }]} 
-          />
-          <Select 
-            label="Estado" 
-            options={[{ value: 'todos', label: 'Todos' }]} 
-          />
-        </div>
+    <div className="flex justify-between items-center mb-6">
+      <div className="flex items-center space-x-2">
+        <Button 
+          onClick={handleNuevoRegistro} 
+          className="bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-md px-6 py-3 text-base"
+        >
+          + Nuevo Registro
+        </Button>
+        <Button 
+          variant="secondary" 
+          className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md px-6 py-3 text-base"
+        >
+          Precalificar
+        </Button>
+        <Button 
+          variant="secondary" 
+          className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md px-6 py-3 text-base"
+        >
+          No Leído
+        </Button>
+        <Button 
+          variant="secondary" 
+          className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md px-6 py-3 text-base"
+        >
+          Asignar
+        </Button>
+        <CustomSelect
+          label="Origen"
+          options={origenOptions}
+          value={origen}
+          onChange={setOrigen}
+          placeholder="Todos"
+        />
+        <CustomSelect
+          label="Estado"
+          options={estadoOptions}
+          value={estado}
+          onChange={setEstado}
+          placeholder="Todos"
+        />
       </div>
+    </div>
       {demands.length > 0 ? (
         <Table 
           data={demands}
