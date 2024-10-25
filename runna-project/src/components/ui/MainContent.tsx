@@ -16,6 +16,7 @@ interface Demand {
   dni: string
   edad: number
   estado: 'No verificada' | 'Verificada' | 'En evaluación'
+  fechaActualizacion: string // Add this property
   legajo?: string
   ultimaActualizacion: string
   colaboradorAsignado?: string
