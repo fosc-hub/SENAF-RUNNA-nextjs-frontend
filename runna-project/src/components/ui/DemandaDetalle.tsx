@@ -169,83 +169,118 @@ export default function DemandaDetalle({ demanda, onClose, onConstatar }: Demand
           </Button>
         </div>
 
-          <CollapsibleSection
+        <CollapsibleSection
             title="Datos requeridos del caso"
             isOpen={sections.datosRequeridos}
             onToggle={() => toggleSection('datosRequeridos')}
           >
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <InputField label="Fecha" name="fecha" value={formData.fecha} onChange={handleInputChange} />
-              <InputField label="Hora" name="hora" value={formData.hora} onChange={handleInputChange} />
-              <InputField label="ID Notificación manual" name="idNotificacion" value={formData.idNotificacion} onChange={handleInputChange} />
-              <InputField label="Notificación Nro." name="notificacionNro" value={formData.notificacionNro} onChange={handleInputChange} />
-            </div>
-
-            <h5 className="font-medium mb-2 text-indigo-600">Niñas, niños y adolescentes convivientes</h5>
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <InputField label="Nombre y Apellido" name="nombreApellidoNNA" value={formData.nombreApellidoNNA} onChange={handleInputChange} className="col-span-3" />
-              <InputField label="Edad" name="edadNNA" value={formData.edadNNA} onChange={handleInputChange} />
-              <InputField label="Género" name="generoNNA" value={formData.generoNNA} onChange={handleInputChange} />
-              <InputField label="Institución educativa" name="institucionEducativa" value={formData.institucionEducativa} onChange={handleInputChange} className="col-span-3" />
-              <InputField label="Curso, nivel y Turno" name="cursoNivelTurno" value={formData.cursoNivelTurno} onChange={handleInputChange} />
-              <InputField label="Institución sanitaria" name="institucionSanitaria" value={formData.institucionSanitaria} onChange={handleInputChange} />
-              <div className="col-span-3 flex items-center mb-4">
-                <span className="mr-4 text-gray-700 font-medium">Es un NNyA con DD vulnerados?</span>
-                <RadioGroup defaultValue={formData.ddVulnerados}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="SI" id="ddVulnerados-si" />
-                    <Label htmlFor="ddVulnerados-si" className="text-gray-700">SI</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="NO" id="ddVulnerados-no" />
-                    <Label htmlFor="ddVulnerados-no" className="text-gray-700">NO</Label>
-                  </div>
-                </RadioGroup>
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <InputField label="Fecha" name="fecha" value={formData.fecha} onChange={handleInputChange} />
+                <InputField label="Hora" name="hora" value={formData.hora} onChange={handleInputChange} />
+                <InputField label="ID Notificación manual" name="idNotificacion" value={formData.idNotificacion} onChange={handleInputChange} />
+                <InputField label="Notificación Nro." name="notificacionNro" value={formData.notificacionNro} onChange={handleInputChange} />
               </div>
-              <InputField label="Comentarios" name="comentariosNNA" value={formData.comentariosNNA} onChange={handleInputChange} textarea className="col-span-3" />
-            </div>
-            <Button variant="outline" className="text-indigo-600 border-indigo-600 hover:bg-indigo-50">
-              <Plus className="h-4 w-4 mr-1" /> Añadir otro niño o adolescente
-            </Button>
 
-            <h5 className="font-medium mb-2 mt-6 text-indigo-600">Adultos convivientes</h5>
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <InputField label="Nombre y Apellido" name="nombreApellidoAdulto" value={formData.nombreApellidoAdulto} onChange={handleInputChange} className="col-span-2" />
-              <InputField label="Vínculo" name="vinculoAdulto" value={formData.vinculoAdulto} onChange={handleInputChange} />
-              <InputField label="Edad" name="edadAdulto" value={formData.edadAdulto} onChange={handleInputChange} />
-              <InputField label="Género" name="generoAdulto" value={formData.generoAdulto} onChange={handleInputChange} />
-              <InputField label="Observaciones" name="observacionesAdulto" value={formData.observacionesAdulto} onChange={handleInputChange} textarea className="col-span-2" />
-            </div>
-            <Button variant="outline" className="text-indigo-600 border-indigo-600 hover:bg-indigo-50">
-              <Plus className="h-4 w-4 mr-1" /> Añadir otro adulto
-            </Button>
-
-            <h5 className="font-medium mb-2 mt-6 text-indigo-600">Autor de la vulneración de Derechos de NNyA</h5>
-            <div className="grid grid-cols-4 gap-4 mb-6">
-              <InputField label="Nombre y Apellido" name="nombreApellidoAutor" value={formData.nombreApellidoAutor} onChange={handleInputChange} className="col-span-2" />
-              <InputField label="Edad" name="edadAutor" value={formData.edadAutor} onChange={handleInputChange} />
-              <InputField label="Género" name="generoAutor" value={formData.generoAutor} onChange={handleInputChange} />
-              <InputField label="Vínculo" name="vinculoAutor" value={formData.vinculoAutor} onChange={handleInputChange} />
-              <div className="col-span-2 flex items-center">
-                <span className="mr-4 text-gray-700 font-medium">Convive?</span>
-                <RadioGroup defaultValue={formData.conviveAutor}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="SI" id="conviveAutor-si" />
-                    <Label htmlFor="conviveAutor-si" className="text-gray-700">SI</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="NO" id="conviveAutor-no" />
-                    <Label htmlFor="conviveAutor-no" className="text-gray-700">NO</Label>
-                  </div>
-                </RadioGroup>
+              <div>
+                <h4 className="text-lg font-medium text-indigo-600 mb-2">Datos de Localización</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <InputField label="Calle" name="calle" value={formData.calle} onChange={handleInputChange} className="col-span-2" />
+                  <InputField label="Número" name="numero" value={formData.numero} onChange={handleInputChange} />
+                  <InputField label="Barrio" name="barrio" value={formData.barrio} onChange={handleInputChange} />
+                  <InputField label="Localidad" name="localidad" value={formData.localidad} onChange={handleInputChange} />
+                  <InputField label="Provincia" name="provincia" value={formData.provincia} onChange={handleInputChange} />
+                  <InputField label="Referencias Geográficas" name="referenciasGeograficas" value={formData.referenciasGeograficas} onChange={handleInputChange} textarea className="col-span-2" />
+                </div>
               </div>
-              <InputField label="Comentarios" name="comentariosAutor" value={formData.comentariosAutor} onChange={handleInputChange} textarea className="col-span-4" />
-            </div>
-            <Button variant="outline" className="text-indigo-600 border-indigo-600 hover:bg-indigo-50">
-              <Plus className="h-4 w-4 mr-1" /> Añadir otro autor
-            </Button>
 
-            {/* ... (keep the rest of the sections) */}
+              <div>
+                <h4 className="text-lg font-medium text-indigo-600 mb-2">Niñas, niños y adolescentes convivientes</h4>
+                <div className="grid grid-cols-3 gap-4">
+                  <InputField label="Nombre y Apellido" name="nombreApellidoNNA" value={formData.nombreApellidoNNA} onChange={handleInputChange} className="col-span-3" />
+                  <InputField label="Edad" name="edadNNA" value={formData.edadNNA} onChange={handleInputChange} />
+                  <InputField label="Género" name="generoNNA" value={formData.generoNNA} onChange={handleInputChange} />
+                  <InputField label="Institución educativa" name="institucionEducativa" value={formData.institucionEducativa} onChange={handleInputChange} className="col-span-3" />
+                  <InputField label="Curso, nivel y Turno" name="cursoNivelTurno" value={formData.cursoNivelTurno} onChange={handleInputChange} />
+                  <InputField label="Institución sanitaria" name="institucionSanitaria" value={formData.institucionSanitaria} onChange={handleInputChange} />
+                  <div className="col-span-3 flex items-center">
+                    <span className="mr-4 text-gray-600">Es un NNyA con DD vulnerados?</span>
+                    <RadioGroup defaultValue={formData.ddVulnerados}>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="SI" id="ddVulnerados-si" />
+                        <Label htmlFor="ddVulnerados-si" className="text-gray-600">SI</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="NO" id="ddVulnerados-no" />
+                        <Label htmlFor="ddVulnerados-no" className="text-gray-600">NO</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  <InputField label="Comentarios" name="comentariosNNA" value={formData.comentariosNNA} onChange={handleInputChange} textarea className="col-span-3" />
+                </div>
+                <Button variant="outline" className="mt-2 text-blue-600">
+                  <Plus className="h-4 w-4 mr-1" /> Añadir otro niño o adolescente
+                </Button>
+              </div>
+
+              <div>
+                <h4 className="text-lg font-medium text-indigo-600 mb-2">Autor de la vulneración de Derechos de NNyA</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <InputField label="Nombre y Apellido" name="nombreApellidoAutor" value={formData.nombreApellidoAutor} onChange={handleInputChange} className="col-span-2" />
+                  <InputField label="Edad" name="edadAutor" value={formData.edadAutor} onChange={handleInputChange} />
+                  <InputField label="Género" name="generoAutor" value={formData.generoAutor} onChange={handleInputChange} />
+                  <InputField label="Vínculo" name="vinculoAutor" value={formData.vinculoAutor} onChange={handleInputChange} />
+                  <div className="col-span-2 flex items-center">
+                    <span className="mr-4 text-gray-600">Convive?</span>
+                    <RadioGroup defaultValue={formData.conviveAutor}>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="SI" id="conviveAutor-si" />
+                        <Label htmlFor="conviveAutor-si" className="text-gray-600">SI</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="NO" id="conviveAutor-no" />
+                        <Label htmlFor="conviveAutor-no" className="text-gray-600">NO</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  <InputField label="Comentarios" name="comentariosAutor" value={formData.comentariosAutor} onChange={handleInputChange} textarea className="col-span-2" />
+                </div>
+                <Button variant="outline" className="mt-2 text-blue-600">
+                  <Plus className="h-4 w-4 mr-1" /> Añadir otro autor
+                </Button>
+              </div>
+
+              <div>
+                <h4 className="text-lg font-medium text-indigo-600 mb-2">Descripción de la situación</h4>
+                <InputField label="Comentarios" name="descripcionSituacion" value={formData.descripcionSituacion} onChange={handleInputChange} textarea />
+              </div>
+
+              <div>
+                <h4 className="text-lg font-medium text-indigo-600 mb-2">Sobre el usuario de la línea</h4>
+                <div className="grid grid-cols-3 gap-4">
+                  <InputField label="Nombre y Apellido" name="nombreApellidoUsuario" value={formData.nombreApellidoUsuario} onChange={handleInputChange} className="col-span-3" />
+                  <InputField label="Edad" name="edadUsuario" value={formData.edadUsuario} onChange={handleInputChange} />
+                  <InputField label="Género" name="generoUsuario" value={formData.generoUsuario} onChange={handleInputChange} />
+                  <InputField label="Vínculo" name="vinculoUsuario" value={formData.vinculoUsuario} onChange={handleInputChange} />
+                  <InputField label="Teléfono" name="telefonoUsuario" value={formData.telefonoUsuario} onChange={handleInputChange} />
+                  <InputField label="Institución o programa" name="institucionPrograma" value={formData.institucionPrograma} onChange={handleInputChange} className="col-span-3" />
+                  <InputField label="Contacto Institución o programa" name="contactoInstitucion" value={formData.contactoInstitucion} onChange={handleInputChange} className="col-span-3" />
+                  <InputField label="Nombre y cargo del responsable" name="nombreCargoResponsable" value={formData.nombreCargoResponsable} onChange={handleInputChange} className="col-span-3" />
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-lg font-medium text-indigo-600 mb-2">Presunta Vulneración de Derechos informada</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <InputField label="Motivo" name="motivo" value={formData.motivo} onChange={handleInputChange} textarea className="col-span-2" />
+                  <InputField label="Ámbito de vulneración" name="ambitoVulneracion" value={formData.ambitoVulneracion} onChange={handleInputChange} textarea />
+                  <InputField label="Principal Derecho vulnerado" name="principalDerechoVulnerado" value={formData.principalDerechoVulnerado} onChange={handleInputChange} textarea />
+                  <InputField label="Problemática Identificada" name="problematicaIdentificada" value={formData.problematicaIdentificada} onChange={handleInputChange} textarea />
+                  <InputField label="Prioridad sugerida de intervención" name="prioridadIntervencion" value={formData.prioridadIntervencion} onChange={handleInputChange} textarea />
+                  <InputField label="Nombre y cargo de Operador/a" name="nombreCargoOperador" value={formData.nombreCargoOperador} onChange={handleInputChange} className="col-span-2" />
+                </div>
+              </div>
+            </div>
           </CollapsibleSection>
 
           {/* ... (keep the other CollapsibleSections) */}
