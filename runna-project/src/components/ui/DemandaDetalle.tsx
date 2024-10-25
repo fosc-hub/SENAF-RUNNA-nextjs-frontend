@@ -36,7 +36,7 @@ interface DemandaDetalleProps {
 
 
 export default function DemandaDetalle({ demanda, onClose, onConstatar }: DemandaDetalleProps) {
-  const [sections, setSections] = useState({
+  const [sections, setSections] = useState<{ datosRequeridos: boolean; conexiones: boolean; derivar: boolean }>({
     datosRequeridos: true,
     conexiones: false,
     derivar: false,
@@ -75,7 +75,7 @@ export default function DemandaDetalle({ demanda, onClose, onConstatar }: Demand
     setIsArchivosAdjuntosOpen(false)
   }
 
-  const toggleSection = (section: string) => {
+  const toggleSection = (section: 'datosRequeridos' | 'conexiones' | 'derivar') => {
     setSections((prev) => ({ ...prev, [section]: !prev[section] }))
   }
   const handleOpenAsignarDemanda = () => {

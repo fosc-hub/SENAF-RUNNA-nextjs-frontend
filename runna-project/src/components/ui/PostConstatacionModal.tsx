@@ -41,8 +41,12 @@ export default function PostConstatacionModal({ demanda, onClose, onEvaluate }: 
   const [isEnviarRespuestaOpen, setIsEnviarRespuestaOpen] = useState(false)
   const [formData, setFormData] = useState({ ...demanda })
   const [isArchivosAdjuntosOpen, setIsArchivosAdjuntosOpen] = useState(false)
+  const [derivarData, setDerivarData] = useState({
+    colaborador: '',
+    comentarios: ''
+  })
 
-  const toggleSection = (section: string) => {
+  const toggleSection = (section: 'datosRequeridos' | 'conexiones' | 'derivar') => {
     setSections(prev => ({ ...prev, [section]: !prev[section] }))
   }
   
@@ -50,6 +54,15 @@ export default function PostConstatacionModal({ demanda, onClose, onEvaluate }: 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+  const handleDerivarInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setDerivarData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleDerivar = () => {
+    console.log('Derivar demanda:', derivarData)
+    // Here you would typically send the data to your backend
   }
 
   const handleOpenAsignarDemanda = () => {
@@ -293,10 +306,16 @@ export default function PostConstatacionModal({ demanda, onClose, onEvaluate }: 
               <p className="text-sm text-gray-600">Actualizado el {formData.fechaActualizacion} por {formData.actualizadoPor}</p>
             </div>
             <div className="mb-4">
-              <h5 className="font-medium mb-2">Vincular con otro caso</h5>
+              <h5 className="font-medium mb-2 text-gray-700">Vincular con otro caso</h5>
               <div className="flex items-center">
-                <Input type="text" placeholder="33.333.333" className="mr-2" />
-                <Button variant="secondary">Vincular</Button>
+                <Input 
+                  type="text" 
+                  placeholder="33.333.333" 
+                  className="mr-2 bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500" 
+                />
+                <Button variant="secondary" className="bg-gray-200 hover:bg-gray-300 text-gray-800">
+                  Vincular
+                </Button>
               </div>
             </div>
           </CollapsibleSection>
@@ -306,12 +325,31 @@ export default function PostConstatacionModal({ demanda, onClose, onEvaluate }: 
             isOpen={sections.derivar}
             onToggle={() => toggleSection('derivar')}
           >
-            <div className="mb-4">
-              <h5 className="font-medium mb-2">Asignar a un colaborador</h5>
-              <Input type="text" placeholder="Buscar colaborador" className="mb-2" />
-              <Textarea placeholder="Comentarios" className="h-20" />
+            <div className="space-y-4">
+              <div>
+                <Input
+                  type="text"
+                  name="colaborador"
+                  placeholder="Buscar colaborador"
+                  value={derivarData.colaborador}
+                  onChange={handleDerivarInputChange}
+                  className="w-full bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <Textarea
+                  name="comentarios"
+                  placeholder="Comentarios"
+                  value={derivarData.comentarios}
+                  onChange={handleDerivarInputChange}
+                  rows={4}
+                  className="w-full bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <Button onClick={handleDerivar} className="bg-blue-500 hover:bg-blue-600 text-white">
+                Derivar
+              </Button>
             </div>
-            <Button variant="secondary">Derivar</Button>
           </CollapsibleSection>
 
           <div className="mt-6">
