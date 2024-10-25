@@ -216,7 +216,7 @@ export default function PostConstatacionModal({ demanda, onClose, onEvaluate }: 
               <InputField label="Institución sanitaria" name="institucionSanitaria" value={formData.institucionSanitaria} onChange={handleInputChange} />
               <div className="col-span-3 flex items-center mb-4">
                 <span className="mr-4">Es un NNyA con DD vulnerados?</span>
-                <RadioGroup defaultValue={formData.ddVulnerados}>
+                <RadioGroup defaultValue={formData.ddVulnerados} label={''} options={[]}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="SI" id="ddVulnerados-si" />
                     <Label htmlFor="ddVulnerados-si">SI</Label>
@@ -253,7 +253,7 @@ export default function PostConstatacionModal({ demanda, onClose, onEvaluate }: 
               <InputField label="Vínculo" name="vinculoAutor" value={formData.vinculoAutor} onChange={handleInputChange} />
               <div className="col-span-2 flex items-center">
                 <span className="mr-4">Convive?</span>
-                <RadioGroup defaultValue={formData.conviveAutor}>
+                <RadioGroup defaultValue={formData.conviveAutor} label={''} options={[]}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="SI" id="conviveAutor-si" />
                     <Label htmlFor="conviveAutor-si">SI</Label>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { X } from 'lucide-react'
 import PurpleOutlineButton from './PurpleOutlineButton'
+import { RadioGroup } from './RadioGroup'
 
 const InputField = ({ label, ...props }) => (
     <div className="mb-4">
@@ -23,19 +24,7 @@ const InputField = ({ label, ...props }) => (
     </div>
   )
 
-const RadioGroup = ({ label, options, ...props }) => (
-  <div className="mb-4">
-    <label className="block text-sm font-medium text-gray-900 mb-1">{label}</label>
-    <div className="flex space-x-4">
-      {options.map((option) => (
-        <label key={option} className="inline-flex items-center">
-          <input type="radio" className="form-radio" value={option} {...props} />
-          <span className="ml-2">{option}</span>
-        </label>
-      ))}
-    </div>
-  </div>
-)
+
 
 export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
   const [step, setStep] = useState(1)

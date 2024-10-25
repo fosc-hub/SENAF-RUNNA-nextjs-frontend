@@ -3,19 +3,23 @@ import * as RadioGroupPrimitive from "@radix-ui/react-radio-group"
 import { Circle } from "lucide-react"
 
 import { cn } from "./utils"
-
-const RadioGroup = React.forwardRef<
-  React.ElementRef<typeof RadioGroupPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>
->(({ className, ...props }, ref) => {
-  return (
-    <RadioGroupPrimitive.Root
-      className={cn("grid gap-2", className)}
-      {...props}
-      ref={ref}
-    />
+interface RadioGroupProps extends React.InputHTMLAttributes<HTMLInputElement> {
+    label: string
+    options: string[]
+  }
+export const RadioGroup: React.FC<RadioGroupProps> = ({ label, options, ...props }) => (
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-900 mb-1">{label}</label>
+      <div className="flex space-x-4">
+        {options.map((option) => (
+          <label key={option} className="inline-flex items-center">
+            <input type="radio" className="form-radio text-blue-600" value={option} {...props} />
+            <span className="ml-2 text-gray-700">{option}</span>
+          </label>
+        ))}
+      </div>
+    </div>
   )
-})
 RadioGroup.displayName = RadioGroupPrimitive.Root.displayName
 
 const RadioGroupItem = React.forwardRef<
@@ -39,4 +43,4 @@ const RadioGroupItem = React.forwardRef<
 })
 RadioGroupItem.displayName = RadioGroupPrimitive.Item.displayName
 
-export { RadioGroup, RadioGroupItem }
+export {  RadioGroupItem }
