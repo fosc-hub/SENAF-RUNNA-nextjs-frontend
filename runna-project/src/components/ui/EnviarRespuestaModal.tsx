@@ -4,7 +4,7 @@ import { Button } from './Button'
 import { Input } from './Input'
 import { Textarea } from './Textarea'
 import { Label } from './Label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './Select'
+import { CustomSelect } from './CustomSelect'
 import { Paperclip } from 'lucide-react'
 
 interface EnviarRespuestaModalProps {
@@ -19,6 +19,12 @@ interface ResponseData {
   email: string
   message: string
 }
+
+const institutionOptions = [
+  { value: 'institucion1', label: 'Institución 1' },
+  { value: 'institucion2', label: 'Institución 2' },
+  { value: 'institucion3', label: 'Institución 3' },
+]
 
 export function EnviarRespuestaModal({ isOpen, onClose, onSend }: EnviarRespuestaModalProps) {
   const [responseData, setResponseData] = useState<ResponseData>({
@@ -46,19 +52,13 @@ export function EnviarRespuestaModal({ isOpen, onClose, onSend }: EnviarRespuest
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Enviar Respuesta">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="institution" className="font-bold text-gray-700">Institución</Label>
-          <Select value={responseData.institution} onValueChange={handleInstitutionChange}>
-            <SelectTrigger className="w-full bg-white border-gray-300 text-gray-900">
-              <SelectValue placeholder="Seleccionar institución" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="institucion1">Institución 1</SelectItem>
-              <SelectItem value="institucion2">Institución 2</SelectItem>
-              <SelectItem value="institucion3">Institución 3</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <CustomSelect
+          label="Institución"
+          options={institutionOptions}
+          value={responseData.institution}
+          onChange={handleInstitutionChange}
+          placeholder="Seleccionar institución"
+        />
         <div className="space-y-2">
           <Label htmlFor="search" className="font-bold text-gray-700">Buscar</Label>
           <Input

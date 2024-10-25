@@ -4,7 +4,7 @@ import { Button } from './Button'
 import { Input } from './Input'
 import { Textarea } from './Textarea'
 import { Label } from './Label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './Select'
+import { CustomSelect } from './CustomSelect'
 import { Camera } from 'lucide-react'
 
 interface RegistrarActividadModalProps {
@@ -20,6 +20,12 @@ interface ActivityData {
   observations: string
 }
 
+const activityOptions = [
+  { value: 'llamada', label: 'Llamada' },
+  { value: 'visita', label: 'Visita' },
+  { value: 'email', label: 'Email' },
+]
+
 export function RegistrarActividadModal({ isOpen, onClose, onSubmit }: RegistrarActividadModalProps) {
   const [activityData, setActivityData] = useState<ActivityData>({
     date: '',
@@ -33,7 +39,7 @@ export function RegistrarActividadModal({ isOpen, onClose, onSubmit }: Registrar
     setActivityData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSelectChange = (value: string) => {
+  const handleActivityChange = (value: string) => {
     setActivityData(prev => ({ ...prev, activity: value }))
   }
 
@@ -56,7 +62,7 @@ export function RegistrarActividadModal({ isOpen, onClose, onSubmit }: Registrar
               value={activityData.date}
               onChange={handleInputChange}
               required
-              className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+              className="w-full bg-white border-gray-300 text-gray-900 placeholder-gray-500"
             />
           </div>
           <div className="space-y-2">
@@ -68,23 +74,17 @@ export function RegistrarActividadModal({ isOpen, onClose, onSubmit }: Registrar
               value={activityData.time}
               onChange={handleInputChange}
               required
-              className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+              className="w-full bg-white border-gray-300 text-gray-900 placeholder-gray-500"
             />
           </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="activity" className="font-bold text-gray-700">Actividad</Label>
-          <Select value={activityData.activity} onValueChange={handleSelectChange}>
-            <SelectTrigger className="w-full bg-white border-gray-300 text-gray-900">
-              <SelectValue placeholder="Seleccionar actividad" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="llamada">Llamada</SelectItem>
-              <SelectItem value="visita">Visita</SelectItem>
-              <SelectItem value="email">Email</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <CustomSelect
+          label="Actividad"
+          options={activityOptions}
+          value={activityData.activity}
+          onChange={handleActivityChange}
+          placeholder="Seleccionar actividad"
+        />
         <div className="space-y-2">
           <Label htmlFor="observations" className="font-bold text-gray-700">Observaciones</Label>
           <Textarea
@@ -94,7 +94,7 @@ export function RegistrarActividadModal({ isOpen, onClose, onSubmit }: Registrar
             onChange={handleInputChange}
             placeholder="Observaciones"
             rows={4}
-            className="bg-white border-gray-300 text-gray-900 placeholder-gray-500 resize-none"
+            className="w-full bg-white border-gray-300 text-gray-900 placeholder-gray-500 resize-none"
           />
         </div>
         <div className="flex justify-between items-center">
