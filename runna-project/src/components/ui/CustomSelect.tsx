@@ -8,9 +8,10 @@ interface CustomSelectProps {
   value: string
   onChange: (value: string) => void
   placeholder?: string
+  renderOption?: (option: { value: string; label: string }) => React.ReactNode
 }
 
-export function CustomSelect({ label, options, value, onChange, placeholder }: CustomSelectProps) {
+export function CustomSelect({ label, options, value, onChange, placeholder, renderOption }: CustomSelectProps) {
   return (
     <div className="space-y-2">
       <Label htmlFor={label} className="font-bold text-gray-700">
@@ -27,7 +28,7 @@ export function CustomSelect({ label, options, value, onChange, placeholder }: C
               value={option.value} 
               className="text-gray-900 hover:bg-gray-100"
             >
-              {option.label}
+              {renderOption ? renderOption(option) : option.label}
             </SelectItem>
           ))}
         </SelectContent>

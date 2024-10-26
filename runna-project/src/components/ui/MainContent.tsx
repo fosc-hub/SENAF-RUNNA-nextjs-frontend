@@ -9,6 +9,7 @@ import PostConstatacionModal from './PostConstatacionModal'
 import NuevoIngresoModal from './NuevoIngresoModal'
 import EvaluacionModal from './EvaluacionModal'
 import { formatDate, formatTime } from './utils'
+import { PrecalificarModal } from './PrecalificarModal'
 import { CustomSelect } from './CustomSelect'
 
 
@@ -35,6 +36,7 @@ export default function MainContent({ initialDemands, onUpdateDemands }: MainCon
   const [selectedDemand, setSelectedDemand] = useState<Demand | null>(null)
   const [showPostConstatacion, setShowPostConstatacion] = useState(false)
   const [showEvaluacionModal, setShowEvaluacionModal] = useState(false)
+  const [isPrecalificarModalOpen, setIsPrecalificarModalOpen] = useState(false)
   const [isNuevoIngresoModalOpen, setIsNuevoIngresoModalOpen] = useState(false)
   const [origen, setOrigen] = useState('todos')
   const [estado, setEstado] = useState('todos')
@@ -134,7 +136,19 @@ export default function MainContent({ initialDemands, onUpdateDemands }: MainCon
         return ''
     }
   }, [])
+  const handlePrecalificar = useCallback(() => {
+    setIsPrecalificarModalOpen(true)
+  }, [])
 
+  const handleClosePrecalificar = useCallback(() => {
+    setIsPrecalificarModalOpen(false)
+  }, [])
+  const handleSavePrecalificar = useCallback((data: { estado: string; comentarios: string }) => {
+    // Here you would typically update the demand with the new estado and comentarios
+    console.log('Precalificar data:', data)
+    // For now, we'll just close the modal
+    setIsPrecalificarModalOpen(false)
+  }, [])
   const columns = useMemo(() => [
     {
       header: '',
@@ -190,11 +204,12 @@ export default function MainContent({ initialDemands, onUpdateDemands }: MainCon
           + Nuevo Registro
         </Button>
         <Button 
-          variant="secondary" 
-          className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md px-6 py-3 text-base"
-        >
-          Precalificar
-        </Button>
+            variant="secondary" 
+            className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md px-4 py-2"
+            onClick={handlePrecalificar}
+          >
+            Precalificar
+          </Button>
         <Button 
           variant="secondary" 
           className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md px-6 py-3 text-base"
@@ -276,6 +291,11 @@ export default function MainContent({ initialDemands, onUpdateDemands }: MainCon
           onSubmit={handleSubmitNuevoIngreso}
         />
       </Modal>
+      <PrecalificarModal
+        isOpen={isPrecalificarModalOpen}
+        onClose={handleClosePrecalificar}
+        onSave={handleSavePrecalificar}
+      />
     </main>
   )
 }
