@@ -108,19 +108,23 @@ export default function PostConstatacionModal({ demanda, onClose, onEvaluate }: 
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex justify-center items-start pt-10">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative">
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
-          <X size={24} />
-        </button>
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden relative">
         <ScrollArea className="h-[90vh] p-6">
           <div className="flex justify-between items-start mb-4">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">{demanda.nombre}</h2>
               <p className="text-gray-700">DNI {demanda.dni} - {demanda.edad} años</p>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-500">Última actualización</p>
-              <p className="text-gray-700">{demanda.fechaActualizacion}</p>
+            <div className="flex items-center space-x-2">
+              {demanda.urgente && (
+                <span className="bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded">
+                  URGENTE
+                </span>
+              )}
+              <p className="text-sm text-gray-500">Actualizado: {demanda.fechaActualizacion}</p>
+              <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X size={24} />
+          </button>
             </div>
           </div>
 

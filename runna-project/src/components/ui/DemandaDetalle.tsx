@@ -34,7 +34,6 @@ interface DemandaDetalleProps {
   onConstatar: () => void
 }
 
-
 export default function DemandaDetalle({ demanda, onClose, onConstatar }: DemandaDetalleProps) {
   const [sections, setSections] = useState<{ datosRequeridos: boolean; conexiones: boolean; derivar: boolean }>({
     datosRequeridos: true,
@@ -42,7 +41,12 @@ export default function DemandaDetalle({ demanda, onClose, onConstatar }: Demand
     derivar: false,
   })
   const [isRegistrarActividadOpen, setIsRegistrarActividadOpen] = useState(false)
-  const [formData, setFormData] = useState({ ...demanda })
+  const [formData, setFormData] = useState<Demanda>({
+    ...demanda,
+    urgente: demanda.urgente ?? true, // Default to true if not provided
+    fechaActualizacion: demanda.fechaActualizacion || new Date().toISOString(), // Default to current date
+  });
+  
   const [isAsignarDemandaOpen, setIsAsignarDemandaOpen] = useState(false)
   const [isEnviarRespuestaOpen, setIsEnviarRespuestaOpen] = useState(false)
   const [isArchivosAdjuntosOpen, setIsArchivosAdjuntosOpen] = useState(false)
@@ -112,18 +116,22 @@ export default function DemandaDetalle({ demanda, onClose, onConstatar }: Demand
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex justify-center items-start pt-10">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden relative">
-        <Button variant="ghost" size="icon" className="absolute top-4 right-4" onClick={onClose}>
-          <X className="h-4 w-4" />
-        </Button>
-
         <ScrollArea className="h-[90vh] p-6">
           <div className="flex justify-between items-start mb-4">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">{demanda.nombre}</h2>
               <p className="text-gray-700">DNI {demanda.dni} - {demanda.edad} años</p>
             </div>
-            <div className="text-right">
+            <div className="flex items-center space-x-2">
+              {demanda.urgente && (
+                <span className="bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded">
+                  URGENTE
+                </span>
+              )}
               <p className="text-sm text-gray-500">Actualizado: {demanda.fechaActualizacion}</p>
+              <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X size={24} />
+          </button>
             </div>
           </div>
 
@@ -151,23 +159,24 @@ export default function DemandaDetalle({ demanda, onClose, onConstatar }: Demand
               <li key={index} className="mb-1">{archivo}</li>
             ))}
           </ul>
+
           <div className="flex space-x-2 mb-6">
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={handleOpenEnviarRespuesta}>
-            <MessageSquare className="mr-2 h-4 w-4" />
-            Enviar Respuesta
-          </Button>
-          <Button variant="secondary" className="bg-gray-200 hover:bg-gray-300 text-gray-800" onClick={handleOpenArchivosAdjuntos}>
-            <Paperclip className="mr-2 h-4 w-4" />
-            Archivos adjuntos
-          </Button>
-          <Button variant="secondary" className="bg-gray-200 hover:bg-gray-300 text-gray-800" onClick={handleOpenAsignarDemanda}>
-            <UserPlus className="mr-2 h-4 w-4" />
-            Asignar
-          </Button>
-          <Button onClick={handleRegistrarActividad} className="bg-blue-600 hover:bg-blue-700 text-white">
-            Registrar actividad
-          </Button>
-        </div>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={handleOpenEnviarRespuesta}>
+              <MessageSquare className="mr-2 h-4 w-4" />
+              Enviar Respuesta
+            </Button>
+            <Button variant="secondary" className="bg-gray-200 hover:bg-gray-300 text-gray-800" onClick={handleOpenArchivosAdjuntos}>
+              <Paperclip className="mr-2 h-4 w-4" />
+              Archivos adjuntos
+            </Button>
+            <Button variant="secondary" className="bg-gray-200 hover:bg-gray-300 text-gray-800" onClick={handleOpenAsignarDemanda}>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Asignar
+            </Button>
+            <Button onClick={handleRegistrarActividad} className="bg-blue-600 hover:bg-blue-700 text-white">
+              Registrar actividad
+            </Button>
+          </div>
 
         <CollapsibleSection
             title="Datos requeridos del caso"
@@ -204,17 +213,12 @@ export default function DemandaDetalle({ demanda, onClose, onConstatar }: Demand
                   <InputField label="Curso, nivel y Turno" name="cursoNivelTurno" value={formData.cursoNivelTurno} onChange={handleInputChange} />
                   <InputField label="Institución sanitaria" name="institucionSanitaria" value={formData.institucionSanitaria} onChange={handleInputChange} />
                   <div className="col-span-3 flex items-center">
-                    <span className="mr-4 text-gray-600">Es un NNyA con DD vulnerados?</span>
-                    <RadioGroup defaultValue={formData.ddVulnerados} label={''} options={[]}>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="SI" id="ddVulnerados-si" />
-                        <Label htmlFor="ddVulnerados-si" className="text-gray-600">SI</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="NO" id="ddVulnerados-no" />
-                        <Label htmlFor="ddVulnerados-no" className="text-gray-600">NO</Label>
-                      </div>
-                    </RadioGroup>
+                  <RadioGroup
+              label="Es un NNYA con DD vulnerados?"
+              name="DerechosVulnerados"
+              options={['SI', 'NO']}
+              onChange={handleInputChange}
+            />
                   </div>
                   <InputField label="Comentarios" name="comentariosNNA" value={formData.comentariosNNA} onChange={handleInputChange} textarea className="col-span-3" />
                 </div>
@@ -231,17 +235,12 @@ export default function DemandaDetalle({ demanda, onClose, onConstatar }: Demand
                   <InputField label="Género" name="generoAutor" value={formData.generoAutor} onChange={handleInputChange} />
                   <InputField label="Vínculo" name="vinculoAutor" value={formData.vinculoAutor} onChange={handleInputChange} />
                   <div className="col-span-2 flex items-center">
-                    <span className="mr-4 text-gray-600">Convive?</span>
-                    <RadioGroup defaultValue={formData.conviveAutor} label={''} options={[]}>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="SI" id="conviveAutor-si" />
-                        <Label htmlFor="conviveAutor-si" className="text-gray-600">SI</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="NO" id="conviveAutor-no" />
-                        <Label htmlFor="conviveAutor-no" className="text-gray-600">NO</Label>
-                      </div>
-                    </RadioGroup>
+                    <RadioGroup
+              label="¿Convive?"
+              name="Convive"
+              options={['SI', 'NO']}
+              onChange={handleInputChange}
+            />
                   </div>
                   <InputField label="Comentarios" name="comentariosAutor" value={formData.comentariosAutor} onChange={handleInputChange} textarea className="col-span-2" />
                 </div>
