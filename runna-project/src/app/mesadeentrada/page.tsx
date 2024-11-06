@@ -3,19 +3,26 @@
 import React, { useState } from 'react'
 import Header from '../../components/ui/Header'
 import Sidebar from '../../components/ui/Sidebar'
-import MainContent from '../../components/ui/MainContent'
+import { MainContent } from '../../components/ui/MainContent'
+
+interface User {
+  initials: string
+  name: string
+  role: string
+  legajo: string
+}
 
 export default function MesaDeEntradas() {
   const [demands, setDemands] = useState([])
 
-  const user = {
+  const user: User = {
     initials: 'VF',
     name: 'Verónica Fernandez Wagner',
     role: 'Admin 27-27255110-9',
     legajo: '29731'
   }
 
-  const handleUpdateDemands = (updatedDemands) => {
+  const handleUpdateDemands = (updatedDemands: any) => {
     setDemands(updatedDemands)
   }
 
@@ -26,11 +33,13 @@ export default function MesaDeEntradas() {
         <h1 className="text-xl font-semibold text-gray-800">
           Bienvenido a <span className="text-sky-500">Mesa de Entradas</span>
         </h1>
-        <span className="text-gray-500">13 de Sept | 17:30 hs.</span>
+        <span className="text-gray-500">
+          {new Date().toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })} | {new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+        </span>
       </div>
       <div className="flex-1 flex">
         <Sidebar />
-        <MainContent initialDemands={demands} onUpdateDemands={handleUpdateDemands} />
+        <MainContent demands={demands} onUpdateDemands={handleUpdateDemands} />
       </div>
     </div>
   )

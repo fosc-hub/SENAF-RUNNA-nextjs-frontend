@@ -1,106 +1,69 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
-import { Search } from 'lucide-react'
-import { Button } from './Button'
-import { Select } from './Select'
-import { Modal } from './Modal'
-import { Table } from './Table'
+'use client'
+
+import React, { useState, useCallback, useMemo } from 'react'
+import { Button, Box, Typography, Modal } from '@mui/material'
+import { 
+  DataGrid, 
+  GridRowParams,
+  GridCallbackDetails,
+  GridRenderCellParams,
+  GridColDef 
+} from '@mui/x-data-grid'
+import { Search } from '@mui/icons-material'
+import { Select, MenuItem, FormControl, InputLabel } from '@mui/material'
 import DemandaDetalle from './DemandaDetalle'
 import PostConstatacionModal from './PostConstatacionModal'
 import NuevoIngresoModal from './NuevoIngresoModal'
 import EvaluacionModal from './EvaluacionModal'
-import { formatDate, formatTime } from './utils'
-import { PrecalificarModal } from './PrecalificarModal'
-import { CustomSelect } from './CustomSelect'
-
 
 interface Demand {
   id: string
   nombre: string
-  dni: string
-  edad: number
-  estado: 'No verificada' | 'Verificada' | 'En evaluación'
-  fechaActualizacion: string // Add this property
   legajo?: string
   ultimaActualizacion: string
   colaboradorAsignado?: string
   recibido: string
+  estado: string
+  calificacion?: string
+  dni: string
+  edad: number
+  fechaActualizacion: string
 }
 
 interface MainContentProps {
-  initialDemands: Demand[]
+  demands: Demand[]
   onUpdateDemands: (demands: Demand[]) => void
 }
 
-export default function MainContent({ initialDemands, onUpdateDemands }: MainContentProps) {
+const origenOptions = [
+  { value: 'todos', label: 'Todos' },
+  { value: 'web', label: 'Web' },
+  { value: 'telefono', label: 'Teléfono' },
+  { value: 'presencial', label: 'Presencial' },
+]
+
+const estadoOptions = [
+  { value: 'todos', label: 'Todos' },
+  { value: 'no_verificada', label: 'No verificada' },
+  { value: 'verificada', label: 'Verificada' },
+  { value: 'en_evaluacion', label: 'En evaluación' },
+]
+
+const calificacionOptions = [
+  { value: 'sin_calificar', label: 'Sin calificar' },
+  { value: 'urgente', label: 'Urgente' },
+  { value: 'grave', label: 'Grave' },
+  { value: 'normal', label: 'Normal' },
+]
+
+export function MainContent({ demands: initialDemands, onUpdateDemands }: MainContentProps) {
   const [demands, setDemands] = useState<Demand[]>(initialDemands)
+  const [isNuevoIngresoModalOpen, setIsNuevoIngresoModalOpen] = useState(false)
   const [selectedDemand, setSelectedDemand] = useState<Demand | null>(null)
   const [showPostConstatacion, setShowPostConstatacion] = useState(false)
   const [showEvaluacionModal, setShowEvaluacionModal] = useState(false)
-  const [isPrecalificarModalOpen, setIsPrecalificarModalOpen] = useState(false)
-  const [isNuevoIngresoModalOpen, setIsNuevoIngresoModalOpen] = useState(false)
-  const [origen, setOrigen] = useState('todos')
-  const [estado, setEstado] = useState('todos')
-
-  const origenOptions = [
-    { value: 'todos', label: 'Todos' },
-    // Add more options as needed
-  ]
-
-  const estadoOptions = [
-    { value: 'todos', label: 'Todos' },
-    // Add more options as needed
-  ]
-
-  useEffect(() => {
-    setDemands(initialDemands)
-  }, [initialDemands])
-
-  const handleDemandClick = useCallback((demand: Demand) => {
-    setSelectedDemand(demand)
-    if (demand.estado === 'Verificada') {
-      setShowPostConstatacion(true)
-      setShowEvaluacionModal(false)
-    } else if (demand.estado === 'En evaluación') {
-      setShowEvaluacionModal(true)
-      setShowPostConstatacion(false)
-    } else {
-      setShowPostConstatacion(false)
-      setShowEvaluacionModal(false)
-    }
-  }, [])
-
-  const handleCloseDetail = useCallback(() => {
-    setSelectedDemand(null)
-    setShowPostConstatacion(false)
-    setShowEvaluacionModal(false)
-  }, [])
-
-  const handleConstatar = useCallback(() => {
-    if (selectedDemand) {
-      setDemands(prevDemands => {
-        const updatedDemands = prevDemands.map(d => 
-          d.id === selectedDemand.id ? { ...d, estado: 'Verificada' as const } : d
-        )
-        onUpdateDemands(updatedDemands)
-        return updatedDemands
-      })
-      handleCloseDetail()
-    }
-  }, [selectedDemand, onUpdateDemands])
-
-  const handleEvaluate = useCallback(() => {
-    if (selectedDemand) {
-      setDemands(prevDemands => {
-        const updatedDemands = prevDemands.map(d => 
-          d.id === selectedDemand.id ? { ...d, estado: 'En evaluación' as const } : d
-        )
-        onUpdateDemands(updatedDemands)
-        return updatedDemands
-      })
-      setShowPostConstatacion(false)
-      setSelectedDemand(null)
-    }
-  }, [selectedDemand, onUpdateDemands])
+  const [origen, setOrigen] = useState('')
+  const [estado, setEstado] = useState('')
 
   const handleNuevoRegistro = useCallback(() => {
     setIsNuevoIngresoModalOpen(true)
@@ -114,7 +77,11 @@ export default function MainContent({ initialDemands, onUpdateDemands }: MainCon
     const demandWithState: Demand = {
       ...newDemand,
       id: Date.now().toString(),
-      estado: 'No verificada'
+      estado: 'No verificada',
+      calificacion: 'Sin calificar',
+      ultimaActualizacion: new Date().toISOString(),
+      recibido: new Date().toISOString(),
+      fechaActualizacion: new Date().toISOString(),
     }
     setDemands(prevDemands => {
       const updatedDemands = [demandWithState, ...prevDemands]
@@ -124,8 +91,26 @@ export default function MainContent({ initialDemands, onUpdateDemands }: MainCon
     setIsNuevoIngresoModalOpen(false)
   }, [onUpdateDemands])
 
-  const getRowColor = useCallback((estado: Demand['estado']) => {
-    switch (estado) {
+  const handleDemandClick = useCallback((params: GridRowParams<Demand>) => {
+    setSelectedDemand(params.row)
+  }, [])
+
+  const handleCloseDetail = useCallback(() => {
+    setSelectedDemand(null)
+    setShowPostConstatacion(false)
+    setShowEvaluacionModal(false)
+  }, [])
+
+  const handleConstatar = useCallback(() => {
+    setShowPostConstatacion(true)
+  }, [])
+
+  const handleEvaluate = useCallback(() => {
+    setShowEvaluacionModal(true)
+  }, [])
+
+  const getRowClassName = useCallback((params: GridRowParams<Demand>) => {
+    switch (params.row.estado) {
       case 'Verificada':
         return 'bg-green-100'
       case 'No verificada':
@@ -136,166 +121,313 @@ export default function MainContent({ initialDemands, onUpdateDemands }: MainCon
         return ''
     }
   }, [])
-  const handlePrecalificar = useCallback(() => {
-    setIsPrecalificarModalOpen(true)
-  }, [])
 
-  const handleClosePrecalificar = useCallback(() => {
-    setIsPrecalificarModalOpen(false)
-  }, [])
-  const handleSavePrecalificar = useCallback((data: { estado: string; comentarios: string }) => {
-    // Here you would typically update the demand with the new estado and comentarios
-    console.log('Precalificar data:', data)
-    // For now, we'll just close the modal
-    setIsPrecalificarModalOpen(false)
-  }, [])
-  const columns = useMemo(() => [
+  const handleCalificacionChange = useCallback((demandId: string, newCalificacion: string) => {
+    setDemands(prevDemands => {
+      const updatedDemands = prevDemands.map(demand => 
+        demand.id === demandId ? { ...demand, calificacion: newCalificacion } : demand
+      )
+      onUpdateDemands(updatedDemands)
+      return updatedDemands
+    })
+  }, [onUpdateDemands])
+
+  const columns: GridColDef[] = useMemo(() => [
     {
-      header: '',
-      accessor: 'id' as const,
-      render: () => (
-        <input 
-          type="checkbox" 
-          className="form-checkbox h-4 w-4 text-sky-600" 
-          onClick={(e) => e.stopPropagation()}
-        />
-      ),
-    },
-    {
-      header: 'Demanda',
-      accessor: 'nombre' as const,
-      render: (demand: Demand) => (
-        <>
-          {demand.legajo && (
-            <span className="text-sky-700 font-medium mr-2">{demand.legajo}</span>
+      field: 'nombre',
+      headerName: 'Demanda',
+      flex: 1,
+      renderCell: (params: GridRenderCellParams<Demand>) => (
+        <Box>
+          {params.row.legajo && (
+            <Typography component="span" sx={{ color: 'primary.main', fontWeight: 'medium', marginRight: 1 }}>
+              {params.row.legajo}
+            </Typography>
           )}
-          {demand.nombre}
-        </>
+          {params.row.nombre}
+        </Box>
       ),
     },
-    { header: 'Última actualización', accessor: 'ultimaActualizacion' as const },
+    { 
+      field: 'ultimaActualizacion', 
+      headerName: 'Última actualización', 
+      flex: 1,
+      valueFormatter: (params: { value: string }) => {
+        return new Date(params.value).toLocaleString('es-AR')
+      }
+    },
     {
-      header: 'Colaborador asignado',
-      accessor: 'colaboradorAsignado' as const,
-      render: (demand: Demand) => (
-        demand.colaboradorAsignado ? (
-          <div className="flex items-center">
-            <div className="w-6 h-6 rounded-full bg-sky-500 text-white flex items-center justify-center text-xs font-medium mr-2" aria-hidden="true">
-              {demand.colaboradorAsignado.charAt(0)}
-            </div>
-            {demand.colaboradorAsignado}
-          </div>
+      field: 'colaboradorAsignado',
+      headerName: 'Colaborador asignado',
+      flex: 1,
+      renderCell: (params: GridRenderCellParams<Demand>) => (
+        params.value ? (
+          <Box display="flex" alignItems="center">
+            <Box
+              sx={{
+                width: 24,
+                height: 24,
+                borderRadius: '50%',
+                bgcolor: 'primary.main',
+                color: 'primary.contrastText',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 12,
+                fontWeight: 'medium',
+                marginRight: 1,
+              }}
+            >
+              {params.value.charAt(0)}
+            </Box>
+            {params.value}
+          </Box>
         ) : (
-          <span className="text-gray-700">No asignado</span>
+          <Typography color="text.secondary">No asignado</Typography>
         )
       ),
     },
-    { header: 'Recibido', accessor: 'recibido' as const },
-  ], [])
+    { 
+      field: 'recibido', 
+      headerName: 'Recibido', 
+      flex: 1,
+      valueFormatter: (params) => {
+        return new Date(params.value).toLocaleString('es-AR')
+      }
+    },
+    {
+      field: 'calificacion',
+      headerName: 'Calificación',
+      flex: 1,
+      renderCell: (params: GridRenderCellParams<Demand>) => (
+        <FormControl fullWidth size="small">
+          <Select
+            value={params.row.calificacion || 'sin_calificar'}
+            onChange={(e) => handleCalificacionChange(params.row.id, e.target.value as string)}
+            onClick={(e) => e.stopPropagation()}
+            sx={{ minWidth: 120 }}
+          >
+            {calificacionOptions.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      ),
+    },
+  ], [handleCalificacionChange])
 
   return (
-    <main className="flex-1 bg-white p-6 overflow-auto">
-    <div className="flex justify-between items-center mb-6">
-      <div className="flex items-center space-x-2">
-        <Button 
-          onClick={handleNuevoRegistro} 
-          className="bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-md px-6 py-3 text-base"
-        >
-          + Nuevo Registro
-        </Button>
-        <Button 
-            variant="secondary" 
-            className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md px-4 py-2"
-            onClick={handlePrecalificar}
+    <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 3, overflow: 'auto' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Button
+            variant="contained"
+            onClick={handleNuevoRegistro}
+            sx={{ bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' } }}
           >
-            Precalificar
+            + Nuevo Registro
           </Button>
-        <Button 
-          variant="secondary" 
-          className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md px-6 py-3 text-base"
-        >
-          No Leído
-        </Button>
-        <Button 
-          variant="secondary" 
-          className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md px-6 py-3 text-base"
-        >
-          Asignar
-        </Button>
-        <CustomSelect
-          label="Origen"
-          options={origenOptions}
-          value={origen}
-          onChange={setOrigen}
-          placeholder="Todos"
-        />
-        <CustomSelect
-          label="Estado"
-          options={estadoOptions}
-          value={estado}
-          onChange={setEstado}
-          placeholder="Todos"
-        />
-      </div>
-    </div>
-      {demands.length > 0 ? (
-        <Table 
-          data={demands}
-          columns={columns}
-          onRowClick={handleDemandClick}
-          getRowClassName={(item) => getRowColor(item.estado)}
-        />
-      ) : (
-        <div className="flex flex-col items-center justify-center h-[calc(100vh-300px)]">
-          <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <Search className="text-gray-600" size={64} />
-          </div>
-          <p className="text-gray-700">Nada por aquí...</p>
-        </div>
-      )}
+          <Button
+            variant="outlined"
+            sx={{ color: 'text.primary', borderColor: 'grey.300', '&:hover': { bgcolor: 'grey.100' } }}
+          >
+            No Leído
+          </Button>
+          <Button
+            variant="outlined"
+            sx={{ color: 'text.primary', borderColor: 'grey.300', '&:hover': { bgcolor: 'grey.100' } }}
+          >
+            Asignar
+          </Button>
+          <FormControl sx={{ minWidth: 120 }} size="small">
+            <InputLabel>Origen</InputLabel>
+            <Select
+              value={origen}
+              onChange={(e) => setOrigen(e.target.value)}
+              label="Origen"
+            >
+              {origenOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl sx={{ minWidth: 120 }} size="small">
+            <InputLabel>Estado</InputLabel>
+            <Select
+              value={estado}
+              onChange={(e) => setEstado(e.target.value)}
+              label="Estado"
+            >
+              {estadoOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+      </Box>
       
-      {selectedDemand && !showPostConstatacion && !showEvaluacionModal && (
-        <Modal isOpen={true} onClose={handleCloseDetail} title="Detalle de Demanda">
-          <DemandaDetalle 
-            demanda={selectedDemand} 
-            onClose={handleCloseDetail} 
-            onConstatar={handleConstatar}
+      <Box sx={{ height: 400, width: '100%' }}>
+        {demands.length > 0 ? (
+          <DataGrid
+            rows={demands}
+            columns={columns}
+            onRowClick={handleDemandClick}
+            getRowClassName={getRowClassName}
+            disableRowSelectionOnClick
+            initialState={{
+              pagination: {
+                paginationModel: { pageSize: 5, page: 0 },
+              },
+            }}
+            pageSizeOptions={[5, 10, 20]}
+            sx={{
+              '& .bg-green-100': {
+                backgroundColor: '#dcfce7',
+              },
+              '& .bg-yellow-100': {
+                backgroundColor: '#fef9c3',
+              },
+              '& .bg-purple-100': {
+                backgroundColor: '#f3e8ff',
+              },
+            }}
           />
-        </Modal>
-      )}
-      
-      {showPostConstatacion && selectedDemand && (
-        <Modal isOpen={true} onClose={handleCloseDetail} title="Post Constatación">
-          <PostConstatacionModal
-            demanda={selectedDemand}
-            onClose={handleCloseDetail}
-            onEvaluate={handleEvaluate}
-          />
-        </Modal>
-      )}
+        ) : (
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            height: '100%' 
+          }}>
+            <Box sx={{ 
+              width: 128, 
+              height: 128, 
+              bgcolor: 'grey.100', 
+              borderRadius: '50%', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              mb: 2 
+            }}>
+              <Search sx={{ fontSize: 64, color: 'text.secondary' }} />
+            </Box>
+            <Typography color="text.secondary">Nada por aquí...</Typography>
+          </Box>
+        )}
+      </Box>
 
-      {showEvaluacionModal && selectedDemand && (
-        <Modal isOpen={true} onClose={handleCloseDetail} title="Evaluación">
-          <EvaluacionModal
-            isOpen={showEvaluacionModal}
-            onClose={handleCloseDetail}
-            demanda={selectedDemand}
-          />
-        </Modal>
-      )}
-
-      <Modal isOpen={isNuevoIngresoModalOpen} onClose={handleCloseNuevoIngreso} title="Nuevo Ingreso">
-        <NuevoIngresoModal
-          isOpen={isNuevoIngresoModalOpen}
-          onClose={handleCloseNuevoIngreso}
-          onSubmit={handleSubmitNuevoIngreso}
-        />
+      <Modal 
+        open={!!selectedDemand && !showPostConstatacion && !showEvaluacionModal} 
+        onClose={handleCloseDetail}
+      >
+        <Box sx={{ 
+          position: 'absolute', 
+          top: '50%', 
+          left: '50%', 
+          transform: 'translate(-50%, -50%)', 
+          bgcolor: 'background.paper', 
+          boxShadow: 24, 
+          p: 4,
+          maxWidth: '90vw',
+          maxHeight: '90vh',
+          overflow: 'auto',
+          borderRadius: 1,
+        }}>
+          {selectedDemand && (
+            <DemandaDetalle 
+              demanda={selectedDemand} 
+              onClose={handleCloseDetail} 
+              onConstatar={handleConstatar}
+            />
+          )}
+        </Box>
       </Modal>
-      <PrecalificarModal
-        isOpen={isPrecalificarModalOpen}
-        onClose={handleClosePrecalificar}
-        onSave={handleSavePrecalificar}
-      />
-    </main>
+      
+      <Modal 
+        open={showPostConstatacion && !!selectedDemand} 
+        onClose={handleCloseDetail}
+      >
+        <Box sx={{ 
+          position: 'absolute', 
+          top: '50%', 
+          left: '50%', 
+          transform: 'translate(-50%, -50%)', 
+          bgcolor: 'background.paper', 
+          boxShadow: 24, 
+          p: 4,
+          maxWidth: '90vw',
+          maxHeight: '90vh',
+          overflow: 'auto',
+          borderRadius: 1,
+        }}>
+          {selectedDemand && (
+            <PostConstatacionModal
+              demanda={selectedDemand}
+              onClose={handleCloseDetail}
+              onEvaluate={handleEvaluate}
+            />
+          )}
+        </Box>
+      </Modal>
+
+      <Modal 
+        open={showEvaluacionModal && !!selectedDemand} 
+        onClose={handleCloseDetail}
+      >
+        <Box sx={{ 
+          position: 'absolute', 
+          top: '50%', 
+          left: '50%', 
+          transform: 'translate(-50%, -50%)', 
+          bgcolor: 'background.paper', 
+          boxShadow: 24, 
+          p: 4,
+          maxWidth: '90vw',
+          maxHeight: '90vh',
+          overflow: 'auto',
+          borderRadius: 1,
+        }}>
+          {selectedDemand && (
+            <EvaluacionModal
+              isOpen={showEvaluacionModal}
+              onClose={handleCloseDetail}
+              demanda={selectedDemand}
+            />
+          )}
+        </Box>
+      </Modal>
+
+      <Modal 
+        open={isNuevoIngresoModalOpen} 
+        onClose={handleCloseNuevoIngreso}
+      >
+        <Box sx={{ 
+          position: 'absolute', 
+          top: '50%', 
+          left: '50%', 
+          transform: 'translate(-50%, -50%)', 
+          bgcolor: 'background.paper', 
+          boxShadow: 24, 
+          p: 4,
+          maxWidth: '90vw',
+          maxHeight: '90vh',
+          overflow: 'auto',
+          borderRadius: 1,
+        }}>
+          <NuevoIngresoModal
+            isOpen={isNuevoIngresoModalOpen}
+            onClose={handleCloseNuevoIngreso}
+            onSubmit={handleSubmitNuevoIngreso}
+          />
+        </Box>
+      </Modal>
+    </Box>
   )
 }
