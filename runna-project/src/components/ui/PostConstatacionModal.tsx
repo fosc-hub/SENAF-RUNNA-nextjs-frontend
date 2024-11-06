@@ -1,15 +1,74 @@
 import React, { useState } from 'react'
-import { X, ChevronDown, ChevronUp, Plus, Paperclip, UserPlus, MessageSquare } from 'lucide-react'
-import { Button } from './Button'
-import { Input } from './Input'
-import { Textarea } from './Textarea'
-import { Label } from './Label'
-import { Checkbox } from './Checkbox'
-import { RadioGroup, RadioGroupItem } from './RadioGroup'
-import { ScrollArea } from './ScrollArea'
+import {
+  Box,
+  Typography,
+  Button,
+  TextField,
+  Checkbox,
+  FormControlLabel,
+  IconButton,
+  Paper,
+  Grid,
+  Radio,
+  RadioGroup,
+  FormControl,
+  FormLabel,
+} from '@mui/material'
+import {
+  Timeline,
+  TimelineItem,
+  TimelineSeparator,
+  TimelineConnector,
+  TimelineContent,
+  TimelineDot,
+} from '@mui/lab'
+import {
+  Close as CloseIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+  Add as AddIcon,
+  AttachFile as AttachFileIcon,
+  Person as PersonIcon,
+  Message as MessageIcon,
+} from '@mui/icons-material'
+import { DataGrid, GridColDef } from '@mui/x-data-grid'
+import { DatePicker } from '@mui/x-date-pickers/DatePicker'
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { AsignarDemandaModal } from './AsignarDemandaModal'
 import { EnviarRespuestaModal } from './EnviarRespuestaModal'
 import { ArchivosAdjuntosModal } from './ArchivosAdjuntosModal'
+
+interface NinoAdolescente {
+  id: string;
+  nombreApellido: string;
+  edad: string;
+  genero: string;
+  institucionEducativa: string;
+  cursoNivelTurno: string;
+  institucionSanitaria: string;
+  esNNyA: boolean;
+  comentarios: string;
+}
+
+interface Adulto {
+  id: string;
+  nombreApellido: string;
+  vinculo: string;
+  edad: string;
+  genero: string;
+  observaciones: string;
+}
+
+interface Autor {
+  id: string;
+  nombreApellido: string;
+  edad: string;
+  genero: string;
+  vinculo: string;
+  convive: boolean;
+  comentarios: string;
+}
 
 interface Demanda {
   id: string
@@ -22,6 +81,9 @@ interface Demanda {
   historial?: Array<{ fecha: string; descripcion: string }>
   archivosAdjuntos?: string[]
   fechaConstatacion?: string
+  ninosAdolescentes: NinoAdolescente[]
+  adultosConvivientes: Adulto[]
+  autores: Autor[]
   [key: string]: any
 }
 
@@ -49,12 +111,31 @@ export default function PostConstatacionModal({ demanda, onClose, onEvaluate }: 
   const toggleSection = (section: 'datosRequeridos' | 'conexiones' | 'derivar') => {
     setSections(prev => ({ ...prev, [section]: !prev[section] }))
   }
-  
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, index?: number, field?: string) => {
     const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    if (index !== undefined && field) {
+      setFormData(prev => ({
+        ...prev,
+        [field]: prev[field].map((item: any, i: number) =>
+          i === index ? { ...item, [name]: value } : item
+        )
+      }))
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }))
+    }
   }
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>, index: number, field: string) => {
+    const { name, checked } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [field]: prev[field].map((item: any, i: number) =>
+        i === index ? { ...item, [name]: checked } : item
+      )
+    }))
+  }
+
   const handleDerivarInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setDerivarData(prev => ({ ...prev, [name]: value }))
@@ -72,12 +153,17 @@ export default function PostConstatacionModal({ demanda, onClose, onEvaluate }: 
   const handleCloseAsignarDemanda = () => {
     setIsAsignarDemandaOpen(false)
   }
+
   const handleOpenArchivosAdjuntos = () => {
     setIsArchivosAdjuntosOpen(true)
   }
 
   const handleCloseArchivosAdjuntos = () => {
     setIsArchivosAdjuntosOpen(false)
+  }  
+  const handleEvaluateClick = () => {
+    onEvaluate()
+    onClose()
   }
 
   const handleSaveArchivosAdjuntos = (data: { files: string[], comments: string }) => {
@@ -106,266 +192,390 @@ export default function PostConstatacionModal({ demanda, onClose, onEvaluate }: 
     setIsEnviarRespuestaOpen(false)
   }
 
+  const addNinoAdolescente = () => {
+    const newNino: NinoAdolescente = {
+      id: Date.now().toString(),
+      nombreApellido: '',
+      edad: '',
+      genero: '',
+      institucionEducativa: '',
+      cursoNivelTurno: '',
+      institucionSanitaria: '',
+      esNNyA: false,
+      comentarios: '',
+    }
+    setFormData(prev => ({
+      ...prev,
+      ninosAdolescentes: [...prev.ninosAdolescentes, newNino]
+    }))
+  }
+
+  const addAdultoConviviente = () => {
+    const newAdulto: Adulto = {
+      id: Date.now().toString(),
+      nombreApellido: '',
+      vinculo: '',
+      edad: '',
+      genero: '',
+      observaciones: '',
+    }
+    setFormData(prev => ({
+      ...prev,
+      adultosConvivientes: [...prev.adultosConvivientes, newAdulto]
+    }))
+  }
+
+  const addAutor = () => {
+    const newAutor: Autor = {
+      id: Date.now().toString(),
+      nombreApellido: '',
+      edad: '',
+      genero: '',
+      vinculo: '',
+      convive: false,
+      comentarios: '',
+    }
+    setFormData(prev => ({
+      ...prev,
+      autores: [...prev.autores, newAutor]
+    }))
+  }
+
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex justify-center items-start pt-10">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden relative">
-        <ScrollArea className="h-[90vh] p-6">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">{demanda.nombre}</h2>
-              <p className="text-gray-700">DNI {demanda.dni} - {demanda.edad} años</p>
-            </div>
-            <div className="flex items-center space-x-2">
-              {demanda.urgente && (
-                <span className="bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded">
-                  URGENTE
-                </span>
-              )}
-              <p className="text-sm text-gray-500">Actualizado: {demanda.fechaActualizacion}</p>
-              <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={24} />
-          </button>
-            </div>
-          </div>
+    <Box sx={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', bgcolor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'start', pt: 5, overflowY: 'auto' }}>
+      <Paper sx={{ width: '100%', maxWidth: '1000px', maxHeight: '90vh', overflow: 'auto', p: 3 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Box>
+            <Typography variant="h4" component="h2">{demanda.nombre}</Typography>
+            <Typography variant="subtitle1" color="text.secondary">DNI {demanda.dni} - {demanda.edad} años</Typography>
+          </Box>
+          <Box display="flex" alignItems="center">
+            {demanda.urgente && (
+              <Typography variant="caption" sx={{ bgcolor: 'error.main', color: 'error.contrastText', px: 1, py: 0.5, borderRadius: 1, mr: 2 }}>
+                URGENTE
+              </Typography>
+            )}
+            <Typography variant="body2" color="text.secondary" mr={2}>Actualizado: {demanda.fechaActualizacion}</Typography>
+            <IconButton onClick={onClose} size="small">
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </Box>
 
-          <div className="bg-green-100 border-l-4 border-green-500 text-green-800 p-4 mb-4">
-            <p>Demanda en Proceso de Constatación</p>
-          </div>
+        <Paper sx={{ bgcolor: 'success.light', p: 2, mb: 3 }} elevation={0}>
+          <Typography color="success.contrastText">Demanda en Proceso de Constatación</Typography>
+        </Paper>
 
-          <h3 className="text-lg font-semibold mb-2 text-gray-900">Historial de la Demanda</h3>
-          <ul className="mb-6 text-sm text-gray-700 border-l-2 border-gray-300 pl-4">
-            {demanda.historial && demanda.historial.map((evento, index) => (
-              <li key={index} className="mb-3">
-                <p className="font-medium text-gray-900">{evento.fecha}</p>
-                <p>{evento.descripcion}</p>
-              </li>
-            ))}
-          </ul>
+        <Typography variant="h6" gutterBottom>Historial de la Demanda</Typography>
+        <Timeline>
+          {demanda.historial?.map((evento, index) => (
+            <TimelineItem key={index}>
+              <TimelineSeparator>
+                <TimelineDot />
+                {index !== demanda.historial!.length - 1 && <TimelineConnector />}
+              </TimelineSeparator>
+              <TimelineContent>
+                <Typography variant="body2" fontWeight="bold">{evento.fecha}</Typography>
+                <Typography variant="body2">{evento.descripcion}</Typography>
+              </TimelineContent>
+            </TimelineItem>
+          ))}
+        </Timeline>
 
-          <h3 className="text-lg font-semibold mb-2 text-gray-900">
-            Archivos adjuntos ({demanda.archivosAdjuntos ? demanda.archivosAdjuntos.length : 0})
-          </h3>
-          <ul className="mb-6 text-sm text-gray-700">
-            {demanda.archivosAdjuntos && demanda.archivosAdjuntos.map((archivo, index) => (
-              <li key={index} className="mb-1">{archivo}</li>
-            ))}
-          </ul>
+        <Typography variant="h6" gutterBottom>
+          Archivos adjuntos ({demanda.archivosAdjuntos ? demanda.archivosAdjuntos.length : 0})
+        </Typography>
+        <Box component="ul" sx={{ mb: 3, pl: 2 }}>
+          {demanda.archivosAdjuntos?.map((archivo, index) => (
+            <Typography component="li" key={index}>{archivo}</Typography>
+          ))}
+        </Box>
 
-          <div className="flex space-x-2 mb-6">
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={handleOpenEnviarRespuesta}>
-            <MessageSquare className="mr-2 h-4 w-4" />
+        <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+          <Button variant="contained" startIcon={<MessageIcon />} onClick={handleOpenEnviarRespuesta}>
             Enviar Respuesta
           </Button>
-          <Button variant="secondary" className="bg-gray-200 hover:bg-gray-300 text-gray-800" onClick={handleOpenArchivosAdjuntos}>
-            <Paperclip className="mr-2 h-4 w-4" />
+          <Button variant="outlined" startIcon={<AttachFileIcon />} onClick={handleOpenArchivosAdjuntos}>
             Archivos adjuntos
           </Button>
-          <Button variant="secondary" className="bg-gray-200 hover:bg-gray-300 text-gray-800" onClick={handleOpenAsignarDemanda}>
-            <UserPlus className="mr-2 h-4 w-4" />
+          <Button variant="outlined" startIcon={<PersonIcon />} onClick={handleOpenAsignarDemanda}>
             Asignar
           </Button>
-        </div>
+        </Box>
 
-          <div className="mb-6">
-            <h4 className="text-lg font-medium text-blue-600 mb-2">Evaluación de la Demanda</h4>
-            <p className="text-sm text-gray-600 mb-2">Asegúrate de chequear estos puntos antes de continuar</p>
-            <div className="flex flex-col space-y-2">
-              <label className="flex items-center">
-                <Checkbox id="formularioCompleto" />
-                <span className="ml-2 text-gray-700">Formulario Completo</span>
-              </label>
-              <label className="flex items-center">
-                <Checkbox id="conexionesDemanda" />
-                <span className="ml-2 text-gray-700">Conexiones de la Demanda</span>
-              </label>
-              <label className="flex items-center">
-                <Checkbox id="archivosAdjuntos" />
-                <span className="ml-2 text-gray-700">Archivos Adjuntos</span>
-              </label>
-            </div>
-          </div>
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h6" color="primary" gutterBottom>Evaluación de la Demanda</Typography>
+          <Typography variant="body2" color="text.secondary" gutterBottom>Asegúrate de chequear estos puntos antes de continuar</Typography>
+          <FormControlLabel control={<Checkbox />} label="Formulario Completo" />
+          <FormControlLabel control={<Checkbox />} label="Conexiones de la Demanda" />
+          <FormControlLabel control={<Checkbox />} label="Archivos Adjuntos" />
+        </Box>
 
-          <CollapsibleSection
-            title="Datos requeridos de la Demanda"
-            isOpen={sections.datosRequeridos}
-            onToggle={() => toggleSection('datosRequeridos')}
-          >
-            <p className="text-sm text-green-600 mb-4">En proceso de Constatación desde el {demanda.fechaConstatacion}, a la espera de Evaluación</p>
-            
-            <h5 className="font-medium mb-2 text-indigo-600">Datos requeridos del caso</h5>
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <InputField label="Fecha" name="fecha" value={formData.fecha} onChange={handleInputChange} />
-              <InputField label="Hora" name="hora" value={formData.hora} onChange={handleInputChange} />
-              <InputField label="ID Notificación manual" name="idNotificacion" value={formData.idNotificacion} onChange={handleInputChange} />
-              <InputField label="Notificación Nro." name="notificacionNro" value={formData.notificacionNro} onChange={handleInputChange} />
-            </div>
+        <CollapsibleSection
+          title="Datos requeridos de la Demanda"
+          isOpen={sections.datosRequeridos}
+          onToggle={() => toggleSection('datosRequeridos')}
+        >
+          <Typography variant="body2" color="success.main" gutterBottom>
+            En proceso de Constatación desde el {demanda.fechaConstatacion}, a la espera de Evaluación
+          </Typography>
+          
+          <Typography variant="subtitle1" color="primary" gutterBottom>Datos requeridos del caso</Typography>
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            <Grid item xs={6}>
+              <TextField fullWidth label="Fecha" name="fecha" value={formData.fecha} onChange={handleInputChange} />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField fullWidth label="Hora" name="hora" value={formData.hora} onChange={handleInputChange} />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField fullWidth label="ID Notificación manual" name="idNotificacion" value={formData.idNotificacion} onChange={handleInputChange} />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField fullWidth label="Notificación Nro." name="notificacionNro" value={formData.notificacionNro} onChange={handleInputChange} />
+            </Grid>
+          </Grid>
 
-            <h5 className="font-medium mb-2 text-indigo-600">Datos de Localización</h5>
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <InputField label="Calle" name="calle" value={formData.calle} onChange={handleInputChange} className="col-span-2" />
-              <InputField label="Número" name="numero" value={formData.numero} onChange={handleInputChange} />
-              <InputField label="Barrio" name="barrio" value={formData.barrio} onChange={handleInputChange} />
-              <InputField label="Localidad" name="localidad" value={formData.localidad} onChange={handleInputChange} />
-              <InputField label="Provincia" name="provincia" value={formData.provincia} onChange={handleInputChange} />
-              <InputField label="Referencias Geográficas" name="referenciasGeograficas" value={formData.referenciasGeograficas} onChange={handleInputChange} textarea className="col-span-2" />
-            </div>
+          <Typography variant="subtitle1" color="primary" gutterBottom>Datos de Localización</Typography>
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            <Grid item xs={12}>
+              <TextField fullWidth label="Calle" name="calle" value={formData.calle} onChange={handleInputChange} />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField fullWidth label="Número" name="numero" value={formData.numero} onChange={handleInputChange} />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField fullWidth label="Barrio" name="barrio" value={formData.barrio} onChange={handleInputChange} />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField fullWidth label="Localidad" name="localidad" value={formData.localidad} onChange={handleInputChange} />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField fullWidth label="Provincia" name="provincia" value={formData.provincia} onChange={handleInputChange} />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField fullWidth multiline rows={3} label="Referencias Geográficas" name="referenciasGeograficas" value={formData.referenciasGeograficas} onChange={handleInputChange} />
+            </Grid>
+          </Grid>
 
-            <h5 className="font-medium mb-2 text-indigo-600">Niñas, niños y adolescentes convivientes</h5>
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <InputField label="Nombre y Apellido" name="nombreApellidoNNA" value={formData.nombreApellidoNNA} onChange={handleInputChange} className="col-span-3" />
-              <InputField label="Edad" name="edadNNA" value={formData.edadNNA} onChange={handleInputChange} />
-              <InputField label="Género" name="generoNNA" value={formData.generoNNA} onChange={handleInputChange} />
-              <InputField label="Institución educativa" name="institucionEducativa" value={formData.institucionEducativa} onChange={handleInputChange} className="col-span-3" />
-              <InputField label="Curso, nivel y Turno" name="cursoNivelTurno" value={formData.cursoNivelTurno} onChange={handleInputChange} />
-              <InputField label="Institución sanitaria" name="institucionSanitaria" value={formData.institucionSanitaria} onChange={handleInputChange} />
-              <div className="col-span-3 flex items-center mb-4">
-                <span className="mr-4">Es un NNyA con DD vulnerados?</span>
-                <RadioGroup defaultValue={formData.ddVulnerados} label={''} options={[]}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="SI" id="ddVulnerados-si" />
-                    <Label htmlFor="ddVulnerados-si">SI</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="NO" id="ddVulnerados-no" />
-                    <Label htmlFor="ddVulnerados-no">NO</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-              <InputField label="Comentarios" name="comentariosNNA" value={formData.comentariosNNA} onChange={handleInputChange} textarea className="col-span-3" />
-            </div>
-            <Button variant="outline" className="text-indigo-600 border-indigo-600 hover:bg-indigo-50">
-              <Plus className="h-4 w-4 mr-1" /> Añadir otro niño o adolescente
-            </Button>
-
-            <h5 className="font-medium mb-2 mt-6 text-indigo-600">Adultos convivientes</h5>
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <InputField label="Nombre y Apellido" name="nombreApellidoAdulto" value={formData.nombreApellidoAdulto} onChange={handleInputChange} className="col-span-2" />
-              <InputField label="Vínculo" name="vinculoAdulto" value={formData.vinculoAdulto} onChange={handleInputChange} />
-              <InputField label="Edad" name="edadAdulto" value={formData.edadAdulto} onChange={handleInputChange} />
-              <InputField label="Género" name="generoAdulto" value={formData.generoAdulto} onChange={handleInputChange} />
-              <InputField label="Observaciones" name="observacionesAdulto" value={formData.observacionesAdulto} onChange={handleInputChange} textarea className="col-span-2" />
-            </div>
-            <Button variant="outline" className="text-indigo-600 border-indigo-600 hover:bg-indigo-50">
-              <Plus className="h-4 w-4 mr-1" /> Añadir otro adulto
-            </Button>
-
-            <h5 className="font-medium mb-2 mt-6 text-indigo-600">Autor de la vulneración de Derechos de NNyA</h5>
-            <div className="grid grid-cols-4 gap-4 mb-6">
-              <InputField label="Nombre y Apellido" name="nombreApellidoAutor" value={formData.nombreApellidoAutor} onChange={handleInputChange} className="col-span-2" />
-              <InputField label="Edad" name="edadAutor" value={formData.edadAutor} onChange={handleInputChange} />
-              <InputField label="Género" name="generoAutor" value={formData.generoAutor} onChange={handleInputChange} />
-              <InputField label="Vínculo" name="vinculoAutor" value={formData.vinculoAutor} onChange={handleInputChange} />
-              <div className="col-span-2 flex items-center">
-                <span className="mr-4">Convive?</span>
-                <RadioGroup defaultValue={formData.conviveAutor} label={''} options={[]}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="SI" id="conviveAutor-si" />
-                    <Label htmlFor="conviveAutor-si">SI</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="NO" id="conviveAutor-no" />
-                    <Label htmlFor="conviveAutor-no">NO</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-              <InputField label="Comentarios" name="comentariosAutor"    value={formData.comentariosAutor} onChange={handleInputChange} textarea className="col-span-4" />
-            </div>
-            <Button variant="outline" className="text-indigo-600 border-indigo-600 hover:bg-indigo-50">
-              <Plus className="h-4 w-4 mr-1" /> Añadir otro autor
-            </Button>
-
-            <h5 className="font-medium mb-2 mt-6 text-indigo-600">Descripción de la situación</h5>
-            <InputField label="Comentarios" name="descripcionSituacion" value={formData.descripcionSituacion} onChange={handleInputChange} textarea />
-
-            <h5 className="font-medium mb-2 mt-6 text-indigo-600">Sobre el usuario de la línea</h5>
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <InputField label="Nombre y Apellido" name="nombreApellidoUsuario" value={formData.nombreApellidoUsuario} onChange={handleInputChange} className="col-span-3" />
-              <InputField label="Edad" name="edadUsuario" value={formData.edadUsuario} onChange={handleInputChange} />
-              <InputField label="Género" name="generoUsuario" value={formData.generoUsuario} onChange={handleInputChange} />
-              <InputField label="Vínculo" name="vinculoUsuario" value={formData.vinculoUsuario} onChange={handleInputChange} />
-              <InputField label="Teléfono" name="telefonoUsuario" value={formData.telefonoUsuario} onChange={handleInputChange} />
-              <InputField label="Institución o programa" name="institucionPrograma" value={formData.institucionPrograma} onChange={handleInputChange} className="col-span-3" />
-              <InputField label="Contacto Institución o programa" name="contactoInstitucion" value={formData.contactoInstitucion} onChange={handleInputChange} className="col-span-3" />
-              <InputField label="Nombre y cargo del responsable" name="nombreCargoResponsable" value={formData.nombreCargoResponsable} onChange={handleInputChange} className="col-span-3" />
-            </div>
-
-            <h5 className="font-medium mb-2 mt-6 text-indigo-600">Presunta Vulneración de Derechos informada</h5>
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <InputField label="Motivo" name="motivo" value={formData.motivo} onChange={handleInputChange} textarea className="col-span-2" />
-              <InputField label="Ámbito de vulneración" name="ambitoVulneracion" value={formData.ambitoVulneracion} onChange={handleInputChange} textarea />
-              <InputField label="Principal Derecho vulnerado" name="principalDerechoVulnerado" value={formData.principalDerechoVulnerado} onChange={handleInputChange} textarea />
-              <InputField label="Problemática Identificada" name="problematicaIdentificada" value={formData.problematicaIdentificada} onChange={handleInputChange} textarea />
-              <InputField label="Prioridad sugerida de intervención" name="prioridadIntervencion" value={formData.prioridadIntervencion} onChange={handleInputChange} textarea />
-              <InputField label="Nombre y cargo de Operador/a" name="nombreCargoOperador" value={formData.nombreCargoOperador} onChange={handleInputChange} className="col-span-2" />
-            </div>
-          </CollapsibleSection>
-
-          <CollapsibleSection
-            title="Conexiones de la Demanda"
-            isOpen={sections.conexiones}
-            onToggle={() => toggleSection('conexiones')}
-          >
-            <div className="mb-4">
-              <p className="font-medium">{formData.nombreCompleto}</p>
-              <p className="text-sm text-gray-600">Actualizado el {formData.fechaActualizacion} por {formData.actualizadoPor}</p>
-            </div>
-            <div className="mb-4">
-              <h5 className="font-medium mb-2 text-gray-700">Vincular con otro caso</h5>
-              <div className="flex items-center">
-                <Input 
-                  type="text" 
-                  placeholder="33.333.333" 
-                  className="mr-2 bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500" 
+          <Typography variant="subtitle1" color="primary" gutterBottom>Niñas, niños y adolescentes convivientes</Typography>
+          {formData.ninosAdolescentes.map((nino, index) => (
+            <Grid container spacing={2} sx={{ mb: 3 }} key={nino.id}>
+              <Grid item xs={12}>
+                <TextField fullWidth label="Nombre y Apellido" name="nombreApellido" value={nino.nombreApellido} onChange={(e) => handleInputChange(e, index, 'ninosAdolescentes')} />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField fullWidth label="Edad" name="edad" value={nino.edad} onChange={(e) => handleInputChange(e, index, 'ninosAdolescentes')} />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField fullWidth label="Género" name="genero" value={nino.genero} onChange={(e) => handleInputChange(e, index, 'ninosAdolescentes')} />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField fullWidth label="Institución educativa" name="institucionEducativa" value={nino.institucionEducativa} onChange={(e) => handleInputChange(e, index, 'ninosAdolescentes')} />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField fullWidth label="Curso, nivel y Turno" name="cursoNivelTurno" value={nino.cursoNivelTurno} onChange={(e) => handleInputChange(e, index, 'ninosAdolescentes')} />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField fullWidth label="Institución sanitaria" name="institucionSanitaria" value={nino.institucionSanitaria} onChange={(e) => handleInputChange(e, index, 'ninosAdolescentes')} />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={nino.esNNyA}
+                      onChange={(e) => handleCheckboxChange(e, index, 'ninosAdolescentes')}
+                      name="esNNyA"
+                    />
+                  }
+                  label="Es un NNyA con DD vulnerados?"
                 />
-                <Button variant="secondary" className="bg-gray-200 hover:bg-gray-300 text-gray-800">
-                  Vincular
-                </Button>
-              </div>
-            </div>
-          </CollapsibleSection>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField fullWidth multiline rows={3} label="Comentarios" name="comentarios" value={nino.comentarios} onChange={(e) => handleInputChange(e, index, 'ninosAdolescentes')} />
+              </Grid>
+            </Grid>
+          ))}
+          <Button variant="outlined" startIcon={<AddIcon />} onClick={addNinoAdolescente} sx={{ mb: 3 }}>
+            Añadir otro niño o adolescente
+          </Button>
 
-          <CollapsibleSection
-            title="Derivar Demanda"
-            isOpen={sections.derivar}
-            onToggle={() => toggleSection('derivar')}
-          >
-            <div className="space-y-4">
-              <div>
-                <Input
-                  type="text"
-                  name="colaborador"
-                  placeholder="Buscar colaborador"
-                  value={derivarData.colaborador}
-                  onChange={handleDerivarInputChange}
-                  className="w-full bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+          <Typography variant="subtitle1" color="primary" gutterBottom>Adultos convivientes</Typography>
+          {formData.adultosConvivientes.map((adulto, index) => (
+            <Grid container spacing={2} sx={{ mb: 3 }} key={adulto.id}>
+              <Grid item xs={12}>
+                <TextField fullWidth label="Nombre y Apellido" name="nombreApellido" value={adulto.nombreApellido} onChange={(e) => handleInputChange(e, index, 'adultosConvivientes')} />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField fullWidth label="Vínculo" name="vinculo" value={adulto.vinculo} onChange={(e) => handleInputChange(e, index, 'adultosConvivientes')} />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField fullWidth label="Edad" name="edad" value={adulto.edad} onChange={(e) => handleInputChange(e, index, 'adultosConvivientes')} />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField fullWidth label="Género" name="genero" value={adulto.genero} onChange={(e) => handleInputChange(e, index, 'adultosConvivientes')} />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField fullWidth multiline rows={3} label="Observaciones" name="observaciones" value={adulto.observaciones} onChange={(e) => handleInputChange(e, index, 'adultosConvivientes')} />
+              </Grid>
+            </Grid>
+          ))}
+          <Button variant="outlined" startIcon={<AddIcon />} onClick={addAdultoConviviente} sx={{ mb: 3 }}>
+            Añadir otro adulto
+          </Button>
+
+          <Typography variant="subtitle1" color="primary" gutterBottom>Autor de la vulneración de Derechos de NNyA</Typography>
+          {formData.autores.map((autor, index) => (
+            <Grid container spacing={2} sx={{ mb: 3 }} key={autor.id}>
+              <Grid item xs={12}>
+                <TextField fullWidth label="Nombre y Apellido" name="nombreApellido" value={autor.nombreApellido} onChange={(e) => handleInputChange(e, index, 'autores')} />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField fullWidth label="Edad" name="edad" value={autor.edad} onChange={(e) => handleInputChange(e, index, 'autores')} />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField fullWidth label="Género" name="genero" value={autor.genero} onChange={(e) => handleInputChange(e, index, 'autores')} />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField fullWidth label="Vínculo" name="vinculo" value={autor.vinculo} onChange={(e) => handleInputChange(e, index, 'autores')} />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={autor.convive}
+                      onChange={(e) => handleCheckboxChange(e, index, 'autores')}
+                      name="convive"
+                    />
+                  }
+                  label="Convive?"
                 />
-              </div>
-              <div>
-                <Textarea
-                  name="comentarios"
-                  placeholder="Comentarios"
-                  value={derivarData.comentarios}
-                  onChange={handleDerivarInputChange}
-                  rows={4}
-                  className="w-full bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <Button onClick={handleDerivar} className="bg-blue-500 hover:bg-blue-600 text-white">
-                Derivar
+              </Grid>
+              <Grid item xs={12}>
+                <TextField fullWidth multiline rows={3} label="Comentarios" name="comentarios" value={autor.comentarios} onChange={(e) => handleInputChange(e, index, 'autores')} />
+              </Grid>
+            </Grid>
+          ))}
+          <Button variant="outlined" startIcon={<AddIcon />} onClick={addAutor} sx={{ mb: 3 }}>
+            Añadir otro autor
+          </Button>
+
+          <Typography variant="subtitle1" color="primary" gutterBottom>Descripción de la situación</Typography>
+          <TextField fullWidth multiline rows={4} label="Comentarios" name="descripcionSituacion" value={formData.descripcionSituacion} onChange={handleInputChange} sx={{ mb: 3 }} />
+
+          <Typography variant="subtitle1" color="primary" gutterBottom>Sobre el usuario de la línea</Typography>
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            <Grid item xs={12}>
+              <TextField fullWidth label="Nombre y Apellido" name="nombreApellidoUsuario" value={formData.nombreApellidoUsuario} onChange={handleInputChange} />
+            </Grid>
+            <Grid item xs={4}>
+              <TextField fullWidth label="Edad" name="edadUsuario" value={formData.edadUsuario} onChange={handleInputChange} />
+            </Grid>
+            <Grid item xs={4}>
+              <TextField fullWidth label="Género" name="generoUsuario" value={formData.generoUsuario} onChange={handleInputChange} />
+            </Grid>
+            <Grid item xs={4}>
+              <TextField fullWidth label="Vínculo" name="vinculoUsuario" value={formData.vinculoUsuario} onChange={handleInputChange} />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField fullWidth label="Teléfono" name="telefonoUsuario" value={formData.telefonoUsuario} onChange={handleInputChange} />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField fullWidth label="Institución o programa" name="institucionPrograma" value={formData.institucionPrograma} onChange={handleInputChange} />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField fullWidth label="Contacto Institución o programa" name="contactoInstitucion" value={formData.contactoInstitucion} onChange={handleInputChange} />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField fullWidth label="Nombre y cargo del responsable" name="nombreCargoResponsable" value={formData.nombreCargoResponsable} onChange={handleInputChange} />
+            </Grid>
+          </Grid>
+
+          <Typography variant="subtitle1" color="primary" gutterBottom>Presunta Vulneración de Derechos informada</Typography>
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            <Grid item xs={12}>
+              <TextField fullWidth multiline rows={3} label="Motivo" name="motivo" value={formData.motivo} onChange={handleInputChange} />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField fullWidth multiline rows={3} label="Ámbito de vulneración" name="ambitoVulneracion" value={formData.ambitoVulneracion} onChange={handleInputChange} />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField fullWidth multiline rows={3} label="Principal Derecho vulnerado" name="principalDerechoVulnerado" value={formData.principalDerechoVulnerado} onChange={handleInputChange} />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField fullWidth multiline rows={3} label="Problemática Identificada" name="problematicaIdentificada" value={formData.problematicaIdentificada} onChange={handleInputChange} />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField fullWidth multiline rows={3} label="Prioridad sugerida de intervención" name="prioridadIntervencion" value={formData.prioridadIntervencion} onChange={handleInputChange} />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField fullWidth label="Nombre y cargo de Operador/a" name="nombreCargoOperador" value={formData.nombreCargoOperador} onChange={handleInputChange} />
+            </Grid>
+          </Grid>
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Conexiones de la Demanda"
+          isOpen={sections.conexiones}
+          onToggle={() => toggleSection('conexiones')}
+        >
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body1" fontWeight="bold">{formData.nombreCompleto}</Typography>
+            <Typography variant="body2" color="text.secondary">Actualizado el {formData.fechaActualizacion} por {formData.actualizadoPor}</Typography>
+          </Box>
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle1" color="primary" gutterBottom>Vincular con otro caso</Typography>
+            <Box display="flex" alignItems="center">
+              <TextField 
+                placeholder="33.333.333" 
+                sx={{ mr: 2 }}
+              />
+              <Button variant="contained" color="secondary">
+                Vincular
               </Button>
-            </div>
-          </CollapsibleSection>
+            </Box>
+          </Box>
+        </CollapsibleSection>
 
-          <div className="mt-6">
-            <Button 
-              onClick={onEvaluate}
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 w-full"
-            >
-              Evaluar Demanda
+        <CollapsibleSection
+          title="Derivar Demanda"
+          isOpen={sections.derivar}
+          onToggle={() => toggleSection('derivar')}
+        >
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              fullWidth
+              label="Buscar colaborador"
+              name="colaborador"
+              value={derivarData.colaborador}
+              onChange={handleDerivarInputChange}
+            />
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              label="Comentarios"
+              name="comentarios"
+              value={derivarData.comentarios}
+              onChange={handleDerivarInputChange}
+            />
+            <Button variant="contained" onClick={handleDerivar}>
+              Derivar
             </Button>
-          </div>
-        </ScrollArea>
-      </div>
+          </Box>
+        </CollapsibleSection>
+
+        <Box sx={{ mt: 3 }}>
+        <Button 
+            fullWidth
+            variant="contained"
+            color="primary"
+            onClick={handleEvaluateClick}
+          >
+            Evaluar Demanda
+          </Button>
+        </Box>
+      </Paper>
 
       <AsignarDemandaModal
         isOpen={isAsignarDemandaOpen}
@@ -385,44 +595,7 @@ export default function PostConstatacionModal({ demanda, onClose, onEvaluate }: 
         onSave={handleSaveArchivosAdjuntos}
         initialFiles={demanda.archivosAdjuntos || []}
       />
-    </div>
-  )
-}
-
-interface InputFieldProps {
-  label: string
-  name: string
-  value: string | undefined
-  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
-  textarea?: boolean
-  className?: string
-}
-
-function InputField({ label, name, value, onChange, textarea = false, className = "" }: InputFieldProps) {
-  return (
-    <div className={`space-y-2 ${className}`}>
-      <Label htmlFor={name} className="text-sm font-medium text-gray-700">{label}</Label>
-      {textarea ? (
-        <Textarea
-          id={name}
-          name={name}
-          value={value || ''}
-          onChange={onChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-gray-900 placeholder-gray-400"
-          placeholder={label}
-        />
-      ) : (
-        <Input
-          type="text"
-          id={name}
-          name={name}
-          value={value || ''}
-          onChange={onChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-gray-900 placeholder-gray-400"
-          placeholder={label}
-        />
-      )}
-    </div>
+    </Box>
   )
 }
 
@@ -435,16 +608,12 @@ interface CollapsibleSectionProps {
 
 function CollapsibleSection({ title, children, isOpen, onToggle }: CollapsibleSectionProps) {
   return (
-    <div className="border-t pt-6 mt-6">
-      <div className="flex justify-between items-center mb-4 cursor-pointer" onClick={onToggle}>
-        <h3 className="text-lg font-semibold text-indigo-600">{title}</h3>
-        {isOpen ? (
-          <ChevronUp className="h-5 w-5 text-indigo-600" />
-        ) : (
-          <ChevronDown className="h-5 w-5 text-indigo-600" />
-        )}
-      </div>
-      {isOpen && children}
-    </div>
+    <Paper sx={{ mb: 3 }} elevation={3}>
+      <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={onToggle}>
+        <Typography variant="h6" color="primary">{title}</Typography>
+        {isOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+      </Box>
+      {isOpen && <Box sx={{ p: 2 }}>{children}</Box>}
+    </Paper>
   )
 }

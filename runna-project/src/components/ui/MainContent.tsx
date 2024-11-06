@@ -28,6 +28,10 @@ interface Demand {
   calificacion?: string;
   fechaActualizacion: string;
   legajo?: string;
+  ninosAdolescentes: any[];
+  adultosConvivientes: any[];
+  autores: any[];
+  fecha: string;
 }
 
 interface MainContentProps {
@@ -62,6 +66,7 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
   const [selectedDemand, setSelectedDemand] = useState<Demand | null>(null)
   const [showPostConstatacion, setShowPostConstatacion] = useState(false)
   const [showEvaluacionModal, setShowEvaluacionModal] = useState(false)
+  const [showDemandaDetalle, setShowDemandaDetalle] = useState(false)
   const [origen, setOrigen] = useState('')
   const [estado, setEstado] = useState('')
 
@@ -85,6 +90,10 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
       calificacion: 'Sin calificar',
       fechaActualizacion: new Date().toISOString(),
       legajo: formData.caratula.legajo || '',
+      ninosAdolescentes: [],
+      adultosConvivientes: [],
+      autores: [],
+      fecha: ''
     }
     setDemands(prevDemands => {
       const updatedDemands = [demandWithState, ...prevDemands]
@@ -96,21 +105,48 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
 
   const handleDemandClick = useCallback((params: GridRowParams<Demand>) => {
     setSelectedDemand(params.row)
+    if (params.row.estado === 'Verificada') {
+      setShowPostConstatacion(true)
+    } else if (params.row.estado === 'En evaluación') {
+      setShowEvaluacionModal(true)
+    } else {
+      setShowDemandaDetalle(true)
+    }
   }, [])
-
   const handleCloseDetail = useCallback(() => {
     setSelectedDemand(null)
+    setShowDemandaDetalle(false)
     setShowPostConstatacion(false)
     setShowEvaluacionModal(false)
   }, [])
 
   const handleConstatar = useCallback(() => {
+    if (selectedDemand) {
+      const updatedDemands = demands.map(demand => 
+        demand.id === selectedDemand.id 
+          ? { ...demand, estado: 'Verificada' } 
+          : demand
+      )
+      setDemands(updatedDemands)
+      onUpdateDemands(updatedDemands)
+    }
+    setShowDemandaDetalle(false)
     setShowPostConstatacion(true)
-  }, [])
+  }, [demands, selectedDemand, onUpdateDemands])
 
   const handleEvaluate = useCallback(() => {
-    setShowEvaluacionModal(true)
-  }, [])
+    if (selectedDemand) {
+      const updatedDemands = demands.map(demand => 
+        demand.id === selectedDemand.id 
+          ? { ...demand, estado: 'En evaluación' } 
+          : demand
+      )
+      setDemands(updatedDemands)
+      onUpdateDemands(updatedDemands)
+    }
+    setShowPostConstatacion(false)
+    // We don't immediately open the EvaluacionModal here
+  }, [demands, selectedDemand, onUpdateDemands])
 
   const getRowClassName = useCallback((params: GridRowParams<Demand>) => {
     switch (params.row.estado) {
@@ -155,7 +191,6 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
       field: 'ultimaActualizacion', 
       headerName: 'Última actualización', 
       flex: 1,
-
     },
     {
       field: 'colaboradorAsignado',
@@ -192,7 +227,6 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
       field: 'recibido', 
       headerName: 'Recibido', 
       flex: 1,
-
     },
     {
       field: 'calificacion',
@@ -327,17 +361,7 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
         onClose={handleCloseDetail}
       >
         <Box sx={{ 
-          position: 'absolute', 
-          top: '50%', 
-          left: '50%', 
-          transform: 'translate(-50%, -50%)', 
-          bgcolor: 'background.paper', 
-          boxShadow: 24, 
-          p: 4,
-          maxWidth: '90vw',
-          maxHeight: '90vh',
-          overflow: 'auto',
-          borderRadius: 1,
+
         }}>
           {selectedDemand && (
             <DemandaDetalle 
@@ -354,17 +378,7 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
         onClose={handleCloseDetail}
       >
         <Box sx={{ 
-          position: 'absolute', 
-          top: '50%', 
-          left: '50%', 
-          transform: 'translate(-50%, -50%)', 
-          bgcolor: 'background.paper', 
-          boxShadow: 24, 
-          p: 4,
-          maxWidth: '90vw',
-          maxHeight: '90vh',
-          overflow: 'auto',
-          borderRadius: 1,
+
         }}>
           {selectedDemand && (
             <PostConstatacionModal
@@ -381,17 +395,7 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
         onClose={handleCloseDetail}
       >
         <Box sx={{ 
-          position: 'absolute', 
-          top: '50%', 
-          left: '50%', 
-          transform: 'translate(-50%, -50%)', 
-          bgcolor: 'background.paper', 
-          boxShadow: 24, 
-          p: 4,
-          maxWidth: '90vw',
-          maxHeight: '90vh',
-          overflow: 'auto',
-          borderRadius: 1,
+
         }}>
           {selectedDemand && (
             <EvaluacionModal
