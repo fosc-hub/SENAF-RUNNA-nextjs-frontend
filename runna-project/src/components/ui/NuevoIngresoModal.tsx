@@ -172,42 +172,58 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }: NuevoIn
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState<FormData>(initialFormData);
 
-  useEffect(() => {
-    if (isOpen) {
-      setActiveStep(0);
-      setFormData(initialFormData);
-    }
-  }, [isOpen]);
-
   const handleNext = () => {
-    setActiveStep((prevStep) => prevStep + 1);
+    setActiveStep((prevStep) => Math.min(prevStep + 1, steps.length - 1));
   };
 
   const handleBack = () => {
-    setActiveStep((prevStep) => prevStep - 1);
+    setActiveStep((prevStep) => Math.max(prevStep - 1, 0));
   };
-
+  const resetForm = () => {
+    setFormData(initialFormData);
+    setActiveStep(0);
+  };
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
-    setFormData(initialFormData);
-    onClose();
+    if (activeStep === steps.length - 1) {
+      onSubmit(formData);
+      onClose();
+      resetForm();
+    } else {
+      handleNext();
+    }
   };
 
-  const handleInputChange = (section: keyof FormData, field: string, value: any) => {
-    setFormData(prev => {
-      if (typeof prev[section] === 'object' && prev[section] !== null) {
+  const handleInputChange = (section: keyof FormData, field: string, value: string | boolean) => {
+    setFormData((prevData) => {
+      if (Array.isArray(prevData[section])) {
+        // Handle array updates (e.g., ninosAdolescentes, adultosConvivientes, autores)
         return {
-          ...prev,
+          ...prevData,
+          [section]: (prevData[section] as any[]).map((item, index) => {
+            if (index === parseInt(field.split('.')[0])) {
+              return {
+                ...item,
+                [field.split('.')[1]]: value
+              };
+            }
+            return item;
+          }),
+        };
+      } else if (typeof prevData[section] === 'object' && prevData[section] !== null) {
+        // Handle object updates (e.g., caratula, presuntaVulneracion, usuarioLinea)
+        return {
+          ...prevData,
           [section]: {
-            ...prev[section],
-            [field]: value
-          }
+            ...prevData[section] as object,
+            [field]: value,
+          },
         };
       } else {
+        // Handle string updates (e.g., descripcionSituacion)
         return {
-          ...prev,
-          [section]: value
+          ...prevData,
+          [section]: value,
         };
       }
     });
@@ -807,6 +823,11 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }: NuevoIn
         return null;
     }
   };
+  useEffect(() => {
+    if (isOpen) {
+      resetForm();
+    }
+  }, [isOpen]);
 
   return (
     <Dialog
@@ -856,25 +877,13 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }: NuevoIn
             >
               Anterior
             </Button>
-            <Box>
-              {activeStep === steps.length - 1 ? (
-                <Button
-                  type="submit"
-                  variant="contained"
-                  sx={{ bgcolor: 'primary.main' }}
-                >
-                  Ingresar Entrada
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleNext}
-                  variant="contained"
-                  sx={{ bgcolor: 'primary.main' }}
-                >
-                  Siguiente
-                </Button>
-              )}
-            </Box>
+            <Button
+              type="submit"
+              variant="contained"
+              sx={{ bgcolor: 'primary.main' }}
+            >
+              {activeStep === steps.length - 1 ? 'Ingresar Entrada' : 'Siguiente'}
+            </Button>
           </Box>
         </form>
       </DialogContent>
