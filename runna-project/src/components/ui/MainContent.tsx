@@ -7,7 +7,7 @@ import {
   GridRowParams,
   GridCallbackDetails,
   GridRenderCellParams,
-  GridColDef 
+  GridColDef,
 } from '@mui/x-data-grid'
 import { Search } from '@mui/icons-material'
 import { Select, MenuItem, FormControl, InputLabel } from '@mui/material'
@@ -17,17 +17,17 @@ import NuevoIngresoModal from './NuevoIngresoModal'
 import EvaluacionModal from './EvaluacionModal'
 
 interface Demand {
-  id: string
-  nombre: string
-  legajo?: string
-  ultimaActualizacion: string
-  colaboradorAsignado?: string
-  recibido: string
-  estado: string
-  calificacion?: string
-  dni: string
-  edad: number
-  fechaActualizacion: string
+  id: string;
+  nombre: string;
+  dni: string;
+  edad: number;
+  ultimaActualizacion: string;
+  colaboradorAsignado?: string;
+  recibido: string;
+  estado: string;
+  calificacion?: string;
+  fechaActualizacion: string;
+  legajo?: string;
 }
 
 interface MainContentProps {
@@ -73,15 +73,18 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
     setIsNuevoIngresoModalOpen(false)
   }, [])
 
-  const handleSubmitNuevoIngreso = useCallback((newDemand: Omit<Demand, 'id' | 'estado'>) => {
+  const handleSubmitNuevoIngreso = useCallback((formData: any) => {
     const demandWithState: Demand = {
-      ...newDemand,
       id: Date.now().toString(),
-      estado: 'No verificada',
-      calificacion: 'Sin calificar',
+      nombre: formData.caratula.nombre,
+      dni: formData.caratula.dni,
+      edad: parseInt(formData.ninosAdolescentes[0]?.edad || '0'),
       ultimaActualizacion: new Date().toISOString(),
       recibido: new Date().toISOString(),
+      estado: 'No verificada',
+      calificacion: 'Sin calificar',
       fechaActualizacion: new Date().toISOString(),
+      legajo: formData.caratula.legajo || '',
     }
     setDemands(prevDemands => {
       const updatedDemands = [demandWithState, ...prevDemands]
@@ -152,9 +155,7 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
       field: 'ultimaActualizacion', 
       headerName: 'Última actualización', 
       flex: 1,
-      valueFormatter: (params: { value: string }) => {
-        return new Date(params.value).toLocaleString('es-AR')
-      }
+
     },
     {
       field: 'colaboradorAsignado',
@@ -191,9 +192,7 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
       field: 'recibido', 
       headerName: 'Recibido', 
       flex: 1,
-      valueFormatter: (params) => {
-        return new Date(params.value).toLocaleString('es-AR')
-      }
+
     },
     {
       field: 'calificacion',
@@ -404,30 +403,11 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
         </Box>
       </Modal>
 
-      <Modal 
-        open={isNuevoIngresoModalOpen} 
+      <NuevoIngresoModal
+        isOpen={isNuevoIngresoModalOpen}
         onClose={handleCloseNuevoIngreso}
-      >
-        <Box sx={{ 
-          position: 'absolute', 
-          top: '50%', 
-          left: '50%', 
-          transform: 'translate(-50%, -50%)', 
-          bgcolor: 'background.paper', 
-          boxShadow: 24, 
-          p: 4,
-          maxWidth: '90vw',
-          maxHeight: '90vh',
-          overflow: 'auto',
-          borderRadius: 1,
-        }}>
-          <NuevoIngresoModal
-            isOpen={isNuevoIngresoModalOpen}
-            onClose={handleCloseNuevoIngreso}
-            onSubmit={handleSubmitNuevoIngreso}
-          />
-        </Box>
-      </Modal>
+        onSubmit={handleSubmitNuevoIngreso}
+      />
     </Box>
   )
 }

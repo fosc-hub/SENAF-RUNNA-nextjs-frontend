@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -172,6 +172,13 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }: NuevoIn
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState<FormData>(initialFormData);
 
+  useEffect(() => {
+    if (isOpen) {
+      setActiveStep(0);
+      setFormData(initialFormData);
+    }
+  }, [isOpen]);
+
   const handleNext = () => {
     setActiveStep((prevStep) => prevStep + 1);
   };
@@ -183,17 +190,27 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }: NuevoIn
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
+    setFormData(initialFormData);
     onClose();
   };
 
   const handleInputChange = (section: keyof FormData, field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: value
+    setFormData(prev => {
+      if (typeof prev[section] === 'object' && prev[section] !== null) {
+        return {
+          ...prev,
+          [section]: {
+            ...prev[section],
+            [field]: value
+          }
+        };
+      } else {
+        return {
+          ...prev,
+          [section]: value
+        };
       }
-    }));
+    });
   };
 
   const addNinoAdolescente = () => {
