@@ -25,15 +25,8 @@ export default function Sidebar() {
 
   return (
     <aside className={`relative bg-white border-r border-gray-200 transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'}`}>
-      <button
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute top-4 -right-3 bg-white border border-gray-200 rounded-full p-1 text-gray-500 hover:text-gray-700 z-10"
-        aria-label={isCollapsed ? "Expandir sidebar" : "Colapsar sidebar"}
-      >
-        {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-      </button>
       <nav className="h-full overflow-y-auto">
-        <div className="py-4"> {/* Add padding to the top to account for the button */}
+        <div className="py-4">
           {menuItems.map((item, index) => (
             <React.Fragment key={index}>
               {item.isHeader ? (
@@ -48,6 +41,7 @@ export default function Sidebar() {
                       className={`
                         flex justify-between items-center px-4 py-2 text-sm text-gray-700
                         hover:bg-sky-50 hover:text-sky-600 cursor-pointer transition-colors duration-150
+                        relative
                       `}
                       tabIndex={0}
                       role="button"
@@ -67,6 +61,14 @@ export default function Sidebar() {
           ))}
         </div>
       </nav>
+      <button
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        className="absolute top-4 -right-3 bg-white border border-gray-200 rounded-full p-1 text-gray-500 hover:text-gray-700"
+        style={{ zIndex: 0 }}
+        aria-label={isCollapsed ? "Expandir sidebar" : "Colapsar sidebar"}
+      >
+        {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+      </button>
     </aside>
   )
 }
