@@ -9,7 +9,8 @@ import {
   GridRenderCellParams,
   GridColDef,
 } from '@mui/x-data-grid'
-import { Search } from '@mui/icons-material'
+import { Search} from '@mui/icons-material'
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { Select, MenuItem, FormControl, InputLabel } from '@mui/material'
 import DemandaDetalle from './DemandaDetalle'
 import PostConstatacionModal from './PostConstatacionModal'
@@ -58,6 +59,13 @@ const calificacionOptions = [
   { value: 'urgente', label: 'Urgente' },
   { value: 'grave', label: 'Grave' },
   { value: 'normal', label: 'Normal' },
+]
+
+const colaboradorOptions = [
+  { value: 'colaborador1', label: 'Colaborador 1' },
+  { value: 'colaborador2', label: 'Colaborador 2' },
+  { value: 'colaborador3', label: 'Colaborador 3' },
+  { value: 'colaborador4', label: 'Colaborador 4' },
 ]
 
 export function MainContent({ demands: initialDemands, onUpdateDemands }: MainContentProps) {
@@ -113,6 +121,7 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
       setShowDemandaDetalle(true)
     }
   }, [])
+
   const handleCloseDetail = useCallback(() => {
     setSelectedDemand(null)
     setShowDemandaDetalle(false)
@@ -145,7 +154,6 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
       onUpdateDemands(updatedDemands)
     }
     setShowPostConstatacion(false)
-    // We don't immediately open the EvaluacionModal here
   }, [demands, selectedDemand, onUpdateDemands])
 
   const getRowClassName = useCallback((params: GridRowParams<Demand>) => {
@@ -171,19 +179,45 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
     })
   }, [onUpdateDemands])
 
+  const handleColaboradorChange = useCallback((demandId: string, newColaborador: string) => {
+    setDemands(prevDemands => {
+      const updatedDemands = prevDemands.map(demand => 
+        demand.id === demandId ? { ...demand, colaboradorAsignado: newColaborador } : demand
+      )
+      onUpdateDemands(updatedDemands)
+      return updatedDemands
+    })
+  }, [onUpdateDemands])
+
   const columns: GridColDef[] = useMemo(() => [
     {
       field: 'nombre',
       headerName: 'Demanda',
       flex: 1,
       renderCell: (params: GridRenderCellParams<Demand>) => (
-        <Box>
-          {params.row.legajo && (
-            <Typography component="span" sx={{ color: 'primary.main', fontWeight: 'medium', marginRight: 1 }}>
-              {params.row.legajo}
-            </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {params.row.calificacion === 'urgente' && (
+            <InfoOutlinedIcon 
+              sx={{ 
+                color: 'error.main',
+                fontSize: 20
+              }} 
+            />
           )}
-          {params.row.nombre}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {params.row.legajo && (
+              <Typography 
+                component="span" 
+                sx={{ 
+                  color: 'primary.main', 
+                  fontWeight: 'medium'
+                }}
+              >
+                {params.row.legajo}
+              </Typography>
+            )}
+            <Typography>{params.row.nombre}</Typography>
+          </Box>
         </Box>
       ),
     },
@@ -197,30 +231,23 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
       headerName: 'Colaborador asignado',
       flex: 1,
       renderCell: (params: GridRenderCellParams<Demand>) => (
-        params.value ? (
-          <Box display="flex" alignItems="center">
-            <Box
-              sx={{
-                width: 24,
-                height: 24,
-                borderRadius: '50%',
-                bgcolor: 'primary.main',
-                color: 'primary.contrastText',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 12,
-                fontWeight: 'medium',
-                marginRight: 1,
-              }}
-            >
-              {params.value.charAt(0)}
-            </Box>
-            {params.value}
-          </Box>
-        ) : (
-          <Typography color="text.secondary">No asignado</Typography>
-        )
+        <FormControl fullWidth size="small">
+          <Select
+            value={params.row.colaboradorAsignado || ''}
+            onChange={(e) => handleColaboradorChange(params.row.id, e.target.value as string)}
+            onClick={(e) => e.stopPropagation()}
+            sx={{ minWidth: 120 }}
+          >
+            <MenuItem value="">
+              <em>No asignado</em>
+            </MenuItem>
+            {colaboradorOptions.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
       ),
     },
     { 
@@ -249,7 +276,7 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
         </FormControl>
       ),
     },
-  ], [handleCalificacionChange])
+  ], [handleCalificacionChange, handleColaboradorChange])
 
   return (
     <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 3, overflow: 'auto' }}>
@@ -360,9 +387,8 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
         open={!!selectedDemand && !showPostConstatacion && !showEvaluacionModal} 
         onClose={handleCloseDetail}
       >
-        <Box sx={{ 
-
-        }}>
+        <Box 
+        >
           {selectedDemand && (
             <DemandaDetalle 
               demanda={selectedDemand} 
@@ -377,9 +403,7 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
         open={showPostConstatacion && !!selectedDemand} 
         onClose={handleCloseDetail}
       >
-        <Box sx={{ 
-
-        }}>
+        <Box >
           {selectedDemand && (
             <PostConstatacionModal
               demanda={selectedDemand}
@@ -395,7 +419,17 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
         onClose={handleCloseDetail}
       >
         <Box sx={{ 
-
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          bgcolor: 'background.paper',
+          boxShadow: 24,
+          p: 4,
+          maxWidth: '90vw',
+          maxHeight: '90vh',
+          overflow: 'auto',
+          borderRadius: 1,
         }}>
           {selectedDemand && (
             <EvaluacionModal
