@@ -7,11 +7,12 @@ interface ModalProps {
   onClose: () => void
   title: string
   children: React.ReactNode
+  zIndex?: number
 }
 
-export function Modal({ isOpen, onClose, title, children }: ModalProps) {
+export function Modal({ isOpen, onClose, title, children, zIndex }: ModalProps) {
   return (
-    <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth sx={{ zIndex: (theme) => zIndex || theme.zIndex.modal }}>
       <DialogTitle>
         {title}
         <IconButton
