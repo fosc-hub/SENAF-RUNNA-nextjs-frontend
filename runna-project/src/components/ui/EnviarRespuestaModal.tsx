@@ -5,7 +5,7 @@ import { Input } from './Input'
 import { Textarea } from './Textarea'
 import { Label } from './Label'
 import { CustomSelect } from './CustomSelect'
-import { Paperclip } from 'lucide-react'
+import { Paperclip, X } from 'lucide-react'
 
 interface EnviarRespuestaModalProps {
   isOpen: boolean
@@ -18,6 +18,7 @@ interface ResponseData {
   search: string
   email: string
   message: string
+  attachments: string[]
 }
 
 const institutionOptions = [
@@ -31,7 +32,8 @@ export function EnviarRespuestaModal({ isOpen, onClose, onSend }: EnviarRespuest
     institution: '',
     search: '',
     email: '',
-    message: ''
+    message: '',
+    attachments: []
   })
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -41,6 +43,24 @@ export function EnviarRespuestaModal({ isOpen, onClose, onSend }: EnviarRespuest
 
   const handleInstitutionChange = (value: string) => {
     setResponseData(prev => ({ ...prev, institution: value }))
+  }
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (files) {
+      const newAttachments = Array.from(files).map(file => file.name)
+      setResponseData(prev => ({
+        ...prev,
+        attachments: [...prev.attachments, ...newAttachments]
+      }))
+    }
+  }
+
+  const handleRemoveAttachment = (fileName: string) => {
+    setResponseData(prev => ({
+      ...prev,
+      attachments: prev.attachments.filter(name => name !== fileName)
+    }))
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -94,10 +114,40 @@ export function EnviarRespuestaModal({ isOpen, onClose, onSend }: EnviarRespuest
             className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-gray-900 placeholder-gray-500 resize-none"
           />
         </div>
+        <div className="space-y-2">
+          <Label className="font-bold text-gray-700">Archivos adjuntos</Label>
+          <div className="flex flex-wrap gap-2">
+            {responseData.attachments.map((file, index) => (
+              <div key={index} className="flex items-center bg-gray-100 rounded-md p-2">
+                <span className="text-sm text-gray-600">{file}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="ml-2"
+                  onClick={() => handleRemoveAttachment(file)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
         <div className="flex justify-between items-center">
-          <Button type="button" variant="outline" size="icon" className="rounded-full">
-            <Paperclip className="h-4 w-4" />
-          </Button>
+          <div>
+            <input
+              type="file"
+              id="file-upload"
+              className="hidden"
+              onChange={handleFileUpload}
+              multiple
+            />
+            <label htmlFor="file-upload">
+              <Button type="button" variant="outline" size="icon" className="rounded-full">
+                <Paperclip className="h-4 w-4" />
+              </Button>
+            </label>
+          </div>
           <div className="space-x-2">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar

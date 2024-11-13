@@ -537,34 +537,6 @@ export default function PostConstatacionModal({ demanda, onClose, onEvaluate }: 
           </Box>
         </CollapsibleSection>
 
-        <CollapsibleSection
-          title="Derivar Demanda"
-          isOpen={sections.derivar}
-          onToggle={() => toggleSection('derivar')}
-        >
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <TextField
-              fullWidth
-              label="Buscar colaborador"
-              name="colaborador"
-              value={derivarData.colaborador}
-              onChange={handleDerivarInputChange}
-            />
-            <TextField
-              fullWidth
-              multiline
-              rows={4}
-              label="Comentarios"
-              name="comentarios"
-              value={derivarData.comentarios}
-              onChange={handleDerivarInputChange}
-            />
-            <Button variant="contained" onClick={handleDerivar}>
-              Derivar
-            </Button>
-          </Box>
-        </CollapsibleSection>
-
         <Box sx={{ mt: 3 }}>
         <Button 
             fullWidth

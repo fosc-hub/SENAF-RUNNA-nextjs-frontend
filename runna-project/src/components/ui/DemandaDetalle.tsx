@@ -7,12 +7,8 @@ import {
   IconButton,
   Paper,
   Grid,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  FormControl,
-  FormLabel,
   Checkbox,
+  FormControlLabel,
 } from '@mui/material'
 import {
   Close as CloseIcon,
@@ -21,6 +17,10 @@ import {
   Person as PersonIcon,
   Message as MessageIcon,
 } from '@mui/icons-material'
+import { ArchivosAdjuntosModal } from './ArchivosAdjuntosModal'
+import { AsignarDemandaModal } from './AsignarDemandaModal'
+import { RegistrarActividadModal } from './RegistrarActividadModal'
+import { EnviarRespuestaModal } from './EnviarRespuestaModal'
 
 interface NinoAdolescente {
   nombreApellido: string
@@ -114,6 +114,11 @@ export default function DemandaDetalle({ demanda, onClose, onConstatar }: Demand
     autores: demanda.autores || [],
   })
 
+  const [isArchivosModalOpen, setIsArchivosModalOpen] = useState(false)
+  const [isAsignarModalOpen, setIsAsignarModalOpen] = useState(false)
+  const [isRegistrarModalOpen, setIsRegistrarModalOpen] = useState(false)
+  const [isEnviarRespuestaOpen, setIsEnviarRespuestaOpen] = useState(false)
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, index?: number, section?: keyof Demanda) => {
     const { name, value } = e.target
     if (section && index !== undefined) {
@@ -174,8 +179,28 @@ export default function DemandaDetalle({ demanda, onClose, onConstatar }: Demand
     }))
   }
 
+  const handleArchivosSubmit = (data: { files: string[], comments: string }) => {
+    console.log('Archivos adjuntos:', data)
+    setIsArchivosModalOpen(false)
+  }
+
+  const handleAsignarSubmit = (data: { collaborator: string, comments: string }) => {
+    console.log('Asignar demanda:', data)
+    setIsAsignarModalOpen(false)
+  }
+
+  const handleRegistrarSubmit = (data: any) => {
+    console.log('Registrar actividad:', data)
+    setIsRegistrarModalOpen(false)
+  }
+
+  const handleEnviarRespuestaSubmit = (data: { institution: string; search: string; email: string; message: string; attachments: string[] }) => {
+    console.log('Enviar respuesta:', data)
+    setIsEnviarRespuestaOpen(false)
+  }
+
   return (
-    <Box sx={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', bgcolor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', pt: 5, overflowY: 'auto' }}>
+    <Box sx={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', bgcolor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', pt: 5, overflowY: 'auto', zIndex: 1000 }}>
       <Paper sx={{ width: '100%', maxWidth: '1000px', maxHeight: '90vh', overflow: 'auto', p: 3 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
           <Box>
@@ -219,16 +244,16 @@ export default function DemandaDetalle({ demanda, onClose, onConstatar }: Demand
         </Box>
 
         <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-          <Button variant="contained" startIcon={<MessageIcon />}>
+          <Button variant="contained" startIcon={<MessageIcon />} onClick={() => setIsEnviarRespuestaOpen(true)}>
             Enviar Respuesta
           </Button>
-          <Button variant="outlined" startIcon={<AttachFileIcon />}>
+          <Button variant="outlined" startIcon={<AttachFileIcon />} onClick={() => setIsArchivosModalOpen(true)}>
             Archivos adjuntos
           </Button>
-          <Button variant="outlined" startIcon={<PersonIcon />}>
+          <Button variant="outlined" startIcon={<PersonIcon />} onClick={() => setIsAsignarModalOpen(true)}>
             Asignar
           </Button>
-          <Button variant="contained">
+          <Button variant="contained" onClick={() => setIsRegistrarModalOpen(true)}>
             Registrar actividad
           </Button>
         </Box>
@@ -714,6 +739,32 @@ export default function DemandaDetalle({ demanda, onClose, onConstatar }: Demand
             A proceso de constatación
           </Button>
         </Box>
+
+        <ArchivosAdjuntosModal
+          isOpen={isArchivosModalOpen}
+          onClose={() => setIsArchivosModalOpen(false)}
+          onSave={handleArchivosSubmit}
+          initialFiles={formData.archivosAdjuntos || []}
+          initialComments=""
+        />
+
+        <AsignarDemandaModal
+          isOpen={isAsignarModalOpen}
+          onClose={() => setIsAsignarModalOpen(false)}
+          onAssign={handleAsignarSubmit}
+        />
+
+        <RegistrarActividadModal
+          isOpen={isRegistrarModalOpen}
+          onClose={() => setIsRegistrarModalOpen(false)}
+          onSubmit={handleRegistrarSubmit}
+        />
+
+        <EnviarRespuestaModal
+          isOpen={isEnviarRespuestaOpen}
+          onClose={() => setIsEnviarRespuestaOpen(false)}
+          onSend={handleEnviarRespuestaSubmit}
+        />
       </Paper>
     </Box>
   )
