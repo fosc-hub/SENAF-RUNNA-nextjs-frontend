@@ -56,7 +56,6 @@ interface Autor {
 interface FormData {
   // Carátula
   caratula: {
-    nombre: string;
     dni: string;
     fecha: string;
     hora: string;
@@ -101,7 +100,6 @@ interface FormData {
 
 const initialFormData: FormData = {
   caratula: {
-    nombre: '',
     dni: '',
     fecha: '',
     hora: '',
@@ -288,13 +286,7 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }: NuevoIn
           <Box sx={{ p: 2 }}>
             <Typography color="primary" sx={{ mb: 2 }}>Carátula</Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <TextField
-                fullWidth
-                label="Nombre"
-                value={formData.caratula.nombre}
-                onChange={(e) => handleInputChange('caratula', 'nombre', e.target.value)}
-                size="small"
-              />
+
               <TextField
                 fullWidth
                 label="DNI"
