@@ -1,7 +1,7 @@
 import { getAll, getOne, create, update, remove } from '../globals';
 import { TLocalidad } from '../interfaces';
 
-const endpoint = 'tlocalidad';
+const endpoint = 'localidad';
 
 export const getTLocalidads = () => getAll<TLocalidad>(endpoint);
 export const getTLocalidad = (id: number) => getOne<TLocalidad>(endpoint, id);

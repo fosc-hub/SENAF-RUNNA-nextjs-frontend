@@ -1,7 +1,7 @@
 import { getAll, getOne, create, update, remove } from '../globals';
 import { TCPC } from '../interfaces';
 
-const endpoint = 'tcpc';
+const endpoint = 'cpc';
 
 export const getTCPCs = () => getAll<TCPC>(endpoint);
 export const getTCPC = (id: number) => getOne<TCPC>(endpoint, id);

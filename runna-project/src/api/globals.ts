@@ -31,6 +31,11 @@ export const create = async <T>(endpoint: string, data: Partial<T>): Promise<T> 
     return response.data;
   } catch (error) {
     console.error(`Error creating in ${endpoint}:`, error);
+    if (error.response) {
+      console.error('Response data:', error.response.data);
+      console.error('Response status:', error.response.status);
+      console.error('Response headers:', error.response.headers);
+    }
     throw new Error(`Failed to create data in ${endpoint}.`);
   }
 };

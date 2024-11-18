@@ -1,7 +1,7 @@
 import { getAll, getOne, create, update, remove } from '../globals';
 import { TBarrio } from '../interfaces';
 
-const endpoint = 'tbarrio';
+const endpoint = 'barrio';
 
 export const getTBarrios = () => getAll<TBarrio>(endpoint);
 export const getTBarrio = (id: number) => getOne<TBarrio>(endpoint, id);

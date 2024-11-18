@@ -132,6 +132,7 @@ export interface TLocalizacion {
   }
 
   export interface Localizacion {
+    id: any;
     calle: string;
     tipo_calle: string;
     piso_depto?: string; // Opcional
@@ -174,39 +175,33 @@ export interface TLocalizacion {
   }
   
   
-  export interface TDemanda {
-    vulneracionDerechos: any;
-    vulneracionDerechos: any;
-    descripcionSituacion: string;
-    datosRequeridos: any;
-    archivosAdjuntos: any;
-    archivosAdjuntos: any;
-    historial: any;
-    asociadoRegistro: any;
-    id?: number;
-    hora_ingreso: string;
+  
+export interface TDemanda {
+
+    id: number;
+  
+    fecha_y_hora_ingreso: string;
+  
     origen: string;
-    localizacion: TLocalizacion | number;
-    usuario_linea: TUsuarioLinea | number;
+  
     nro_notificacion_102?: string;
+  
     nro_sac?: string;
+  
     nro_suac?: string;
+  
     nro_historia_clinica?: string;
+  
     nro_oficio_web?: string;
-    descripcion?: string;
-    ultima_actualizacion?: string;
-    estado: string;
-    calificacion?: string;
-    nombre: string; // Added to match Demanda interface
-    dni: string; // Added to match Demanda interface
-    edad: number; // Added to match Demanda interface
-    fechaActualizacion: string; // Added to match Demanda interface
-    legajo?: string;
-    ninosAdolescentes: any[]; // Added to match Demanda interface
-    adultosConvivientes: any[]; // Added to match Demanda interface
-    autores: any[]; // Added to match Demanda interface
-    fecha: string; // Added to match Demanda interface
+  
+    descripcion: string;
+  
+    localizacion: number;
+  
+    usuario_externo: string;
+  
   }
+  
   export interface TPrecalificacionDemanda {
     fecha: string;
     hora: string;

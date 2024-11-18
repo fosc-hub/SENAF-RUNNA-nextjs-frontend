@@ -1,891 +1,471 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react'
 import {
-  Dialog,
-  DialogContent,
+  Modal,
+  Box,
+  Typography,
   TextField,
   Button,
-  Typography,
-  IconButton,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
+  Grid,
   FormControl,
-  TextareaAutosize,
-  Box,
-  Stepper,
-  Step,
-  StepLabel,
-} from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import AddIcon from '@mui/icons-material/Add';
-import { TDemanda } from '../../api/interfaces';
-
+  InputLabel,
+  Select,
+  MenuItem,
+  CircularProgress,
+} from '@mui/material'
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3'
+import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers'
+import { es } from 'date-fns/locale'
+import { createLocalizacion } from '../../api/TableFunctions/localizacion'
+import { getTUsuariosExternos } from '../../api/TableFunctions/usuarioExterno'
+import { createDemand } from '../../api/TableFunctions/demands'
+import { getTBarrios } from '../../api/TableFunctions/barrios'
+import { getTLocalidads } from '../../api/TableFunctions/localidades'
+import { getTProvincias } from '../../api/TableFunctions/provincias'
+import { getTCPCs } from '../../api/TableFunctions/cpcs'
+import { X } from 'lucide-react'
 
 interface NuevoIngresoModalProps {
-
-  isOpen: boolean;
-
-  onClose: () => void;
-
-  onSubmit: (data: Partial<TDemanda>) => void;
-
+  isOpen: boolean
+  onClose: () => void
+  onSubmit: (formData: any) => void
 }
-
-
-interface NinoAdolescente {
-  nombreApellido: string;
-  edad: string;
-  genero: string;
-  institucionEducativa: string;
-  cursoNivelTurno: string;
-  institucionSanitaria: string;
-  esNNyA: boolean;
-  comentarios: string;
-}
-
-interface Adulto {
-  nombreApellido: string;
-  vinculo: string;
-  edad: string;
-  genero: string;
-  observaciones: string;
-}
-
-interface Autor {
-  nombreApellido: string;
-  edad: string;
-  genero: string;
-  vinculo: string;
-  convive: boolean;
-  comentarios: string;
-}
-
-interface FormData {
-  // Carátula
-  caratula: {
-    dni: string;
-    fecha: string;
-    hora: string;
-    idNotificacion: string;
-    notificacionNro: string;
-    calle: string;
-    numero: string;
-    barrio: string;
-    localidad: string;
-    provincia: string;
-    referenciasGeograficas: string;
-  };
-  // Niños y adolescentes
-  ninosAdolescentes: NinoAdolescente[];
-  // Adultos convivientes
-  adultosConvivientes: Adulto[];
-  // Presunta Vulneración
-  presuntaVulneracion: {
-    motivo: string;
-    ambitoVulneracion: string;
-    principalDerechoVulnerado: string;
-    problematicaIdentificada: string;
-    prioridadIntervencion: string;
-    nombreCargoOperador: string;
-  };
-  // Autor
-  autores: Autor[];
-  // Descripción
-  descripcionSituacion: string;
-  // Usuario de línea
-  usuarioLinea: {
-    nombreApellido: string;
-    edad: string;
-    genero: string;
-    vinculo: string;
-    telefono: string;
-    institucionPrograma: string;
-    contactoInstitucion: string;
-    nombreCargoResponsable: string;
-  };
-}
-
-const initialFormData: FormData = {
-  caratula: {
-    dni: '',
-    fecha: '',
-    hora: '',
-    idNotificacion: '',
-    notificacionNro: '',
-    calle: '',
-    numero: '',
-    barrio: '',
-    localidad: '',
-    provincia: '',
-    referenciasGeograficas: '',
-  },
-  ninosAdolescentes: [{
-    nombreApellido: '',
-    edad: '',
-    genero: '',
-    institucionEducativa: '',
-    cursoNivelTurno: '',
-    institucionSanitaria: '',
-    esNNyA: false,
-    comentarios: '',
-  }],
-  adultosConvivientes: [{
-    nombreApellido: '',
-    vinculo: '',
-    edad: '',
-    genero: '',
-    observaciones: '',
-  }],
-  presuntaVulneracion: {
-    motivo: '',
-    ambitoVulneracion: '',
-    principalDerechoVulnerado: '',
-    problematicaIdentificada: '',
-    prioridadIntervencion: '',
-    nombreCargoOperador: '',
-  },
-  autores: [{
-    nombreApellido: '',
-    edad: '',
-    genero: '',
-    vinculo: '',
-    convive: false,
-    comentarios: '',
-  }],
-  descripcionSituacion: '',
-  usuarioLinea: {
-    nombreApellido: '',
-    edad: '',
-    genero: '',
-    vinculo: '',
-    telefono: '',
-    institucionPrograma: '',
-    contactoInstitucion: '',
-    nombreCargoResponsable: '',
-  },
-};
-
-const steps = [
-  'Carátula',
-  'Niños y Adolescentes',
-  'Adultos Convivientes',
-  'Presunta Vulneración',
-  'Información Adicional',
-];
 
 export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }: NuevoIngresoModalProps) {
-  const [activeStep, setActiveStep] = useState(0);
-  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [formData, setFormData] = useState<any>({
+    fecha_y_hora_ingreso: new Date(),
+    origen: '',
+    nro_notificacion_102: '',
+    nro_sac: '',
+    nro_suac: '',
+    nro_historia_clinica: '',
+    nro_oficio_web: '',
+    descripcion: '',
+    localizacion: {
+      calle: '',
+      tipo_calle: 'CALLE',
+      piso_depto: '',
+      lote: '',
+      mza: '',
+      casa_nro: '',
+      referencia_geo: '',
+      barrio: '',
+      localidad: '',
+      cpc: '',
+    },
+    usuario_externo: '',
+  })
+  const [usuariosExternos, setUsuariosExternos] = useState<any[]>([])
+  const [barrios, setBarrios] = useState<any[]>([])
+  const [localidades, setLocalidades] = useState<any[]>([])
+  const [provincias, setProvincias] = useState<any[]>([])
+  const [cpcs, setCPCs] = useState<any[]>([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const isSubmittingRef = useRef(false);
 
-  const handleNext = () => {
-    setActiveStep((prevStep) => Math.min(prevStep + 1, steps.length - 1));
-  };
+  useEffect(() => {
+    fetchUsuariosExternos()
+    fetchBarrios()
+    fetchLocalidades()
+    fetchProvincias()
+    fetchCPCs()
+  }, [])
 
-  const handleBack = () => {
-    setActiveStep((prevStep) => Math.max(prevStep - 1, 0));
-  };
-  const resetForm = () => {
-    setFormData(initialFormData);
-    setActiveStep(0);
-  };
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (activeStep === steps.length - 1) {
-      onSubmit(formData);
-      onClose();
-      resetForm();
-    } else {
-      handleNext();
+  const fetchUsuariosExternos = async () => {
+    try {
+      const fetchedUsuarios = await getTUsuariosExternos()
+      setUsuariosExternos(fetchedUsuarios)
+    } catch (error) {
+      console.error('Error fetching usuarios externos:', error)
     }
-  };
+  }
 
-  const handleInputChange = (section: keyof FormData, field: string, value: string | boolean) => {
-    setFormData((prevData) => {
-      if (Array.isArray(prevData[section])) {
-        // Handle array updates (e.g., ninosAdolescentes, adultosConvivientes, autores)
-        return {
-          ...prevData,
-          [section]: (prevData[section] as any[]).map((item, index) => {
-            if (index === parseInt(field.split('.')[0])) {
-              return {
-                ...item,
-                [field.split('.')[1]]: value
-              };
-            }
-            return item;
-          }),
-        };
-      } else if (typeof prevData[section] === 'object' && prevData[section] !== null) {
-        // Handle object updates (e.g., caratula, presuntaVulneracion, usuarioLinea)
-        return {
-          ...prevData,
-          [section]: {
-            ...prevData[section] as object,
-            [field]: value,
-          },
-        };
-      } else {
-        // Handle string updates (e.g., descripcionSituacion)
-        return {
-          ...prevData,
-          [section]: value,
-        };
+  const fetchBarrios = async () => {
+    try {
+      const fetchedBarrios = await getTBarrios()
+      setBarrios(fetchedBarrios)
+    } catch (error) {
+      console.error('Error fetching barrios:', error)
+    }
+  }
+
+  const fetchLocalidades = async () => {
+    try {
+      const fetchedLocalidades = await getTLocalidads()
+      setLocalidades(fetchedLocalidades)
+    } catch (error) {
+      console.error('Error fetching localidades:', error)
+    }
+  }
+
+  const fetchProvincias = async () => {
+    try {
+      const fetchedProvincias = await getTProvincias()
+      setProvincias(fetchedProvincias)
+    } catch (error) {
+      console.error('Error fetching provincias:', error)
+    }
+  }
+
+  const fetchCPCs = async () => {
+    try {
+      const fetchedCPCs = await getTCPCs()
+      setCPCs(fetchedCPCs)
+    } catch (error) {
+      console.error('Error fetching CPCs:', error)
+    }
+  }
+
+  const handleInputChange = (field: string, value: any) => {
+    setFormData((prevData: any) => ({
+      ...prevData,
+      [field]: value,
+    }))
+  }
+
+  const handleLocalizacionChange = (field: string, value: any) => {
+    setFormData((prevData: any) => ({
+      ...prevData,
+      localizacion: {
+        ...prevData.localizacion,
+        [field]: value,
+      },
+    }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    // Prevent double submission
+    if (isSubmittingRef.current) {
+      return;
+    }
+    
+    isSubmittingRef.current = true;
+    setIsSubmitting(true)
+    setError(null)
+    try {
+      // Validate required fields
+      const requiredFields = ['origen', 'descripcion', 'usuario_externo']
+      const missingFields = requiredFields.filter(field => !formData[field])
+      if (missingFields.length > 0) {
+        throw new Error(`Missing required fields: ${missingFields.join(', ')}`)
       }
-    });
-  };
 
-  const addNinoAdolescente = () => {
-    setFormData(prev => ({
-      ...prev,
-      ninosAdolescentes: [
-        ...prev.ninosAdolescentes,
-        {
-          nombreApellido: '',
-          edad: '',
-          genero: '',
-          institucionEducativa: '',
-          cursoNivelTurno: '',
-          institucionSanitaria: '',
-          esNNyA: false,
-          comentarios: '',
-        }
-      ]
-    }));
-  };
+      // First, create the localizacion
+      const localizacionData = {
+        ...formData.localizacion,
+        piso_depto: Number(formData.localizacion.piso_depto) || null,
+        lote: Number(formData.localizacion.lote) || null,
+        mza: Number(formData.localizacion.mza) || null,
+        casa_nro: Number(formData.localizacion.casa_nro) || null,
+        barrio: Number(formData.localizacion.barrio) || null,
+        localidad: Number(formData.localizacion.localidad) || null,
+        cpc: Number(formData.localizacion.cpc) || null,
+      }
+      console.log('Localizacion data:', localizacionData)
+      const localizacionResponse = await createLocalizacion(localizacionData)
+      console.log('Localizacion response:', localizacionResponse)
+      
+      if (!localizacionResponse || !localizacionResponse.id) {
+        throw new Error('Failed to create localizacion')
+      }
 
-  const addAdulto = () => {
-    setFormData(prev => ({
-      ...prev,
-      adultosConvivientes: [
-        ...prev.adultosConvivientes,
-        {
-          nombreApellido: '',
-          vinculo: '',
-          edad: '',
-          genero: '',
-          observaciones: '',
-        }
-      ]
-    }));
-  };
+      // Then, create the demanda with the localizacion ID
+      const demandaData = {
+        fecha_y_hora_ingreso: formData.fecha_y_hora_ingreso.toISOString(),
+        origen: formData.origen,
+        nro_notificacion_102: Number(formData.nro_notificacion_102) || null,
+        nro_sac: Number(formData.nro_sac) || null,
+        nro_suac: Number(formData.nro_suac) || null,
+        nro_historia_clinica: Number(formData.nro_historia_clinica) || null,
+        nro_oficio_web: Number(formData.nro_oficio_web) || null,
+        descripcion: formData.descripcion,
+        localizacion: localizacionResponse.id,
+        usuario_externo: Number(formData.usuario_externo) || null,
+      }
 
-  const addAutor = () => {
-    setFormData(prev => ({
-      ...prev,
-      autores: [
-        ...prev.autores,
-        {
-          nombreApellido: '',
-          edad: '',
-          genero: '',
-          vinculo: '',
-          convive: false,
-          comentarios: '',
-        }
-      ]
-    }));
-  };
+      console.log('Demanda data:', demandaData)
+      const demandaResponse = await createDemand(demandaData)
+      console.log('Demanda response:', demandaResponse)
 
-  const renderStepContent = (step: number) => {
-    switch (step) {
-      case 0:
-        return (
-          <Box sx={{ p: 2 }}>
-            <Typography color="primary" sx={{ mb: 2 }}>Carátula</Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      onClose()
+    } catch (error) {
+      console.error('Error submitting form:', error)
+      setError(error.message || 'An error occurred while submitting the form')
+    } finally {
+      setIsSubmitting(false)
+      isSubmittingRef.current = false;
+    }
+  }
 
-              <TextField
-                fullWidth
-                label="DNI"
-                value={formData.caratula.dni}
-                onChange={(e) => handleInputChange('caratula', 'dni', e.target.value)}
-                size="small"
-              />
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <TextField
-                  type="date"
-                  label="Fecha"
-                  value={formData.caratula.fecha}
-                  onChange={(e) => handleInputChange('caratula', 'fecha', e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  size="small"
-                  fullWidth
+  return (
+    <Modal open={isOpen} onClose={onClose}>
+      <Box sx={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: 600,
+        bgcolor: 'background.paper',
+        boxShadow: 24,
+        p: 4,
+        maxHeight: '90vh',
+        overflowY: 'auto',
+      }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h6">Nuevo Ingreso</Typography>
+          <X onClick={onClose} style={{ cursor: 'pointer' }} />
+        </Box>
+        {error && (
+          <Typography color="error" sx={{ mb: 2 }}>
+            {error}
+          </Typography>
+        )}
+        <form onSubmit={handleSubmit}>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+                <DateTimePicker
+                  label="Fecha y hora de ingreso"
+                  value={formData.fecha_y_hora_ingreso}
+                  onChange={(newValue) => handleInputChange('fecha_y_hora_ingreso', newValue)}
+                  renderInput={(params) => <TextField {...params} fullWidth size="small" />}
                 />
-                <TextField
-                  type="time"
-                  label="Hora"
-                  value={formData.caratula.hora}
-                  onChange={(e) => handleInputChange('caratula', 'hora', e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  size="small"
-                  fullWidth
-                />
-              </Box>
+              </LocalizationProvider>
+            </Grid>
+            <Grid item xs={12}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Origen</InputLabel>
+                <Select
+                  value={formData.origen}
+                  onChange={(e) => handleInputChange('origen', e.target.value)}
+                  label="Origen"
+                >
+                  <MenuItem value="WEB">WEB</MenuItem>
+                  <MenuItem value="TELEFONO">TELEFONO</MenuItem>
+                  <MenuItem value="PRESENCIAL">PRESENCIAL</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={6}>
               <TextField
                 fullWidth
-                label="ID Notificación manual"
-                value={formData.caratula.idNotificacion}
-                onChange={(e) => handleInputChange('caratula', 'idNotificacion', e.target.value)}
+                label="Nro. Notificación 102"
+                type="number"
+                value={formData.nro_notificacion_102}
+                onChange={(e) => handleInputChange('nro_notificacion_102', e.target.value)}
                 size="small"
               />
+            </Grid>
+            <Grid item xs={6}>
               <TextField
                 fullWidth
-                label="Notificación Nro."
-                value={formData.caratula.notificacionNro}
-                onChange={(e) => handleInputChange('caratula', 'notificacionNro', e.target.value)}
+                label="Nro. SAC"
+                type="number"
+                value={formData.nro_sac}
+                onChange={(e) => handleInputChange('nro_sac', e.target.value)}
                 size="small"
               />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                fullWidth
+                label="Nro. SUAC"
+                type="number"
+                value={formData.nro_suac}
+                onChange={(e) => handleInputChange('nro_suac', e.target.value)}
+                size="small"
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                fullWidth
+                label="Nro. Historia Clínica"
+                type="number"
+                value={formData.nro_historia_clinica}
+                onChange={(e) => handleInputChange('nro_historia_clinica', e.target.value)}
+                size="small"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Nro. Oficio Web"
+                type="number"
+                value={formData.nro_oficio_web}
+                onChange={(e) => handleInputChange('nro_oficio_web', e.target.value)}
+                size="small"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Descripción"
+                multiline
+                rows={4}
+                value={formData.descripcion}
+                onChange={(e) => handleInputChange('descripcion', e.target.value)}
+                size="small"
+              />
+            </Grid>
+
+            <Grid item xs={12}>
               <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Datos de Localización</Typography>
+            </Grid>
+            <Grid item xs={6}>
               <TextField
                 fullWidth
                 label="Calle"
-                value={formData.caratula.calle}
-                onChange={(e) => handleInputChange('caratula', 'calle', e.target.value)}
+                value={formData.localizacion.calle}
+                onChange={(e) => handleLocalizacionChange('calle', e.target.value)}
                 size="small"
               />
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <TextField
-                  fullWidth
-                  label="Número"
-                  value={formData.caratula.numero}
-                  onChange={(e) => handleInputChange('caratula', 'numero', e.target.value)}
-                  size="small"
-                />
-                <TextField
-                  fullWidth
-                  label="Barrio"
-                  value={formData.caratula.barrio}
-                  onChange={(e) => handleInputChange('caratula', 'barrio', e.target.value)}
-                  size="small"
-                />
-              </Box>
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <TextField
-                  fullWidth
-                  label="Localidad"
-                  value={formData.caratula.localidad}
-                  onChange={(e) => handleInputChange('caratula', 'localidad', e.target.value)}
-                  size="small"
-                />
-                <TextField
-                  fullWidth
-                  label="Provincia"
-                  value={formData.caratula.provincia}
-                  onChange={(e) => handleInputChange('caratula', 'provincia', e.target.value)}
-                  size="small"
-                />
-              </Box>
+            </Grid>
+            <Grid item xs={6}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Tipo de Calle</InputLabel>
+                <Select
+                  value={formData.localizacion.tipo_calle}
+                  onChange={(e) => handleLocalizacionChange('tipo_calle', e.target.value)}
+                  label="Tipo de Calle"
+                >
+                  <MenuItem value="CALLE">CALLE</MenuItem>
+                  <MenuItem value="AVENIDA">AVENIDA</MenuItem>
+                  <MenuItem value="PASAJE">PASAJE</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={6}>
               <TextField
                 fullWidth
-                label="Referencias Geográficas"
-                value={formData.caratula.referenciasGeograficas}
-                onChange={(e) => handleInputChange('caratula', 'referenciasGeograficas', e.target.value)}
+                label="Piso/Depto"
+                type="number"
+                value={formData.localizacion.piso_depto}
+                onChange={(e) => handleLocalizacionChange('piso_depto', e.target.value)}
+                size="small"
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                fullWidth
+                label="Lote"
+                type="number"
+                value={formData.localizacion.lote}
+                onChange={(e) => handleLocalizacionChange('lote', e.target.value)}
+                size="small"
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                fullWidth
+                label="Manzana"
+                type="number"
+                value={formData.localizacion.mza}
+                onChange={(e) => handleLocalizacionChange('mza', e.target.value)}
+                size="small"
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                fullWidth
+                label="Número de Casa"
+                type="number"
+                value={formData.localizacion.casa_nro}
+                onChange={(e) => handleLocalizacionChange('casa_nro', e.target.value)}
+                size="small"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Referencia Geográfica"
                 multiline
-                rows={4}
+                rows={2}
+                value={formData.localizacion.referencia_geo}
+                onChange={(e) => handleLocalizacionChange('referencia_geo', e.target.value)}
                 size="small"
               />
-            </Box>
-          </Box>
-        );
+            </Grid>
+            <Grid item xs={6}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Barrio</InputLabel>
+                <Select
+                  value={formData.localizacion.barrio}
+                  onChange={(e) => handleLocalizacionChange('barrio', e.target.value)}
+                  label="Barrio"
+                >
+                  {barrios.map((barrio) => (
+                    <MenuItem key={barrio.id} value={barrio.id}>
+                      {barrio.nombre}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={6}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Localidad</InputLabel>
+                <Select
+                  value={formData.localizacion.localidad}
+                  onChange={(e) => handleLocalizacionChange('localidad', e.target.value)}
+                  label="Localidad"
+                >
+                  {localidades.map((localidad) => (
+                    <MenuItem key={localidad.id} value={localidad.id}>
+                      {localidad.nombre}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={6}>
+              <FormControl fullWidth size="small">
+                <InputLabel>CPC</InputLabel>
+                <Select
+                  value={formData.localizacion.cpc}
+                  onChange={(e) => handleLocalizacionChange('cpc', e.target.value)}
+                  label="CPC"
+                >
+                  {cpcs.map((cpc) => (
+                    <MenuItem key={cpc.id} value={cpc.id}>
+                      {cpc.nombre}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
 
-      case 1:
-        return (
-          <Box sx={{ p: 2 }}>
-            <Typography color="primary" sx={{ mb: 2 }}>Niñas, niños y adolescentes convivientes</Typography>
-            {formData.ninosAdolescentes.map((nino, index) => (
-              <Box key={index} sx={{ mb: 3 }}>
-                <TextField
-                  fullWidth
-                  label="Nombre y Apellido"
-                  value={nino.nombreApellido}
-                  onChange={(e) => {
-                    const newNinos = [...formData.ninosAdolescentes];
-                    newNinos[index].nombreApellido = e.target.value;
-                    setFormData({ ...formData, ninosAdolescentes: newNinos });
-                  }}
-                  size="small"
-                  sx={{ mb: 2 }}
-                />
-                <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                  <TextField
-                    label="Edad"
-                    value={nino.edad}
-                    onChange={(e) => {
-                      const newNinos = [...formData.ninosAdolescentes];
-                      newNinos[index].edad = e.target.value;
-                      setFormData({ ...formData, ninosAdolescentes: newNinos });
-                    }}
-                    size="small"
-                    fullWidth
-                  />
-                  <TextField
-                    label="Género"
-                    value={nino.genero}
-                    onChange={(e) => {
-                      const newNinos = [...formData.ninosAdolescentes];
-                      newNinos[index].genero = e.target.value;
-                      setFormData({ ...formData, ninosAdolescentes: newNinos });
-                    }}
-                    size="small"
-                    fullWidth
-                  />
-                  <TextField
-                    label="Institución educativa"
-                    value={nino.institucionEducativa}
-                    onChange={(e) => {
-                      const newNinos = [...formData.ninosAdolescentes];
-                      newNinos[index].institucionEducativa = e.target.value;
-                      setFormData({ ...formData, ninosAdolescentes: newNinos });
-                    }}
-                    size="small"
-                    fullWidth
-                  />
-                </Box>
-                <TextField
-                  fullWidth
-                  label="Curso, nivel y Turno"
-                  value={nino.cursoNivelTurno}
-                  onChange={(e) => {
-                    const newNinos = [...formData.ninosAdolescentes];
-                    newNinos[index].cursoNivelTurno = e.target.value;
-                    setFormData({ ...formData, ninosAdolescentes: newNinos });
-                  }}
-                  size="small"
-                  sx={{ mb: 2 }}
-                />
-                <TextField
-                  fullWidth
-                  label="Institución sanitaria"
-                  value={nino.institucionSanitaria}
-                  onChange={(e) => {
-                    const newNinos = [...formData.ninosAdolescentes];
-                    newNinos[index].institucionSanitaria = e.target.value;
-                    setFormData({ ...formData, ninosAdolescentes: newNinos });
-                  }}
-                  size="small"
-                  sx={{ mb: 2 }}
-                />
-                <FormControl component="fieldset" sx={{ mb: 2 }}>
-                  <Typography variant="body2" sx={{ mb: 1 }}>Es un NNyA con DD vulnerados?</Typography>
-                  <RadioGroup
-                    row
-                    value={nino.esNNyA}
-                    onChange={(e) => {
-                      const newNinos = [...formData.ninosAdolescentes];
-                      newNinos[index].esNNyA = e.target.value === 'true';
-                      setFormData({ ...formData, ninosAdolescentes: newNinos });
-                    }}
-                  >
-                    <FormControlLabel value={true} control={<Radio />} label="SI" />
-                    <FormControlLabel value={false} control={<Radio />} label="NO" />
-                  </RadioGroup>
-                </FormControl>
-                <TextField
-                  fullWidth
-                  label="Comentarios"
-                  value={nino.comentarios}
-                  onChange={(e) => {
-                    const newNinos = [...formData.ninosAdolescentes];
-                    newNinos[index].comentarios = e.target.value;
-                    setFormData({ ...formData, ninosAdolescentes: newNinos });
-                  }}
-                  multiline
-                  rows={4}
-                  size="small"
-                />
-              </Box>
-            ))}
-            <Button
-              startIcon={<AddIcon />}
-              onClick={addNinoAdolescente}
-              sx={{ color: 'primary.main' }}
+            <Grid item xs={12}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Usuario Externo</InputLabel>
+                <Select
+                  value={formData.usuario_externo}
+                  onChange={(e) => handleInputChange('usuario_externo', e.target.value)}
+                  label="Usuario Externo"
+                >
+                  {usuariosExternos.map((usuario) => (
+                    <MenuItem key={usuario.id} value={usuario.id}>
+                      {usuario.nombre}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+
+          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+            <Button 
+              type="submit" 
+              variant="contained" 
+              color="primary"
+              disabled={isSubmitting}
             >
-              Añadir otro niño o adolescente
-            </Button>
-          </Box>
-        );
-
-      case 2:
-        return (
-          <Box sx={{ p: 2 }}>
-            <Typography color="primary" sx={{ mb: 2 }}>Adultos convivientes</Typography>
-            {formData.adultosConvivientes.map((adulto, index) => (
-              <Box key={index} sx={{ mb: 3 }}>
-                <TextField
-                  fullWidth
-                  label="Nombre y Apellido"
-                  value={adulto.nombreApellido}
-                  onChange={(e) => {
-                    const newAdultos = [...formData.adultosConvivientes];
-                    newAdultos[index].nombreApellido = e.target.value;
-                    setFormData({ ...formData, adultosConvivientes: newAdultos });
-                  }}
-                  size="small"
-                  sx={{ mb: 2 }}
-                />
-                <TextField
-                  fullWidth
-                  label="Vínculo"
-                  value={adulto.vinculo}
-                  onChange={(e) => {
-                    const newAdultos = [...formData.adultosConvivientes];
-                    newAdultos[index].vinculo = e.target.value;
-                    setFormData({ ...formData, adultosConvivientes: newAdultos });
-                  }}
-                  size="small"
-                  sx={{ mb: 2 }}
-                />
-                <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                  <TextField
-                    label="Edad"
-                    value={adulto.edad}
-                    onChange={(e) => {
-                      const newAdultos = [...formData.adultosConvivientes];
-                      newAdultos[index].edad = e.target.value;
-                      setFormData({ ...formData, adultosConvivientes: newAdultos });
-                    }}
-                    size="small"
-                    fullWidth
-                  />
-                  <TextField
-                    label="Género"
-                    value={adulto.genero}
-                    onChange={(e) => {
-                      const newAdultos = [...formData.adultosConvivientes];
-                      newAdultos[index].genero = e.target.value;
-                      setFormData({ ...formData, adultosConvivientes: newAdultos });
-                    }}
-                    size="small"
-                    fullWidth
-                  />
-                </Box>
-                <TextField
-                  fullWidth
-                  label="Observaciones"
-                  value={adulto.observaciones}
-                  onChange={(e) => {
-                    const newAdultos = [...formData.adultosConvivientes];
-                    newAdultos[index].observaciones = e.target.value;
-                    setFormData({ ...formData, adultosConvivientes: newAdultos });
-                  }}
-                  multiline
-                  rows={4}
-                  size="small"
-                />
-              </Box>
-            ))}
-            <Button
-              startIcon={<AddIcon />}
-              onClick={addAdulto}
-              sx={{ color: 'primary.main' }}
-            >
-              Añadir otro adulto
-            </Button>
-          </Box>
-        );
-
-      case 3:
-        return (
-          <Box sx={{ p: 2 }}>
-            <Typography color="primary" sx={{ mb: 2 }}>Presunta Vulneración de Derechos informada</Typography>
-            <TextField
-              fullWidth
-              label="Motivo"
-              value={formData.presuntaVulneracion.motivo}
-              onChange={(e) => handleInputChange('presuntaVulneracion', 'motivo', e.target.value)}
-              multiline
-              rows={4}
-              size="small"
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Ámbito de vulneración"
-              value={formData.presuntaVulneracion.ambitoVulneracion}
-              onChange={(e) => handleInputChange('presuntaVulneracion', 'ambitoVulneracion', e.target.value)}
-              multiline
-              rows={4}
-              size="small"
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Principal Derecho vulnerado"
-              value={formData.presuntaVulneracion.principalDerechoVulnerado}
-              onChange={(e) => handleInputChange('presuntaVulneracion', 'principalDerechoVulnerado', e.target.value)}
-              multiline
-              rows={4}
-              size="small"
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Problemática Identificada"
-              value={formData.presuntaVulneracion.problematicaIdentificada}
-              onChange={(e) => handleInputChange('presuntaVulneracion', 'problematicaIdentificada', e.target.value)}
-              multiline
-              rows={4}
-              size="small"
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Prioridad sugerida de intervención"
-              value={formData.presuntaVulneracion.prioridadIntervencion}
-              onChange={(e) => handleInputChange('presuntaVulneracion', 'prioridadIntervencion', e.target.value)}
-              multiline
-              rows={4}
-              size="small"
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Nombre y cargo de Operador/a"
-              value={formData.presuntaVulneracion.nombreCargoOperador}
-              onChange={(e) => handleInputChange('presuntaVulneracion', 'nombreCargoOperador', e.target.value)}
-              size="small"
-            />
-          </Box>
-        );
-
-      case 4:
-        return (
-          <Box sx={{ p: 2 }}>
-            <Typography color="primary" sx={{ mb: 2 }}>Autor de la vulneración de Derechos de NNyA</Typography>
-            {formData.autores.map((autor, index) => (
-              <Box key={index} sx={{ mb: 3 }}>
-                <TextField
-                  fullWidth
-                  label="Nombre y Apellido"
-                  value={autor.nombreApellido}
-                  onChange={(e) => {
-                    const newAutores = [...formData.autores];
-                    newAutores[index].nombreApellido = e.target.value;
-                    setFormData({ ...formData, autores: newAutores });
-                  }}
-                  size="small"
-                  sx={{ mb: 2 }}
-                />
-                <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                  <TextField
-                    label="Edad"
-                    value={autor.edad}
-                    onChange={(e) => {
-                      const newAutores = [...formData.autores];
-                      newAutores[index].edad = e.target.value;
-                      setFormData({ ...formData, autores: newAutores });
-                    }}
-                    size="small"
-                    fullWidth
-                  />
-                  <TextField
-                    label="Género"
-                    value={autor.genero}
-                    onChange={(e) => {
-                      const newAutores = [...formData.autores];
-                      newAutores[index].genero = e.target.value;
-                      setFormData({ ...formData, autores: newAutores });
-                    }}
-                    size="small"
-                    fullWidth
-                  />
-                  <TextField
-                    label="Vínculo"
-                    value={autor.vinculo}
-                    onChange={(e) => {
-                      const newAutores = [...formData.autores];
-                      newAutores[index].vinculo = e.target.value;
-                      setFormData({ ...formData, autores: newAutores });
-                    }}
-                    size="small"
-                    fullWidth
-                  />
-                </Box>
-                <FormControl component="fieldset" sx={{ mb: 2 }}>
-                  <Typography variant="body2" sx={{ mb: 1 }}>Convive?</Typography>
-                  <RadioGroup
-                    row
-                    value={autor.convive}
-                    onChange={(e) => {
-                      const newAutores = [...formData.autores];
-                      newAutores[index].convive = e.target.value === 'true';
-                      setFormData({ ...formData, autores: newAutores });
-                    }}
-                  >
-                    <FormControlLabel value={true} control={<Radio />} label="SI" />
-                    <FormControlLabel value={false} control={<Radio />} label="NO" />
-                  </RadioGroup>
-                </FormControl>
-                <TextField
-                  fullWidth
-                  label="Comentarios"
-                  value={autor.comentarios}
-                  onChange={(e) => {
-                    const newAutores = [...formData.autores];
-                    newAutores[index].comentarios = e.target.value;
-                    setFormData({ ...formData, autores: newAutores });
-                  }}
-                  multiline
-                  rows={4}
-                  size="small"
-                />
-              </Box>
-            ))}
-            <Button
-              startIcon={<AddIcon />}
-              onClick={addAutor}
-              sx={{ color: 'primary.main' }}
-            >
-              Añadir otro autor
-            </Button>
-
-            <Typography color="primary" sx={{ mt: 4, mb: 2 }}>Descripción de la situación</Typography>
-            <TextField
-              fullWidth
-              label="Comentarios"
-              value={formData.descripcionSituacion}
-              onChange={(e) => handleInputChange('descripcionSituacion', '', e.target.value)}
-              multiline
-              rows={4}
-              size="small"
-              sx={{ mb: 4 }}
-            />
-
-            <Typography color="primary" sx={{ mb: 2 }}>Sobre el usuario de la línea</Typography>
-            <TextField
-              fullWidth
-              label="Nombre y Apellido"
-              value={formData.usuarioLinea.nombreApellido}
-              onChange={(e) => handleInputChange('usuarioLinea', 'nombreApellido', e.target.value)}
-              size="small"
-              sx={{ mb: 2 }}
-            />
-            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-              <TextField
-                label="Edad"
-                value={formData.usuarioLinea.edad}
-                onChange={(e) => handleInputChange('usuarioLinea', 'edad', e.target.value)}
-                size="small"
-                fullWidth
-              />
-              <TextField
-                label="Género"
-                value={formData.usuarioLinea.genero}
-                onChange={(e) => handleInputChange('usuarioLinea', 'genero', e.target.value)}
-                size="small"
-                fullWidth
-              />
-            </Box>
-            <TextField
-              fullWidth
-              label="Vínculo"
-              value={formData.usuarioLinea.vinculo}
-              onChange={(e) => handleInputChange('usuarioLinea', 'vinculo', e.target.value)}
-              size="small"
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Teléfono"
-              value={formData.usuarioLinea.telefono}
-              onChange={(e) => handleInputChange('usuarioLinea', 'telefono', e.target.value)}
-              size="small"
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Institución o programa"
-              value={formData.usuarioLinea.institucionPrograma}
-              onChange={(e) => handleInputChange('usuarioLinea', 'institucionPrograma', e.target.value)}
-              size="small"
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Contacto Institución o programa"
-              value={formData.usuarioLinea.contactoInstitucion}
-              onChange={(e) => handleInputChange('usuarioLinea', 'contactoInstitucion', e.target.value)}
-              size="small"
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Nombre y cargo del responsable"
-              value={formData.usuarioLinea.nombreCargoResponsable}
-              onChange={(e) => handleInputChange('usuarioLinea', 'nombreCargoResponsable', e.target.value)}
-              size="small"
-            />
-          </Box>
-        );
-
-      default:
-        return null;
-    }
-  };
-  useEffect(() => {
-    if (isOpen) {
-      resetForm();
-    }
-  }, [isOpen]);
-
-  return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
-      PaperProps={{
-        sx: {
-          maxHeight: '90vh',
-        },
-      }}
-    >
-      <Box sx={{ position: 'relative', p: 2 }}>
-        <Typography variant="h6">Nuevo Ingreso</Typography>
-        <IconButton
-          aria-label="close"
-          onClick={onClose}
-          sx={{
-            position: 'absolute',
-            right: 8,
-            top: 8,
-            color: (theme) => theme.palette.grey[500],
-          }}
-        >
-          <CloseIcon />
-        </IconButton>
-      </Box>
-
-      <Stepper activeStep={activeStep} sx={{ px: 2, py: 3 }}>
-        {steps.map((label) => (
-          <Step key={label}>
-            <StepLabel>{label}</StepLabel>
-          </Step>
-        ))}
-      </Stepper>
-
-      <DialogContent dividers>
-        <form onSubmit={handleSubmit}>
-          {renderStepContent(activeStep)}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-            <Button
-              onClick={handleBack}
-              disabled={activeStep === 0}
-              variant="outlined"
-              sx={{ color: 'grey.700' }}
-            >
-              Anterior
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              sx={{ bgcolor: 'primary.main' }}
-            >
-              {activeStep === steps.length - 1 ? 'Ingresar Entrada' : 'Siguiente'}
+              {isSubmitting ? <CircularProgress size={24} /> : 'Guardar'}
             </Button>
           </Box>
         </form>
-      </DialogContent>
-    </Dialog>
-  );
+      </Box>
+    </Modal>
+  )
 }
