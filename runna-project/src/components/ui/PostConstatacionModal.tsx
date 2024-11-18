@@ -1,4 +1,6 @@
 import React, { useState } from 'react'
+import { TDemanda } from '../../api/interfaces'
+
 import {
   Box,
   Typography,
@@ -88,7 +90,7 @@ interface Demanda {
 }
 
 interface PostConstatacionModalProps {
-  demanda: Demanda
+  demanda: TDemanda
   onClose: () => void
   onEvaluate: () => void
 }

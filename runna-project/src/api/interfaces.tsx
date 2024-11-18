@@ -120,6 +120,9 @@ export interface TProvincia {
   }
   
 export interface TLocalizacion {
+    referenciasGeograficas: unknown;
+    provincia: unknown;
+    numero: unknown;
     id: number;
     calle: string;
     tipo_calle: string;
@@ -154,6 +157,11 @@ export interface TLocalizacion {
   }
   
   export interface TUsuarioLinea {
+    nombreCargoResponsable: unknown;
+    institucionPrograma: unknown;
+    vinculo: unknown;
+    edad: unknown;
+    nombreApellido: unknown;
     nombre: string;
     apellido: string;
     fecha_nacimiento: string; // Opcional según contexto, lo podemos ajustar más adelante
@@ -167,19 +175,37 @@ export interface TLocalizacion {
   
   
   export interface TDemanda {
-    id?: number; // Optional for retrieval
-    hora_ingreso: string; // Required
-    origen: string; // Required
-    localizacion: TLocalizacion | number; // Can be an object or a foreign key ID
-    usuario_linea: TUsuarioLinea | number; // Can be an object or a foreign key ID
-  
-    nro_notificacion_102?: string; // Optional
-    nro_sac?: string; // Optional
-    nro_suac?: string; // Optional
-    nro_historia_clinica?: string; // Optional
-    nro_oficio_web?: string; // Optional
-    descripcion?: string; // Optional
-    ultima_actualizacion?: string; // Optional
+    vulneracionDerechos: any;
+    vulneracionDerechos: any;
+    descripcionSituacion: string;
+    datosRequeridos: any;
+    archivosAdjuntos: any;
+    archivosAdjuntos: any;
+    historial: any;
+    asociadoRegistro: any;
+    id?: number;
+    hora_ingreso: string;
+    origen: string;
+    localizacion: TLocalizacion | number;
+    usuario_linea: TUsuarioLinea | number;
+    nro_notificacion_102?: string;
+    nro_sac?: string;
+    nro_suac?: string;
+    nro_historia_clinica?: string;
+    nro_oficio_web?: string;
+    descripcion?: string;
+    ultima_actualizacion?: string;
+    estado: string;
+    calificacion?: string;
+    nombre: string; // Added to match Demanda interface
+    dni: string; // Added to match Demanda interface
+    edad: number; // Added to match Demanda interface
+    fechaActualizacion: string; // Added to match Demanda interface
+    legajo?: string;
+    ninosAdolescentes: any[]; // Added to match Demanda interface
+    adultosConvivientes: any[]; // Added to match Demanda interface
+    autores: any[]; // Added to match Demanda interface
+    fecha: string; // Added to match Demanda interface
   }
   export interface TPrecalificacionDemanda {
     fecha: string;
@@ -302,3 +328,16 @@ export interface TLegajo {
     demanda: TDemanda | number; // Relación con TDemanda
     motivo: TMotivoIntervencion | number; // Relación con TMotivoIntervencion
   }
+  export interface TUsuarioExterno {
+    id: number; // ID único del usuario externo
+    nombre: string;
+    apellido: string;
+    fecha_nacimiento: string; // Formato de fecha (ISO)
+    genero: 'MASCULINO' | 'FEMENINO' | 'OTRO'; // Enum para género
+    telefono: number; // Número de teléfono
+    mail: string; // Correo electrónico
+    vinculo: number; // Relación con la tabla de vínculos
+    institucion: number; // Relación con la tabla de instituciones
+    responsable: number; // Relación con TResponsable
+  }
+  

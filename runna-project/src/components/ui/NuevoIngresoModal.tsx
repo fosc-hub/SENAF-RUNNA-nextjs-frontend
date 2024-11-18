@@ -18,12 +18,19 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
+import { TDemanda } from '../../api/interfaces';
+
 
 interface NuevoIngresoModalProps {
+
   isOpen: boolean;
+
   onClose: () => void;
-  onSubmit: (data: FormData) => void;
+
+  onSubmit: (data: Partial<TDemanda>) => void;
+
 }
+
 
 interface NinoAdolescente {
   nombreApellido: string;

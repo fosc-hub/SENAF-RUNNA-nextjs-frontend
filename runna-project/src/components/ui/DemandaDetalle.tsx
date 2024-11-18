@@ -1,4 +1,6 @@
 import React, { useState } from 'react'
+import { TDemanda } from '../../api/interfaces'
+
 import {
   Box,
   Typography,
@@ -99,13 +101,13 @@ interface Demanda {
 }
 
 interface DemandaDetalleProps {
-  demanda: Demanda
+  demanda: TDemanda
   onClose: () => void
   onConstatar: () => void
 }
 
 export default function DemandaDetalle({ demanda, onClose, onConstatar }: DemandaDetalleProps) {
-  const [formData, setFormData] = useState<Demanda>({
+  const [formData, setFormData] = useState<TDemanda>({
     ...demanda,
     calificacion: demanda.calificacion || 'Sin calificar',
     fechaActualizacion: demanda.fechaActualizacion || new Date().toISOString(),

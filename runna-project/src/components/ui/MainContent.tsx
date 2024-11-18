@@ -1,44 +1,15 @@
 'use client'
 
-import React, { useState, useCallback, useMemo } from 'react'
-import { Button, Box, Typography, Modal } from '@mui/material'
-import { 
-  DataGrid, 
-  GridRowParams,
-  GridCallbackDetails,
-  GridRenderCellParams,
-  GridColDef,
-} from '@mui/x-data-grid'
-import { Search} from '@mui/icons-material'
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import { Select, MenuItem, FormControl, InputLabel } from '@mui/material'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { Button, Box, Typography, Modal, FormControl, InputLabel, Select, MenuItem } from '@mui/material'
+import { DataGrid, GridRowParams, GridRenderCellParams, GridColDef } from '@mui/x-data-grid'
+import { Search, InfoOutlined } from '@mui/icons-material'
 import DemandaDetalle from './DemandaDetalle'
 import PostConstatacionModal from './PostConstatacionModal'
 import NuevoIngresoModal from './NuevoIngresoModal'
 import EvaluacionModal from './EvaluacionModal'
-
-interface Demand {
-  id: string;
-  nombre: string;
-  dni: string;
-  edad: number;
-  ultimaActualizacion: string;
-  colaboradorAsignado?: string;
-  recibido: string;
-  estado: string;
-  calificacion?: string;
-  fechaActualizacion: string;
-  legajo?: string;
-  ninosAdolescentes: any[];
-  adultosConvivientes: any[];
-  autores: any[];
-  fecha: string;
-}
-
-interface MainContentProps {
-  demands: Demand[]
-  onUpdateDemands: (demands: Demand[]) => void
-}
+import { getDemands, createDemand, updateDemand } from '../../api/TableFunctions/demands'
+import { TDemanda, TLocalizacion, TUsuarioLinea } from '../../api/interfaces'
 
 const origenOptions = [
   { value: 'todos', label: 'Todos' },
@@ -61,22 +32,28 @@ const calificacionOptions = [
   { value: 'normal', label: 'Normal' },
 ]
 
-const colaboradorOptions = [
-  { value: 'colaborador1', label: 'Colaborador 1' },
-  { value: 'colaborador2', label: 'Colaborador 2' },
-  { value: 'colaborador3', label: 'Colaborador 3' },
-  { value: 'colaborador4', label: 'Colaborador 4' },
-]
-
-export function MainContent({ demands: initialDemands, onUpdateDemands }: MainContentProps) {
-  const [demands, setDemands] = useState<Demand[]>(initialDemands)
+export function MainContent() {
+  const [demands, setDemands] = useState<TDemanda[]>([])
   const [isNuevoIngresoModalOpen, setIsNuevoIngresoModalOpen] = useState(false)
-  const [selectedDemand, setSelectedDemand] = useState<Demand | null>(null)
+  const [selectedDemand, setSelectedDemand] = useState<TDemanda | null>(null)
   const [showPostConstatacion, setShowPostConstatacion] = useState(false)
   const [showEvaluacionModal, setShowEvaluacionModal] = useState(false)
   const [showDemandaDetalle, setShowDemandaDetalle] = useState(false)
   const [origen, setOrigen] = useState('')
   const [estado, setEstado] = useState('')
+
+  useEffect(() => {
+    fetchDemands()
+  }, [])
+
+  const fetchDemands = async () => {
+    try {
+      const fetchedDemands = await getDemands()
+      setDemands(fetchedDemands)
+    } catch (error) {
+      console.error('Error fetching demands:', error)
+    }
+  }
 
   const handleNuevoRegistro = useCallback(() => {
     setIsNuevoIngresoModalOpen(true)
@@ -86,32 +63,17 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
     setIsNuevoIngresoModalOpen(false)
   }, [])
 
-  const handleSubmitNuevoIngreso = useCallback((formData: any) => {
-    const demandWithState: Demand = {
-      id: Date.now().toString(),
-      nombre: formData.caratula.nombre,
-      dni: formData.caratula.dni,
-      edad: parseInt(formData.ninosAdolescentes[0]?.edad || '0'),
-      ultimaActualizacion: new Date().toISOString(),
-      recibido: new Date().toISOString(),
-      estado: 'No verificada',
-      calificacion: 'Sin calificar',
-      fechaActualizacion: new Date().toISOString(),
-      legajo: formData.caratula.legajo || '',
-      ninosAdolescentes: [],
-      adultosConvivientes: [],
-      autores: [],
-      fecha: ''
+  const handleSubmitNuevoIngreso = useCallback(async (formData: Partial<TDemanda>) => {
+    try {
+      const newDemand = await createDemand(formData)
+      setDemands(prevDemands => [newDemand, ...prevDemands])
+      setIsNuevoIngresoModalOpen(false)
+    } catch (error) {
+      console.error('Error creating new demand:', error)
     }
-    setDemands(prevDemands => {
-      const updatedDemands = [demandWithState, ...prevDemands]
-      onUpdateDemands(updatedDemands)
-      return updatedDemands
-    })
-    setIsNuevoIngresoModalOpen(false)
-  }, [onUpdateDemands])
+  }, [])
 
-  const handleDemandClick = useCallback((params: GridRowParams<Demand>) => {
+  const handleDemandClick = useCallback((params: GridRowParams<TDemanda>) => {
     setSelectedDemand(params.row)
     if (params.row.estado === 'Verificada') {
       setShowPostConstatacion(true)
@@ -129,34 +91,36 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
     setShowEvaluacionModal(false)
   }, [])
 
-  const handleConstatar = useCallback(() => {
+  const handleConstatar = useCallback(async () => {
     if (selectedDemand) {
-      const updatedDemands = demands.map(demand => 
-        demand.id === selectedDemand.id 
-          ? { ...demand, estado: 'Verificada' } 
-          : demand
-      )
-      setDemands(updatedDemands)
-      onUpdateDemands(updatedDemands)
+      try {
+        const updatedDemand = await updateDemand(selectedDemand.id!, { ...selectedDemand, estado: 'Verificada' })
+        setDemands(prevDemands => prevDemands.map(demand => 
+          demand.id === updatedDemand.id ? updatedDemand : demand
+        ))
+        setShowDemandaDetalle(false)
+        setShowPostConstatacion(true)
+      } catch (error) {
+        console.error('Error updating demand:', error)
+      }
     }
-    setShowDemandaDetalle(false)
-    setShowPostConstatacion(true)
-  }, [demands, selectedDemand, onUpdateDemands])
+  }, [selectedDemand])
 
-  const handleEvaluate = useCallback(() => {
+  const handleEvaluate = useCallback(async () => {
     if (selectedDemand) {
-      const updatedDemands = demands.map(demand => 
-        demand.id === selectedDemand.id 
-          ? { ...demand, estado: 'En evaluación' } 
-          : demand
-      )
-      setDemands(updatedDemands)
-      onUpdateDemands(updatedDemands)
+      try {
+        const updatedDemand = await updateDemand(selectedDemand.id!, { ...selectedDemand, estado: 'En evaluación' })
+        setDemands(prevDemands => prevDemands.map(demand => 
+          demand.id === updatedDemand.id ? updatedDemand : demand
+        ))
+        setShowPostConstatacion(false)
+      } catch (error) {
+        console.error('Error updating demand:', error)
+      }
     }
-    setShowPostConstatacion(false)
-  }, [demands, selectedDemand, onUpdateDemands])
+  }, [selectedDemand])
 
-  const getRowClassName = useCallback((params: GridRowParams<Demand>) => {
+  const getRowClassName = useCallback((params: GridRowParams<TDemanda>) => {
     switch (params.row.estado) {
       case 'Verificada':
         return 'bg-green-100'
@@ -169,114 +133,43 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
     }
   }, [])
 
-  const handleCalificacionChange = useCallback((demandId: string, newCalificacion: string) => {
-    setDemands(prevDemands => {
-      const updatedDemands = prevDemands.map(demand => 
-        demand.id === demandId ? { ...demand, calificacion: newCalificacion } : demand
-      )
-      onUpdateDemands(updatedDemands)
-      return updatedDemands
-    })
-  }, [onUpdateDemands])
-
-  const handleColaboradorChange = useCallback((demandId: string, newColaborador: string) => {
-    setDemands(prevDemands => {
-      const updatedDemands = prevDemands.map(demand => 
-        demand.id === demandId ? { ...demand, colaboradorAsignado: newColaborador } : demand
-      )
-      onUpdateDemands(updatedDemands)
-      return updatedDemands
-    })
-  }, [onUpdateDemands])
-
   const columns: GridColDef[] = useMemo(() => [
     {
+      field: 'id',
+      headerName: 'ID',
+      width: 70,
+    },
+    {
+      field: 'hora_ingreso',
+      headerName: 'Hora de Ingreso',
+      width: 180,
+    },
+    {
+      field: 'origen',
+      headerName: 'Origen',
+      width: 130,
+    },
+    {
       field: 'nombre',
-      headerName: 'Demanda',
-      flex: 1,
-      renderCell: (params: GridRenderCellParams<Demand>) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {params.row.calificacion === 'urgente' && (
-            <InfoOutlinedIcon 
-              sx={{ 
-                color: 'error.main',
-                fontSize: 20
-              }} 
-            />
-          )}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {params.row.legajo && (
-              <Typography 
-                component="span" 
-                sx={{ 
-                  color: 'primary.main', 
-                  fontWeight: 'medium'
-                }}
-              >
-                {params.row.legajo}
-              </Typography>
-            )}
-            <Typography>{params.row.nombre}</Typography>
-          </Box>
-        </Box>
-      ),
-    },
-    { 
-      field: 'ultimaActualizacion', 
-      headerName: 'Última actualización', 
-      flex: 1,
+      headerName: 'Nombre',
+      width: 200,
     },
     {
-      field: 'colaboradorAsignado',
-      headerName: 'Colaborador asignado',
-      flex: 1,
-      renderCell: (params: GridRenderCellParams<Demand>) => (
-        <FormControl fullWidth size="small">
-          <Select
-            value={params.row.colaboradorAsignado || ''}
-            onChange={(e) => handleColaboradorChange(params.row.id, e.target.value as string)}
-            onClick={(e) => e.stopPropagation()}
-            sx={{ minWidth: 120 }}
-          >
-            <MenuItem value="">
-              <em>No asignado</em>
-            </MenuItem>
-            {colaboradorOptions.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      ),
-    },
-    { 
-      field: 'recibido', 
-      headerName: 'Recibido', 
-      flex: 1,
+      field: 'dni',
+      headerName: 'DNI',
+      width: 130,
     },
     {
-      field: 'calificacion',
-      headerName: 'Calificación',
-      flex: 1,
-      renderCell: (params: GridRenderCellParams<Demand>) => (
-        <FormControl fullWidth size="small">
-          <Select
-            value={params.row.calificacion || 'sin_calificar'}
-            onChange={(e) => handleCalificacionChange(params.row.id, e.target.value as string)}
-            onClick={(e) => e.stopPropagation()}
-            sx={{ minWidth: 120 }}
-          >
-            {calificacionOptions.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      ),
+      field: 'estado',
+      headerName: 'Estado',
+      width: 130,
     },
-  ], [handleCalificacionChange, handleColaboradorChange])
+    {
+      field: 'ultima_actualizacion',
+      headerName: 'Última Actualización',
+      width: 180,
+    },
+  ], [])
 
   return (
     <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 3, overflow: 'auto' }}>
@@ -288,18 +181,6 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
             sx={{ bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' } }}
           >
             + Nuevo Registro
-          </Button>
-          <Button
-            variant="outlined"
-            sx={{ color: 'text.primary', borderColor: 'grey.300', '&:hover': { bgcolor: 'grey.100' } }}
-          >
-            No Leído
-          </Button>
-          <Button
-            variant="outlined"
-            sx={{ color: 'text.primary', borderColor: 'grey.300', '&:hover': { bgcolor: 'grey.100' } }}
-          >
-            Asignar
           </Button>
           <FormControl sx={{ minWidth: 120 }} size="small">
             <InputLabel>Origen</InputLabel>
@@ -387,8 +268,7 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
         open={!!selectedDemand && !showPostConstatacion && !showEvaluacionModal} 
         onClose={handleCloseDetail}
       >
-        <Box 
-        >
+        <Box>
           {selectedDemand && (
             <DemandaDetalle 
               demanda={selectedDemand} 
@@ -403,7 +283,7 @@ export function MainContent({ demands: initialDemands, onUpdateDemands }: MainCo
         open={showPostConstatacion && !!selectedDemand} 
         onClose={handleCloseDetail}
       >
-        <Box >
+        <Box>
           {selectedDemand && (
             <PostConstatacionModal
               demanda={selectedDemand}

@@ -14,15 +14,12 @@ import {
   Divider,
 } from '@mui/material'
 import { X } from 'lucide-react'
+import { TDemanda } from '../../api/interfaces'
 
 interface EvaluacionModalProps {
   isOpen: boolean
   onClose: () => void
-  demanda: {
-    nombre: string
-    dni: string
-    fecha: string
-  }
+  demanda: TDemanda
 }
 
 export default function EvaluacionModal({ isOpen, onClose, demanda }: EvaluacionModalProps) {
