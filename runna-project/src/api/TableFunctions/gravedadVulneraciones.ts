@@ -1,7 +1,7 @@
 import { getAll, getOne, create, update, remove } from '../globals';
 import { TGravedadVulneracion } from '../interfaces';
 
-const endpoint = 'tgravedadvulneracion';
+const endpoint = 'gravedad-vulneracion';
 
 export const getTGravedadVulneracions = () => getAll<TGravedadVulneracion>(endpoint);
 export const getTGravedadVulneracion = (id: number) => getOne<TGravedadVulneracion>(endpoint, id);

@@ -1,7 +1,7 @@
 import { getAll, getOne, create, update, remove } from '../globals';
 import { TCategoriaSubmotivo } from '../interfaces';
 
-const endpoint = 'tcategoriasubmotivo';
+const endpoint = 'categoria-submotivo';
 
 export const getTCategoriaSubmotivos = () => getAll<TCategoriaSubmotivo>(endpoint);
 export const getTCategoriaSubmotivo = (id: number) => getOne<TCategoriaSubmotivo>(endpoint, id);

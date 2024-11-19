@@ -1,7 +1,7 @@
 import { getAll, getOne, create, update, remove } from '../globals';
 import { TUrgenciaVulneracion } from '../interfaces';
 
-const endpoint = 'turgenciavulneracion';
+const endpoint = 'urgencia-vulneracion';
 
 export const getTUrgenciaVulneracions = () => getAll<TUrgenciaVulneracion>(endpoint);
 export const getTUrgenciaVulneracion = (id: number) => getOne<TUrgenciaVulneracion>(endpoint, id);
