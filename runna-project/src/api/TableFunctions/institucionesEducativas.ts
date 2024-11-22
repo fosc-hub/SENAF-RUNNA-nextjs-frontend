@@ -1,7 +1,7 @@
 import { getAll, getOne, create, update, remove } from '../globals';
 import { TInstitucionEducativa } from '../interfaces';
 
-const endpoint = 'tinstitucioneducativa';
+const endpoint = 'institucion-educativa';
 
 export const getTInstitucionEducativas = () => getAll<TInstitucionEducativa>(endpoint);
 export const getTInstitucionEducativa = (id: number) => getOne<TInstitucionEducativa>(endpoint, id);

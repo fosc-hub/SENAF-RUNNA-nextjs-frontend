@@ -226,114 +226,57 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }: NuevoIn
   };
   
   
-  useEffect(() => {
-    fetchUsuariosExternos()
-    fetchBarrios()
-    fetchLocalidades()
-    fetchProvincias()
-    fetchCPCs()
-    fetchMotivosIntervencion()
-    fetchCategoriaMotivos()
-    fetchCategoriaSubmotivos()
-    fetchGravedadVulneraciones()
-    fetchUrgenciaVulneraciones()
-    fetchCondicionesVulnerabilidad()
-  }, [])
-  const fetchUsuariosExternos = async () => {
+useEffect(() => {
+  const fetchData = async () => {
     try {
-      const fetchedUsuarios = await getTUsuariosExternos()
-      setUsuariosExternos(fetchedUsuarios)
-    } catch (error) {
-      console.error('Error fetching usuarios externos:', error)
-    }
-  }
-  const fetchCategoriaMotivos = async () => {
-    try {
-      const fetchedCategoriaMotivos = await getTCategoriaMotivos()
-      setCategoriaMotivos(fetchedCategoriaMotivos)
-    } catch (error) {
-      console.error('Error fetching categoria motivos:', error)
-    }
-  }
-  const fetchCategoriaSubmotivos = async () => {
-    try {
-      const fetchedCategoriaSubmotivos = await getTCategoriaSubmotivos()
-      setCategoriaSubmotivos(fetchedCategoriaSubmotivos)
-    } catch (error) {
-      console.error('Error fetching categoria submotivos:', error)
-    }
-  }
-  const fetchGravedadVulneraciones = async () => {
-    try {
-      const fetchedGravedades = await getTGravedadVulneracions()
-      setGravedadVulneraciones(fetchedGravedades)
-    } catch (error) {
-      console.error('Error fetching gravedad vulneraciones:', error)
-    }
-  }
+      // Ejecutar todas las llamadas fetch en paralelo
+      const [
+        fetchedUsuarios,
+        fetchedBarrios,
+        fetchedLocalidades,
+        fetchedProvincias,
+        fetchedCPCs,
+        fetchedMotivos,
+        fetchedCategoriaMotivos,
+        fetchedCategoriaSubmotivos,
+        fetchedGravedades,
+        fetchedUrgencias,
+        fetchedCondiciones,
+      ] = await Promise.all([
+        getTUsuariosExternos(),
+        getTBarrios(),
+        getTLocalidads(),
+        getTProvincias(),
+        getTCPCs(),
+        getTMotivoIntervencions(),
+        getTCategoriaMotivos(),
+        getTCategoriaSubmotivos(),
+        getTGravedadVulneracions(),
+        getTUrgenciaVulneracions(),
+        getTCondicionesVulnerabilidads(),
+      ]);
 
-  const fetchUrgenciaVulneraciones = async () => {
-    try {
-      const fetchedUrgencias = await getTUrgenciaVulneracions()
-      setUrgenciaVulneraciones(fetchedUrgencias)
-    } catch (error) {
-      console.error('Error fetching urgencia vulneraciones:', error)
-    }
-  }
+      // Almacenar los datos obtenidos en el estado
+      setUsuariosExternos(fetchedUsuarios);
+      setBarrios(fetchedBarrios);
+      setLocalidades(fetchedLocalidades);
+      setProvincias(fetchedProvincias);
+      setCPCs(fetchedCPCs);
+      setMotivosIntervencion(fetchedMotivos);
+      setCategoriaMotivos(fetchedCategoriaMotivos);
+      setCategoriaSubmotivos(fetchedCategoriaSubmotivos);
+      setGravedadVulneraciones(fetchedGravedades);
+      setUrgenciaVulneraciones(fetchedUrgencias);
+      setCondicionesVulnerabilidad(fetchedCondiciones);
 
-  const fetchCondicionesVulnerabilidad = async () => {
-    try {
-      const fetchedCondiciones = await getTCondicionesVulnerabilidads()
-      setCondicionesVulnerabilidad(fetchedCondiciones)
     } catch (error) {
-      console.error('Error fetching condiciones de vulnerabilidad:', error)
+      console.error('Error fetching data:', error);
     }
-  }
+  };
 
-  const fetchBarrios = async () => {
-    try {
-      const fetchedBarrios = await getTBarrios()
-      setBarrios(fetchedBarrios)
-    } catch (error) {
-      console.error('Error fetching barrios:', error)
-    }
-  }
+  fetchData();
+}, []);
 
-  const fetchLocalidades = async () => {
-    try {
-      const fetchedLocalidades = await getTLocalidads()
-      setLocalidades(fetchedLocalidades)
-    } catch (error) {
-      console.error('Error fetching localidades:', error)
-    }
-  }
-
-  const fetchProvincias = async () => {
-    try {
-      const fetchedProvincias = await getTProvincias()
-      setProvincias(fetchedProvincias)
-    } catch (error) {
-      console.error('Error fetching provincias:', error)
-    }
-  }
-
-  const fetchCPCs = async () => {
-    try {
-      const fetchedCPCs = await getTCPCs()
-      setCPCs(fetchedCPCs)
-    } catch (error) {
-      console.error('Error fetching CPCs:', error)
-    }
-  }
-
-  const fetchMotivosIntervencion = async () => {
-    try {
-      const fetchedMotivos = await getTMotivoIntervencions()
-      setMotivosIntervencion(fetchedMotivos)
-    } catch (error) {
-      console.error('Error fetching motivos de intervención:', error)
-    }
-  }
 
   const addDebugInfo = (info: string) => {
     setDebugInfo(prev => [...prev, info])
