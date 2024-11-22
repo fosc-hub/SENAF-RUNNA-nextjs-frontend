@@ -43,8 +43,8 @@ import { getTCondicionesVulnerabilidads } from '../../api/TableFunctions/condici
 // ... (previous code remains the same)
 
 
-const formatDate = (date: Date | null): string | null => {
-  if (!date) return null;
+const formatDate = (date: Date | null): string | undefined => {
+  if (!date) return undefined;
   return date.toISOString().split('T')[0];
 };
 
@@ -324,22 +324,6 @@ useEffect(() => {
     setActiveStep((prevStep) => Math.max(prevStep - 1, 0))
   }
 
-  const createPersona = async (personaData: any, isNNyA: boolean) => {
-    try {
-      addDebugInfo(`Attempting to create persona: ${JSON.stringify(personaData)}`)
-      const response = await createTPersona({
-        ...personaData,
-        adulto: !isNNyA,
-        nnya: isNNyA,
-      })
-      addDebugInfo(`Persona created successfully: ${JSON.stringify(response)}`)
-      return response
-    } catch (error) {
-      addDebugInfo(`Error creating persona: ${error.message}`)
-      console.error('Error creating persona:', error)
-      throw error
-    }
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -388,31 +372,34 @@ useEffect(() => {
 
       addDebugInfo('Creating personas for niños y adolescentes')
       const ninosAdolescentesPersonas = await Promise.all(
-        formData.ninosAdolescentes.map((nino: any) =>
+        formData.ninosAdolescentes.map((nino) =>
           createTPersona({
             ...nino,
+            situacion_dni: nino.situacionDni || 'EN_TRAMITE', // Ensure situacion_dni is always sent
             fecha_nacimiento: formatDate(nino.fechaNacimiento ? new Date(nino.fechaNacimiento) : null),
-            edad_aproximada: parseInt(nino.edadAproximada),
-            dni: parseInt(nino.dni),
+            edad_aproximada: nino.edadAproximada ? parseInt(nino.edadAproximada) : null,
+            dni: nino.dni ? parseInt(nino.dni) : null,
             adulto: false,
             nnya: true,
           })
         )
       );
+      
 
-      addDebugInfo('Creating personas for adultos convivientes')
       const adultosConvivientesPersonas = await Promise.all(
-        formData.adultosConvivientes.map((adulto: any) =>
+        formData.adultosConvivientes.map((adulto) =>
           createTPersona({
             ...adulto,
+            situacion_dni: adulto.situacionDni || 'EN_TRAMITE', // Ensure situacion_dni is always sent
             fecha_nacimiento: formatDate(adulto.fechaNacimiento ? new Date(adulto.fechaNacimiento) : null),
-            edad_aproximada: parseInt(adulto.edadAproximada),
-            dni: parseInt(adulto.dni),
+            edad_aproximada: adulto.edadAproximada ? parseInt(adulto.edadAproximada) : null,
+            dni: adulto.dni ? parseInt(adulto.dni) : null,
             adulto: true,
             nnya: false,
           })
         )
       );
+      
 
       addDebugInfo('Preparing demanda data')
       const demandaData = {
@@ -798,8 +785,8 @@ useEffect(() => {
                     label="Situación DNI"
                   >
                     <MenuItem value="EN_TRAMITE">En Trámite</MenuItem>
-                    <MenuItem value="TIENE">Tiene</MenuItem>
-                    <MenuItem value="NO_TIENE">No Tiene</MenuItem>
+                    <MenuItem value="VENCIDO">Vencido</MenuItem>
+                    <MenuItem value="EXTRAVIADO">Extraviado</MenuItem>
                   </Select>
                 </FormControl>
                 <FormControl fullWidth>
@@ -811,7 +798,7 @@ useEffect(() => {
                   >
                     <MenuItem value="MASCULINO">Masculino</MenuItem>
                     <MenuItem value="FEMENINO">Femenino</MenuItem>
-                    <MenuItem value="NO_BINARIO">No Binario</MenuItem>
+                    <MenuItem value="OTRO">Otro</MenuItem>
                   </Select>
                 </FormControl>
                 <FormControlLabel
