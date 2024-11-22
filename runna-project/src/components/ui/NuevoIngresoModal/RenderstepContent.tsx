@@ -21,8 +21,13 @@ import { ImportIcon as AddIcon } from 'lucide-react'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3'
 import { LocalizationProvider, DateTimePicker, DatePicker } from '@mui/x-date-pickers'
 import { es } from 'date-fns/locale'
+import { getTCategoriaMotivo } from '../../../api/TableFunctions/categoriasMotivos'
 const formatDate = (date) => date ? date.toISOString().split('T')[0] : null
-
+const getCategoriaMotivosNombre = (motivoId: number, categoriaMotivos: any[]) => {
+    const categoria = categoriaMotivos.find(cat => cat.id === motivoId)
+    return categoria ? categoria.nombre : 'Desconocido'
+  }
+  
 export const renderStepContent = ({
   activeStep,
   formData,
@@ -506,62 +511,68 @@ export const renderStepContent = ({
                   ))}
                 </Select>
               </FormControl>
-              <FormControl fullWidth sx={{ mt: 2 }}>
-                <InputLabel>Categorías de Motivo</InputLabel>
-                <Select
-                  multiple
-                  value={formData.presuntaVulneracion.categoriaMotivos || []}
-                  onChange={(e) => handleInputChange('presuntaVulneracion.categoriaMotivos', e.target.value)}
-                  renderValue={(selected) => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {selected.map((value) => (
-                        <Chip key={value} label={categoriaMotivos.find(m => m.id === value)?.nombre} />
-                      ))}
-                    </Box>
-                  )}
-                >
-                  {categoriaMotivos.map((categoria) => (
-                    <MenuItem key={categoria.id} value={categoria.id}>
-                      <Checkbox checked={(formData.presuntaVulneracion.categoriaMotivos || []).indexOf(categoria.id) > -1} />
-                      <ListItemText 
-                        primary={categoria.nombre} 
-                        secondary={`Descripción: ${categoria.descripcion}, Peso: ${categoria.peso}`} 
-                      />
-                    </MenuItem>
+              <FormControl fullWidth margin="normal">
+            <InputLabel id="categoria-motivos-label">Categoría de Motivos</InputLabel>
+            <Select
+              labelId="categoria-motivos-label"
+              multiple
+              value={formData.presuntaVulneracion.categoriaMotivos}
+              onChange={(e) => handleInputChange('presuntaVulneracion.categoriaMotivos', e.target.value)}
+              renderValue={(selected) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {selected.map((value) => (
+                    <Chip key={value} label={getCategoriaMotivosNombre(value, categoriaMotivos)} />
                   ))}
-                </Select>
-              </FormControl>
-              <FormControl fullWidth sx={{ mt: 2 }}>
-                <InputLabel>Subcategorías de Motivo</InputLabel>
-                <Select
-                  multiple
-                  value={formData.presuntaVulneracion.categoriaSubmotivos || []}
-                  onChange={(e) => handleInputChange('presuntaVulneracion.categoriaSubmotivos', e.target.value)}
-                  renderValue={(selected) => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {selected.map((value) => (
-                        <Chip key={value} label={categoriaSubmotivos.find(m => m.id === value)?.nombre} />
-                      ))}
-                    </Box>
-                  )}
-                >
-                  {filteredSubmotivos.map((submotivo) => (
-                    <MenuItem key={submotivo.id} value={submotivo.id}>
-                      <Checkbox checked={(formData.presuntaVulneracion.categoriaSubmotivos || []).indexOf(submotivo.id) > -1} />
-                      <ListItemText 
-                        primary={submotivo.nombre} 
-                        secondary={
-                          <React.Fragment>
-                            <Typography variant="body2">Descripción: {submotivo.descripcion}</Typography>
-                            <Typography variant="body2">Peso: {submotivo.peso}</Typography>
-                            <Typography variant="body2">Categoría: {getCategoriaMotivosNombre(submotivo.motivo)}</Typography>
-                          </React.Fragment>
-                        }
+                </Box>
+              )}
+            >
+              {categoriaMotivos.map((motivo) => (
+                <MenuItem key={motivo.id} value={motivo.id}>
+                  <Checkbox checked={formData.presuntaVulneracion.categoriaMotivos.indexOf(motivo.id) > -1} />
+                  <ListItemText 
+                    primary={motivo.nombre}
+                    secondary={motivo.descripcion}
+                  />
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth margin="normal">
+              <InputLabel id="subcategorias-label">Subcategorías</InputLabel>
+              <Select
+                labelId="subcategorias-label"
+                multiple
+                value={formData.presuntaVulneracion.categoriaSubmotivos}
+                onChange={(e) => handleInputChange('presuntaVulneracion.categoriaSubmotivos', e.target.value)}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((value) => (
+                      <Chip 
+                        key={value} 
+                        label={filteredSubmotivos.find(sm => sm.id === value)?.nombre || 'Desconocido'} 
                       />
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                    ))}
+                  </Box>
+                )}
+              >
+                {filteredSubmotivos.map((submotivo) => (
+                  <MenuItem key={submotivo.id} value={submotivo.id}>
+                    <Checkbox checked={formData.presuntaVulneracion.categoriaSubmotivos.indexOf(submotivo.id) > -1} />
+                    <ListItemText 
+                      primary={submotivo.nombre}
+                      secondary={
+                        <>
+                          <Typography variant="body2" color="textSecondary">
+                            {getCategoriaMotivosNombre(submotivo.motivo, categoriaMotivos)}
+                          </Typography>
+                          <Typography variant="body2">{submotivo.descripcion}</Typography>
+                        </>
+                      }
+                    />
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
               <FormControl fullWidth sx={{ mt: 2 }}>
               <InputLabel>Gravedad de la Vulneración</InputLabel>
               <Select
