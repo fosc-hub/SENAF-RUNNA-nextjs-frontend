@@ -6,7 +6,7 @@ import { DataGrid, GridRowParams, GridRenderCellParams, GridColDef } from '@mui/
 import { Search, InfoOutlined } from '@mui/icons-material'
 import DemandaDetalle from './DemandaDetalle'
 import PostConstatacionModal from './PostConstatacionModal'
-import NuevoIngresoModal from './NuevoIngresoModal'
+import NuevoIngresoModal from './NuevoIngresoModal/NuevoIngresoModal'
 import EvaluacionModal from './EvaluacionModal'
 import { getDemands, createDemand, updateDemand } from '../../api/TableFunctions/demands'
 import { TDemanda, TLocalizacion, TUsuarioLinea } from '../../api/interfaces'
