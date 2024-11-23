@@ -12,6 +12,7 @@ import {
 import { createLocalizacion } from '../../../api/TableFunctions/localizacion'
 import {createDemand} from '../../../api/TableFunctions/demands'
 import {createTPersona} from '../../../api/TableFunctions/personas'
+import {createTVulneracion} from '../../../api/TableFunctions/vulneraciones'
 import { es } from 'date-fns/locale'
 import { X } from 'lucide-react'
 import { useFormData } from './useFormData'
@@ -29,7 +30,7 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
   const [debugInfo, setDebugInfo] = useState([])
   const isSubmittingRef = useRef(false)
 
-  const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addAutor } = useFormData()
+  const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addAutor, addVulneraciontext } = useFormData()
   const apiData = useApiData()
 
   const filteredSubmotivos = useMemo(() => {
@@ -142,6 +143,31 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
       const demandaResponse = await createDemand(demandaData)
       addDebugInfo(`Demanda created: ${JSON.stringify(demandaResponse)}`)
 
+      if (!demandaResponse || !demandaResponse.id) {
+        throw new Error('Failed to create demanda')
+      }
+
+      // Create vulneraciones
+      addDebugInfo('Creating vulneraciones')
+      const vulneracionesPromises = formData.vulneraciones.map(vulneracion => {
+        const vulneracionData = {
+          principal_demanda: vulneracion.principal_demanda,
+          transcurre_actualidad: vulneracion.transcurre_actualidad,
+          categoria_motivo: vulneracion.categoria_motivo,
+          categoria_submotivo: vulneracion.categoria_submotivo,
+          gravedad_vulneracion: vulneracion.gravedad_vulneracion,
+          urgencia_vulneracion: vulneracion.urgencia_vulneracion,
+          nnya: ninosAdolescentesPersonas[vulneracion.nnya]?.id,
+          autor_dv: adultosConvivientesPersonas[vulneracion.autor_dv]?.id,
+          demanda: demandaResponse.id
+        }
+        return createTVulneracion(vulneracionData)
+      })
+
+      const vulneracionesResponses = await Promise.all(vulneracionesPromises)
+      addDebugInfo(`Created ${vulneracionesResponses.length} vulneraciones`)
+
+      onSubmit(demandaResponse)
       onClose()
     } catch (error) {
       console.error('Error submitting form:', error)
@@ -152,6 +178,7 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
       isSubmittingRef.current = false
     }
   }
+
 
   return (
     <Modal open={isOpen} onClose={onClose}>
@@ -189,8 +216,10 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
               addNinoAdolescente,
               addAdultoConviviente,
               addAutor,
+              addVulneraciontext,
               ...apiData,
-              filteredSubmotivos,
+              addVulneracionApi: apiData.addVulneracion,
+
             })}
           </LocalizationProvider>
           <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>

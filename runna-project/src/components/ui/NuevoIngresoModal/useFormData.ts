@@ -24,6 +24,7 @@ const initialFormData = {
   usuario_externo: '',
   ninosAdolescentes: [],
   adultosConvivientes: [],
+  vulneraciones: [],
   presuntaVulneracion: {
     motivo: '',
     ambitoVulneracion: '',
@@ -105,7 +106,24 @@ export const useFormData = () => {
       ],
     }))
   }
-
+  const addVulneraciontext = () => {
+    setFormData((prevData) => ({
+      ...prevData,
+      vulneraciones: [
+        ...prevData.vulneraciones,
+        {
+          principal_demanda: false,
+          transcurre_actualidad: false,
+          categoria_motivo: '',
+          categoria_submotivo: '',
+          gravedad_vulneracion: '',
+          urgencia_vulneracion: '',
+          nnya: '',
+          autor_dv: '',
+        },
+      ],
+    }))
+  }
   const addAdultoConviviente = () => {
     setFormData((prevData) => ({
       ...prevData,
@@ -143,6 +161,6 @@ export const useFormData = () => {
     }))
   }
 
-  return { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addAutor }
+  return { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addAutor, addVulneraciontext }
 }
 

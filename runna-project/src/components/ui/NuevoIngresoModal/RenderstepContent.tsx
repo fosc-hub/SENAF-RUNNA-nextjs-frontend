@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState} from 'react'
 import {
   Typography,
   TextField,
@@ -27,25 +27,62 @@ const getCategoriaMotivosNombre = (motivoId: number, categoriaMotivos: any[]) =>
     const categoria = categoriaMotivos.find(cat => cat.id === motivoId)
     return categoria ? categoria.nombre : 'Desconocido'
   }
+
+  export const renderStepContent = ({
+    activeStep,
+    formData,
+    handleInputChange,
+    addNinoAdolescente,
+    addVulneraciontext,
+    addAdultoConviviente,
+    addAutor,
+    usuariosExternos,
+    barrios,
+    localidades,
+    cpcs,
+    motivosIntervencion,
+    categoriaMotivos,
+    categoriaSubmotivos,
+    gravedadVulneraciones,
+    urgenciaVulneraciones,
+    condicionesVulnerabilidad,
+    addVulneracionApi
+  }) => {
+    const [newVulneracion, setNewVulneracion] = useState({
+      principal_demanda: false,
+      transcurre_actualidad: false,
+      categoria_motivo: '',
+      categoria_submotivo: '',
+      gravedad_vulneracion: '',
+      urgencia_vulneracion: '',
+      nnya: '',
+      autor_dv: '',
+    })
   
-export const renderStepContent = ({
-  activeStep,
-  formData,
-  handleInputChange,
-  addNinoAdolescente,
-  addAdultoConviviente,
-  addAutor,
-  usuariosExternos,
-  barrios,
-  localidades,
-  cpcs,
-  motivosIntervencion,
-  categoriaMotivos,
-  filteredSubmotivos,
-  gravedadVulneraciones,
-  urgenciaVulneraciones,
-  condicionesVulnerabilidad,
-}) => {
+    const [localFilteredSubmotivos, setLocalFilteredSubmotivos] = useState([])
+  
+    useEffect(() => {
+        if (newVulneracion.categoria_motivo) {
+          const filtered = categoriaSubmotivos.filter(submotivo =>
+            submotivo.motivo === newVulneracion.categoria_motivo
+          )
+          setLocalFilteredSubmotivos(filtered)
+        } else {
+          setLocalFilteredSubmotivos([])
+        }
+      }, [newVulneracion.categoria_motivo, categoriaSubmotivos])
+  
+    const handleVulneracionChange = (field, value) => {
+        setNewVulneracion(prev => {
+          const updated = { ...prev, [field]: value }
+          if (field === 'categoria_motivo') {
+            updated.categoria_submotivo = ''
+          }
+          return updated
+        })
+      }
+
+  
   switch (activeStep) {
     case 0:
         return (
@@ -135,6 +172,32 @@ export const renderStepContent = ({
                 size="small"
               />
             </Grid>
+          
+            <FormControl fullWidth>
+                <InputLabel>Motivos de Intervención</InputLabel>
+                <Select
+                  multiple
+                  value={formData.presuntaVulneracion.motivos || []}
+                  onChange={(e) => handleInputChange('presuntaVulneracion.motivos', e.target.value)}
+                  renderValue={(selected) => (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {selected.map((value) => (
+                        <Chip key={value} label={motivosIntervencion.find(m => m.id === value)?.nombre} />
+                      ))}
+                    </Box>
+                  )}
+                >
+                  {motivosIntervencion.map((motivo) => (
+                    <MenuItem key={motivo.id} value={motivo.id}>
+                      <Checkbox checked={(formData.presuntaVulneracion.motivos || []).indexOf(motivo.id) > -1} />
+                      <ListItemText 
+                        primary={motivo.nombre} 
+                        secondary={`Descripción: ${motivo.descripcion}, Peso: ${motivo.peso}`} 
+                      />
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
             <Grid item xs={12}>
               <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Datos de Localización</Typography>
@@ -483,223 +546,146 @@ export const renderStepContent = ({
           </Box>
         )
         case 3:
-          return (
-            <Box>
-              <Typography color="primary" sx={{ mb: 2 }}>Presunta Vulneración de Derechos informada</Typography>
-              <FormControl fullWidth>
-                <InputLabel>Motivos de Intervención</InputLabel>
-                <Select
-                  multiple
-                  value={formData.presuntaVulneracion.motivos || []}
-                  onChange={(e) => handleInputChange('presuntaVulneracion.motivos', e.target.value)}
-                  renderValue={(selected) => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {selected.map((value) => (
-                        <Chip key={value} label={motivosIntervencion.find(m => m.id === value)?.nombre} />
-                      ))}
+            return (
+              <Box>
+                <Typography variant="h6" color="primary" gutterBottom>
+                  Presunta Vulneración de Derechos informada
+                </Typography>
+                
+                {formData.vulneraciones.map((vulneracion, index) => (
+                  <Box key={index} sx={{ mb: 4, p: 2, border: '1px solid #ccc', borderRadius: '4px' }}>
+                    <Typography variant="h6" gutterBottom>Vulneración {index + 1}</Typography>
+                    
+                    <FormControl fullWidth margin="normal">
+                      <InputLabel id={`categoria-motivos-label-${index}`}>Categoría de Motivos</InputLabel>
+                      <Select
+                        labelId={`categoria-motivos-label-${index}`}
+                        value={vulneracion.categoria_motivo}
+                        onChange={(e) => handleInputChange(`vulneraciones[${index}].categoria_motivo`, e.target.value)}
+                      >
+                        {categoriaMotivos.map((motivo) => (
+                          <MenuItem key={motivo.id} value={motivo.id}>
+                            {motivo.nombre}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+      
+                    <FormControl fullWidth margin="normal">
+                      <InputLabel>Subcategoría</InputLabel>
+                      <Select
+                        value={vulneracion.categoria_submotivo}
+                        onChange={(e) => handleInputChange(`vulneraciones[${index}].categoria_submotivo`, e.target.value)}
+                        disabled={!vulneracion.categoria_motivo}
+                      >
+                        {categoriaSubmotivos
+                          .filter(submotivo => submotivo.motivo === vulneracion.categoria_motivo)
+                          .map((submotivo) => (
+                            <MenuItem key={submotivo.id} value={submotivo.id}>
+                              {submotivo.nombre}
+                            </MenuItem>
+                          ))
+                        }
+                      </Select>
+                    </FormControl>
+      
+                    <FormControl fullWidth margin="normal">
+                      <InputLabel>Gravedad de la Vulneración</InputLabel>
+                      <Select
+                        value={vulneracion.gravedad_vulneracion}
+                        onChange={(e) => handleInputChange(`vulneraciones[${index}].gravedad_vulneracion`, e.target.value)}
+                      >
+                        {gravedadVulneraciones.map((gravedad) => (
+                          <MenuItem key={gravedad.id} value={gravedad.id}>
+                            {gravedad.nombre}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+      
+                    <FormControl fullWidth margin="normal">
+                      <InputLabel>Urgencia de la Vulneración</InputLabel>
+                      <Select
+                        value={vulneracion.urgencia_vulneracion}
+                        onChange={(e) => handleInputChange(`vulneraciones[${index}].urgencia_vulneracion`, e.target.value)}
+                      >
+                        {urgenciaVulneraciones.map((urgencia) => (
+                          <MenuItem key={urgencia.id} value={urgencia.id}>
+                            {urgencia.nombre}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+      
+                    <FormControl fullWidth margin="normal">
+                      <InputLabel>NNyA</InputLabel>
+                      <Select
+                        value={vulneracion.nnya}
+                        onChange={(e) => handleInputChange(`vulneraciones[${index}].nnya`, e.target.value)}
+                      >
+                        {formData.ninosAdolescentes.map((nnya, nnyaIndex) => (
+                          <MenuItem key={nnyaIndex} value={nnyaIndex}>
+                            {`${nnya.nombre} ${nnya.apellido}`}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+      
+                    <FormControl fullWidth margin="normal">
+                      <InputLabel>Autor DV</InputLabel>
+                      <Select
+                        value={vulneracion.autor_dv}
+                        onChange={(e) => handleInputChange(`vulneraciones[${index}].autor_dv`, e.target.value)}
+                      >
+                        {formData.adultosConvivientes.map((adulto, adultoIndex) => (
+                          <MenuItem key={adultoIndex} value={adultoIndex}>
+                            {`${adulto.nombre} ${adulto.apellido}`}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+      
+                    <Box sx={{ mt: 2 }}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={vulneracion.principal_demanda}
+                            onChange={(e) => handleInputChange(`vulneraciones[${index}].principal_demanda`, e.target.checked)}
+                          />
+                        }
+                        label="Principal Demanda"
+                      />
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={vulneracion.transcurre_actualidad}
+                            onChange={(e) => handleInputChange(`vulneraciones[${index}].transcurre_actualidad`, e.target.checked)}
+                          />
+                        }
+                        label="Transcurre Actualidad"
+                      />
                     </Box>
-                  )}
+                  </Box>
+                ))}
+      
+                <Button
+                  startIcon={<AddIcon />}
+                  onClick={addVulneraciontext}
+                  sx={{ mt: 2, color: 'primary.main' }}
                 >
-                  {motivosIntervencion.map((motivo) => (
-                    <MenuItem key={motivo.id} value={motivo.id}>
-                      <Checkbox checked={(formData.presuntaVulneracion.motivos || []).indexOf(motivo.id) > -1} />
-                      <ListItemText 
-                        primary={motivo.nombre} 
-                        secondary={`Descripción: ${motivo.descripcion}, Peso: ${motivo.peso}`} 
-                      />
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl fullWidth margin="normal">
-            <InputLabel id="categoria-motivos-label">Categoría de Motivos</InputLabel>
-            <Select
-              labelId="categoria-motivos-label"
-              multiple
-              value={formData.presuntaVulneracion.categoriaMotivos}
-              onChange={(e) => handleInputChange('presuntaVulneracion.categoriaMotivos', e.target.value)}
-              renderValue={(selected) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {selected.map((value) => (
-                    <Chip key={value} label={getCategoriaMotivosNombre(value, categoriaMotivos)} />
-                  ))}
-                </Box>
-              )}
-            >
-              {categoriaMotivos.map((motivo) => (
-                <MenuItem key={motivo.id} value={motivo.id}>
-                  <Checkbox checked={formData.presuntaVulneracion.categoriaMotivos.indexOf(motivo.id) > -1} />
-                  <ListItemText 
-                    primary={motivo.nombre}
-                    secondary={motivo.descripcion}
-                  />
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl fullWidth margin="normal">
-              <InputLabel id="subcategorias-label">Subcategorías</InputLabel>
-              <Select
-                labelId="subcategorias-label"
-                multiple
-                value={formData.presuntaVulneracion.categoriaSubmotivos}
-                onChange={(e) => handleInputChange('presuntaVulneracion.categoriaSubmotivos', e.target.value)}
-                renderValue={(selected) => (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {selected.map((value) => (
-                      <Chip 
-                        key={value} 
-                        label={filteredSubmotivos.find(sm => sm.id === value)?.nombre || 'Desconocido'} 
-                      />
-                    ))}
-                  </Box>
-                )}
-              >
-                {filteredSubmotivos.map((submotivo) => (
-                  <MenuItem key={submotivo.id} value={submotivo.id}>
-                    <Checkbox checked={formData.presuntaVulneracion.categoriaSubmotivos.indexOf(submotivo.id) > -1} />
-                    <ListItemText 
-                      primary={submotivo.nombre}
-                      secondary={
-                        <>
-                          <Typography variant="body2" color="textSecondary">
-                            {getCategoriaMotivosNombre(submotivo.motivo, categoriaMotivos)}
-                          </Typography>
-                          <Typography variant="body2">{submotivo.descripcion}</Typography>
-                        </>
-                      }
-                    />
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-              <FormControl fullWidth sx={{ mt: 2 }}>
-              <InputLabel>Gravedad de la Vulneración</InputLabel>
-              <Select
-                value={formData.presuntaVulneracion.gravedadVulneracion}
-                onChange={(e) => handleInputChange('presuntaVulneracion.gravedadVulneracion', e.target.value)}
-                label="Gravedad de la Vulneración"
-              >
-                {gravedadVulneraciones.map((gravedad) => (
-                  <MenuItem key={gravedad.id} value={gravedad.id}>
-                    <ListItemText
-                      primary={gravedad.nombre}
-                      secondary={`Descripción: ${gravedad.descripcion}, Peso: ${gravedad.peso}`}
-                    />
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl fullWidth sx={{ mt: 2 }}>
-              <InputLabel>Urgencia de la Vulneración</InputLabel>
-              <Select
-                value={formData.presuntaVulneracion.urgenciaVulneracion}
-                onChange={(e) => handleInputChange('presuntaVulneracion.urgenciaVulneracion', e.target.value)}
-                label="Urgencia de la Vulneración"
-              >
-                {urgenciaVulneraciones.map((urgencia) => (
-                  <MenuItem key={urgencia.id} value={urgencia.id}>
-                    <ListItemText
-                      primary={urgencia.nombre}
-                      secondary={`Descripción: ${urgencia.descripcion}, Peso: ${urgencia.peso}`}
-                    />
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl fullWidth sx={{ mt: 2 }}>
-              <InputLabel>Condiciones de Vulnerabilidad (NNyA)</InputLabel>
-              <Select
-                multiple
-                value={formData.presuntaVulneracion.condicionesVulnerabilidadNNyA}
-                onChange={(e) => handleInputChange('presuntaVulneracion.condicionesVulnerabilidadNNyA', e.target.value)}
-                renderValue={(selected) => (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {selected.map((value) => (
-                      <Chip key={value} label={condicionesVulnerabilidad.find(c => c.id === value)?.nombre} />
-                    ))}
-                  </Box>
-                )}
-              >
-                {condicionesVulnerabilidad.filter(c => c.nnya).map((condicion) => (
-                  <MenuItem key={condicion.id} value={condicion.id}>
-                    <Checkbox checked={(formData.presuntaVulneracion.condicionesVulnerabilidadNNyA || []).indexOf(condicion.id) > -1} />
-                    <ListItemText primary={condicion.nombre} />
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl fullWidth sx={{ mt: 2 }}>
-              <InputLabel>Condiciones de Vulnerabilidad (Adulto)</InputLabel>
-              <Select
-                multiple
-                value={formData.presuntaVulneracion.condicionesVulnerabilidadAdulto}
-                onChange={(e) => handleInputChange('presuntaVulneracion.condicionesVulnerabilidadAdulto', e.target.value)}
-                renderValue={(selected) => (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {selected.map((value) => (
-                      <Chip key={value} label={condicionesVulnerabilidad.find(c => c.id === value)?.nombre} />
-                    ))}
-                  </Box>
-                )}
-              >
-                {condicionesVulnerabilidad.filter(c => c.adulto).map((condicion) => (
-                  <MenuItem key={condicion.id} value={condicion.id}>
-                    <Checkbox checked={(formData.presuntaVulneracion.condicionesVulnerabilidadAdulto || []).indexOf(condicion.id) > -1} />
-                    <ListItemText primary={condicion.nombre} />
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <TextField
-              fullWidth
-              label="Ámbito de vulneración"
-              value={formData.presuntaVulneracion.ambitoVulneracion}
-              onChange={(e) => handleInputChange('presuntaVulneracion.ambitoVulneracion', e.target.value)}
-              multiline
-              rows={4}
-              sx={{ mt: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Principal Derecho vulnerado"
-              value={formData.presuntaVulneracion.principalDerechoVulnerado}
-              onChange={(e) => handleInputChange('presuntaVulneracion.principalDerechoVulnerado', e.target.value)}
-              multiline
-              rows={4}
-              sx={{ mt: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Problemática Identificada"
-              value={formData.presuntaVulneracion.problematicaIdentificada}
-              onChange={(e) => handleInputChange('presuntaVulneracion.problematicaIdentificada', e.target.value)}
-              multiline
-              rows={4}
-              sx={{ mt: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Prioridad sugerida de intervención"
-              value={formData.presuntaVulneracion.prioridadIntervencion}
-              onChange={(e) => handleInputChange('presuntaVulneracion.prioridadIntervencion', e.target.value)}
-              multiline
-              rows={4}
-              sx={{ mt: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Nombre y cargo de Operador/a"
-              value={formData.presuntaVulneracion.nombreCargoOperador}
-              onChange={(e) => handleInputChange('presuntaVulneracion.nombreCargoOperador', e.target.value)}
-              sx={{ mt: 2 }}
-            />
-          </Box>
-          )
+                  Añadir otra vulneración
+                </Button>
+      
+                <Typography variant="h6" color="primary" gutterBottom sx={{ mt: 4 }}>
+                  Vulneraciones Añadidas: {formData.vulneraciones.length}
+                </Typography>
+              </Box>
+            )
+
         case 4:
         return (
           <Box>
-            <Typography color="primary" sx={{ mb: 2 }}>Autor de la vulneración de Derechos de NNyA</Typography>
+            <Typography color="primary" sx={{ mb: 2 }}>Vulneracion</Typography>
             {formData.autores.map((autor: any, index: number) => (
               <Box key={index} sx={{ mb: 3 }}>
                 <TextField

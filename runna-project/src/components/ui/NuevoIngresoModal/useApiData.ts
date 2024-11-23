@@ -13,6 +13,8 @@ import { getTCategoriaSubmotivos } from '../../../api/TableFunctions/categoriaSu
 import { getTGravedadVulneracions } from '../../../api/TableFunctions/gravedadVulneraciones'
 import { getTUrgenciaVulneracions } from '../../../api/TableFunctions/urgenciaVulneraciones'
 import { getTCondicionesVulnerabilidads } from '../../../api/TableFunctions/condicionesVulnerabilidad'
+import {getTVulneracions} from '../../../api/TableFunctions/vulneraciones'
+import {createTVulneracion} from '../../../api/TableFunctions/vulneraciones'
 
 export const useApiData = () => {
     const [apiData, setApiData] = useState({
@@ -27,6 +29,7 @@ export const useApiData = () => {
       gravedadVulneraciones: [],
       urgenciaVulneraciones: [],
       condicionesVulnerabilidad: [],
+      vulneraciones: [],
     })
   
     useEffect(() => {
@@ -44,6 +47,7 @@ export const useApiData = () => {
             fetchedGravedades,
             fetchedUrgencias,
             fetchedCondiciones,
+            fetchedVulneraciones,
           ] = await Promise.all([
             getTUsuariosExternos(),
             getTBarrios(),
@@ -56,6 +60,7 @@ export const useApiData = () => {
             getTGravedadVulneracions(),
             getTUrgenciaVulneracions(),
             getTCondicionesVulnerabilidads(),
+            getTVulneracions(),
           ])
   
           setApiData({
@@ -70,6 +75,7 @@ export const useApiData = () => {
             gravedadVulneraciones: fetchedGravedades,
             urgenciaVulneraciones: fetchedUrgencias,
             condicionesVulnerabilidad: fetchedCondiciones,
+            vulneraciones: fetchedVulneraciones,
           })
         } catch (error) {
           console.error('Error fetching data:', error)
@@ -78,8 +84,33 @@ export const useApiData = () => {
   
       fetchData()
     }, [])
-  
-    return apiData
-  }
-  
+    const addVulneracion = async (vulneracionData) => {
+        try {
+          // Create a new object with only the necessary data
+          const serializableVulneracionData = {
+            principal_demanda: vulneracionData.principal_demanda,
+            transcurre_actualidad: vulneracionData.transcurre_actualidad,
+            categoria_motivo: vulneracionData.categoria_motivo,
+            categoria_submotivo: vulneracionData.categoria_submotivo,
+            gravedad_vulneracion: vulneracionData.gravedad_vulneracion,
+            urgencia_vulneracion: vulneracionData.urgencia_vulneracion,
+            nnya: vulneracionData.nnya,
+            autor_dv: vulneracionData.autor_dv,
+            demanda: vulneracionData.demanda,
+          }
+    
+          const newVulneracion = await createTVulneracion(serializableVulneracionData)
+          setApiData(prevData => ({
+            ...prevData,
+            vulneraciones: [...prevData.vulneraciones, newVulneracion]
+          }))
+          return newVulneracion
+        } catch (error) {
+          console.error('Error creating vulneracion:', error)
+          throw new Error('Failed to create data in vulneracion.')
+        }
+      }
+    
+      return { ...apiData, addVulneracion }
+    }
   
