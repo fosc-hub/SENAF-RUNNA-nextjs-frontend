@@ -21,7 +21,7 @@ import { renderStepContent } from './RenderstepContent'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3'
 import { LocalizationProvider, DateTimePicker, DatePicker } from '@mui/x-date-pickers'
 import {createTDemandaMotivoIntervencion} from '../../../api/TableFunctions/demandasMotivoIntervencion'
-
+import {createTNNyAEducacion} from '../../../api/TableFunctions/nnyaeducacion'
 const steps = ['Carátula', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Información Adicional']
 
 export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
@@ -97,8 +97,8 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
       // Create personas for niños y adolescentes
       addDebugInfo('Creating personas for niños y adolescentes')
       const ninosAdolescentesPersonas = await Promise.all(
-        formData.ninosAdolescentes.map((nino) =>
-          createTPersona({
+        formData.ninosAdolescentes.map(async (nino) => {
+          const personaResponse = await createTPersona({
             ...nino,
             situacion_dni: nino.situacionDni || 'EN_TRAMITE',
             fecha_nacimiento: formatDate(nino.fechaNacimiento ? new Date(nino.fechaNacimiento) : null),
@@ -107,7 +107,18 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
             adulto: false,
             nnya: true,
           })
-        )
+
+          // Create nnya-educacion entry
+          if (personaResponse && personaResponse.id && nino.educacion) {
+            const educacionData = {
+              ...nino.educacion,
+              nnya: personaResponse.id
+            }
+            await createTNNyAEducacion(educacionData)
+          }
+
+          return personaResponse
+        })
       )
 
       // Create personas for adultos convivientes

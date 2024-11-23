@@ -46,7 +46,10 @@ const getCategoriaMotivosNombre = (motivoId: number, categoriaMotivos: any[]) =>
     gravedadVulneraciones,
     urgenciaVulneraciones,
     condicionesVulnerabilidad,
-    addVulneracionApi
+    addVulneracionApi,
+    institucionesEducativas,
+
+
   }) => {
     const [newVulneracion, setNewVulneracion] = useState({
       principal_demanda: false,
@@ -60,7 +63,7 @@ const getCategoriaMotivosNombre = (motivoId: number, categoriaMotivos: any[]) =>
     })
   
     const [localFilteredSubmotivos, setLocalFilteredSubmotivos] = useState([])
-  
+
     useEffect(() => {
         if (newVulneracion.categoria_motivo) {
           const filtered = categoriaSubmotivos.filter(submotivo =>
@@ -335,107 +338,171 @@ const getCategoriaMotivosNombre = (motivoId: number, categoriaMotivos: any[]) =>
             </Grid>
           </Grid>
         )
-      case 1:
-        return (
-          <Box>
-            <Typography color="primary" sx={{ mb: 2 }}>Niñas, niños y adolescentes convivientes</Typography>
-            {formData.ninosAdolescentes.map((nino, index) => (
-              <Box key={index} sx={{ mb: 3 }}>
-                <Grid container spacing={2}>
-                  <Grid item xs={6}>
-                    <TextField
-                      fullWidth
-                      label="Nombre"
-                      value={nino.nombre}
-                      onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].nombre`, e.target.value)}
-                    />
+        case 1:
+          return (
+            <Box>
+              <Typography color="primary" sx={{ mb: 2 }}>Niñas, niños y adolescentes convivientes</Typography>
+              {formData.ninosAdolescentes.map((nino, index) => (
+                <Box key={index} sx={{ mb: 3 }}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <TextField
+                        fullWidth
+                        label="Nombre"
+                        value={nino.nombre}
+                        onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].nombre`, e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <TextField
+                        fullWidth
+                        label="Apellido"
+                        value={nino.apellido}
+                        onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].apellido`, e.target.value)}
+                      />
+                    </Grid>
                   </Grid>
-                  <Grid item xs={6}>
-                    <TextField
-                      fullWidth
-                      label="Apellido"
-                      value={nino.apellido}
-                      onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].apellido`, e.target.value)}
+                  <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+                    <DatePicker
+                      label="Fecha de Nacimiento"
+                      value={nino.fechaNacimiento ? new Date(nino.fechaNacimiento) : null}
+                      onChange={(newValue) => {
+                        handleInputChange(`ninosAdolescentes[${index}].fechaNacimiento`, newValue ? formatDate(newValue) : null);
+                      }}
+                      renderInput={(params) => <TextField {...params} fullWidth />}
+                      inputFormat="yyyy-MM-dd"
                     />
-                  </Grid>
-                </Grid>
-                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-                  <DatePicker
-                    label="Fecha de Nacimiento"
-                    value={nino.fechaNacimiento ? new Date(nino.fechaNacimiento) : null}
-                    onChange={(newValue) => {
-                      handleInputChange(`ninosAdolescentes[${index}].fechaNacimiento`, newValue ? formatDate(newValue) : null);
-                    }}
-                    renderInput={(params) => <TextField {...params} fullWidth />}
-                    inputFormat="yyyy-MM-dd"
+                  </LocalizationProvider>
+                  <TextField
+                    fullWidth
+                    label="Edad Aproximada"
+                    type="number"
+                    value={nino.edadAproximada}
+                    onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].edadAproximada`, e.target.value)}
                   />
-                </LocalizationProvider>
-                <TextField
-                  fullWidth
-                  label="Edad Aproximada"
-                  type="number"
-                  value={nino.edadAproximada}
-                  onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].edadAproximada`, e.target.value)}
-                />
-                <TextField
-                  fullWidth
-                  label="DNI"
-                  type="number"
-                  value={nino.dni}
-                  onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].dni`, e.target.value)}
-                />
-                <FormControl fullWidth>
-                  <InputLabel>Situación DNI</InputLabel>
-                  <Select
-                    value={nino.situacionDni}
-                    onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].situacionDni`, e.target.value)}
-                    label="Situación DNI"
-                  >
-                    <MenuItem value="EN_TRAMITE">En Trámite</MenuItem>
-                    <MenuItem value="VENCIDO">Vencido</MenuItem>
-                    <MenuItem value="EXTRAVIADO">Extraviado</MenuItem>
-                  </Select>
-                </FormControl>
-                <FormControl fullWidth>
-                  <InputLabel>Género</InputLabel>
-                  <Select
-                    value={nino.genero}
-                    onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].genero`, e.target.value)}
-                    label="Género"
-                  >
-                    <MenuItem value="MASCULINO">Masculino</MenuItem>
-                    <MenuItem value="FEMENINO">Femenino</MenuItem>
-                    <MenuItem value="OTRO">Otro</MenuItem>
-                  </Select>
-                </FormControl>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={nino.botonAntipanico}
-                      onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].botonAntipanico`, e.target.checked)}
-                    />
-                  }
-                  label="Botón Antipánico"
-                />
-                <TextField
-                  fullWidth
-                  label="Observaciones"
-                  multiline
-                  rows={4}
-                  value={nino.observaciones}
-                  onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].observaciones`, e.target.value)}
-                />
-              </Box>
-            ))}
-            <Button
-              startIcon={<AddIcon />}
-              onClick={addNinoAdolescente}
-              sx={{ color: 'primary.main' }}
-            >
-              Añadir otro niño o adolescente
-            </Button>
-          </Box>
-        )
+                  <TextField
+                    fullWidth
+                    label="DNI"
+                    type="number"
+                    value={nino.dni}
+                    onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].dni`, e.target.value)}
+                  />
+                  <FormControl fullWidth>
+                    <InputLabel>Situación DNI</InputLabel>
+                    <Select
+                      value={nino.situacionDni}
+                      onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].situacionDni`, e.target.value)}
+                      label="Situación DNI"
+                    >
+                      <MenuItem value="EN_TRAMITE">En Trámite</MenuItem>
+                      <MenuItem value="VENCIDO">Vencido</MenuItem>
+                      <MenuItem value="EXTRAVIADO">Extraviado</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <FormControl fullWidth>
+                    <InputLabel>Género</InputLabel>
+                    <Select
+                      value={nino.genero}
+                      onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].genero`, e.target.value)}
+                      label="Género"
+                    >
+                      <MenuItem value="MASCULINO">Masculino</MenuItem>
+                      <MenuItem value="FEMENINO">Femenino</MenuItem>
+                      <MenuItem value="OTRO">Otro</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={nino.botonAntipanico}
+                        onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].botonAntipanico`, e.target.checked)}
+                      />
+                    }
+                    label="Botón Antipánico"
+                  />
+                  <TextField
+                    fullWidth
+                    label="Observaciones"
+                    multiline
+                    rows={4}
+                    value={nino.observaciones}
+                    onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].observaciones`, e.target.value)}
+                  />
+    
+                  <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Información Educativa</Typography>
+                  <FormControl fullWidth sx={{ mb: 2 }}>
+  <InputLabel>Institución Educativa</InputLabel>
+  <Select
+    value={nino.educacion?.institucion_educativa || ''}
+    onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].educacion.institucion_educativa`, e.target.value)}
+    label="Institución Educativa"
+  >
+    {institucionesEducativas && institucionesEducativas.length > 0 ? (
+      institucionesEducativas.map((institucion) => (
+        <MenuItem key={institucion.id} value={institucion.id}>
+          {institucion.nombre}
+        </MenuItem>
+      ))
+    ) : (
+      <MenuItem value="" disabled>No hay instituciones disponibles</MenuItem>
+    )}
+  </Select>
+</FormControl>
+
+                  <TextField
+                    fullWidth
+                    label="Curso"
+                    value={nino.educacion?.curso || ''}
+                    onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].educacion.curso`, e.target.value)}
+                    sx={{ mb: 2 }}
+                  />
+<FormControl fullWidth sx={{ mb: 2 }}>
+  <InputLabel>Nivel</InputLabel>
+  <Select
+    value={nino.educacion?.nivel || ''}
+    onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].educacion.nivel`, e.target.value)}
+    label="Nivel"
+  >
+    <MenuItem value="PRIMARIO">Primario</MenuItem>
+    <MenuItem value="SECUNDARIO">Secundario</MenuItem>
+    <MenuItem value="TERCIARIO">Terciario</MenuItem>
+    <MenuItem value="UNIVERSITARIO">Universitario</MenuItem>
+    <MenuItem value="OTRO">Otro</MenuItem>
+  </Select>
+</FormControl>
+<FormControl fullWidth sx={{ mb: 2 }}>
+  <InputLabel>Turno</InputLabel>
+  <Select
+    value={nino.educacion?.turno || ''}
+    onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].educacion.turno`, e.target.value)}
+    label="Turno"
+  >
+    <MenuItem value="MANIANA">Mañana</MenuItem>
+    <MenuItem value="TARDE">Tarde</MenuItem>
+    <MenuItem value="NOCHE">Noche</MenuItem>
+    <MenuItem value="OTRO">Otro</MenuItem>
+  </Select>
+</FormControl>
+
+                  <TextField
+                    fullWidth
+                    label="Comentarios Educativos"
+                    multiline
+                    rows={2}
+                    value={nino.educacion?.comentarios || ''}
+                    onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].educacion.comentarios`, e.target.value)}
+                  />
+                </Box>
+              ))}
+              <Button
+                startIcon={<AddIcon />}
+                onClick={addNinoAdolescente}
+                sx={{ color: 'primary.main' }}
+              >
+                Añadir otro niño o adolescente
+              </Button>
+            </Box>
+          )
       case 2:
         return (
           <Box>
