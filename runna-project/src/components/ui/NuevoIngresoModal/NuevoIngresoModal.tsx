@@ -20,6 +20,7 @@ import { useApiData } from './useApiData'
 import { renderStepContent } from './RenderstepContent'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3'
 import { LocalizationProvider, DateTimePicker, DatePicker } from '@mui/x-date-pickers'
+import {createTDemandaMotivoIntervencion} from '../../../api/TableFunctions/demandasMotivoIntervencion'
 
 const steps = ['Carátula', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Información Adicional']
 
@@ -64,13 +65,16 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
     
     try {
       addDebugInfo('Starting form submission')
+      addDebugInfo(`Form Data: ${JSON.stringify(formData, null, 2)}`)
 
+      // Validate required fields
       const requiredFields = ['origen', 'descripcion', 'usuario_externo']
       const missingFields = requiredFields.filter(field => !formData[field])
       if (missingFields.length > 0) {
         throw new Error(`Missing required fields: ${missingFields.join(', ')}`)
       }
 
+      // Create localizacion
       const localizacionData = {
         ...formData.localizacion,
         piso_depto: Number(formData.localizacion.piso_depto) || null,
@@ -90,6 +94,7 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
         throw new Error('Failed to create localizacion')
       }
 
+      // Create personas for niños y adolescentes
       addDebugInfo('Creating personas for niños y adolescentes')
       const ninosAdolescentesPersonas = await Promise.all(
         formData.ninosAdolescentes.map((nino) =>
@@ -105,6 +110,8 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
         )
       )
 
+      // Create personas for adultos convivientes
+      addDebugInfo('Creating personas for adultos convivientes')
       const adultosConvivientesPersonas = await Promise.all(
         formData.adultosConvivientes.map((adulto) =>
           createTPersona({
@@ -119,6 +126,7 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
         )
       )
 
+      // Create demanda
       addDebugInfo('Preparing demanda data')
       const demandaData = {
         fecha_y_hora_ingreso: formData.fecha_y_hora_ingreso.toISOString(),
@@ -166,6 +174,29 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
 
       const vulneracionesResponses = await Promise.all(vulneracionesPromises)
       addDebugInfo(`Created ${vulneracionesResponses.length} vulneraciones`)
+
+      // Create demanda-motivo-intervencion entries
+      addDebugInfo('Creating demanda-motivo-intervencion entries')
+      addDebugInfo(`presuntaVulneracion: ${JSON.stringify(formData.presuntaVulneracion, null, 2)}`)
+
+      const motivo = formData.presuntaVulneracion.motivos
+      if (motivo) {
+        const demandaMotivoIntervencionData = {
+          si_no: true,
+          demanda: demandaResponse.id,
+          motivo_intervencion: motivo
+        }
+        
+        try {
+          const demandaMotivoIntervencionResponse = await createTDemandaMotivoIntervencion(demandaMotivoIntervencionData)
+          addDebugInfo(`Created demanda-motivo-intervencion entry: ${JSON.stringify(demandaMotivoIntervencionResponse)}`)
+        } catch (error) {
+          addDebugInfo(`Error creating demanda-motivo-intervencion entry: ${error.message}`)
+          console.error('Error creating demanda-motivo-intervencion entry:', error)
+        }
+      } else {
+        addDebugInfo('No motivo selected, skipping demanda-motivo-intervencion creation')
+      }
 
       onSubmit(demandaResponse)
       onClose()

@@ -174,30 +174,22 @@ const getCategoriaMotivosNombre = (motivoId: number, categoriaMotivos: any[]) =>
             </Grid>
           
             <FormControl fullWidth>
-                <InputLabel>Motivos de Intervención</InputLabel>
-                <Select
-                  multiple
-                  value={formData.presuntaVulneracion.motivos || []}
-                  onChange={(e) => handleInputChange('presuntaVulneracion.motivos', e.target.value)}
-                  renderValue={(selected) => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {selected.map((value) => (
-                        <Chip key={value} label={motivosIntervencion.find(m => m.id === value)?.nombre} />
-                      ))}
-                    </Box>
-                  )}
-                >
-                  {motivosIntervencion.map((motivo) => (
-                    <MenuItem key={motivo.id} value={motivo.id}>
-                      <Checkbox checked={(formData.presuntaVulneracion.motivos || []).indexOf(motivo.id) > -1} />
-                      <ListItemText 
-                        primary={motivo.nombre} 
-                        secondary={`Descripción: ${motivo.descripcion}, Peso: ${motivo.peso}`} 
-                      />
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+  <InputLabel>Motivos de Intervención</InputLabel>
+  <Select
+    value={formData.presuntaVulneracion.motivos || ''}  // Assuming 'motivos' is now a single value
+    onChange={(e) => handleInputChange('presuntaVulneracion.motivos', e.target.value)}
+  >
+    {motivosIntervencion.map((motivo) => (
+      <MenuItem key={motivo.id} value={motivo.id}>
+        <ListItemText 
+          primary={motivo.nombre} 
+          secondary={`Descripción: ${motivo.descripcion}, Peso: ${motivo.peso}`} 
+        />
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>
+
 
             <Grid item xs={12}>
               <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Datos de Localización</Typography>
