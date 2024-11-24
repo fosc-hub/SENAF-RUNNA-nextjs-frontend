@@ -16,6 +16,7 @@ import { getTCondicionesVulnerabilidads } from '../../../api/TableFunctions/cond
 import {getTVulneracions} from '../../../api/TableFunctions/vulneraciones'
 import {createTVulneracion} from '../../../api/TableFunctions/vulneraciones'
 import {getTInstitucionEducativas} from '../../../api/TableFunctions/institucionesEducativas'
+import {getTInstitucionSanitarias} from '../../../api/TableFunctions/institucionesSanitarias'
 import { get } from 'http'
 
 export const useApiData = () => {
@@ -33,6 +34,7 @@ export const useApiData = () => {
       condicionesVulnerabilidad: [],
       vulneraciones: [],
       institucionesEducativas: [],
+      institucionesSanitarias: []
     })
   
     useEffect(() => {
@@ -52,6 +54,7 @@ export const useApiData = () => {
             fetchedCondiciones,
             fetchedVulneraciones,
             fetchedInstitucionesEducativas,
+            fetchedInstitucionesSanitarias
           ] = await Promise.all([
             getTUsuariosExternos(),
             getTBarrios(),
@@ -66,6 +69,7 @@ export const useApiData = () => {
             getTCondicionesVulnerabilidads(),
             getTVulneracions(),
             getTInstitucionEducativas(),
+            getTInstitucionSanitarias()
           ])
   
           setApiData({
@@ -82,6 +86,7 @@ export const useApiData = () => {
             condicionesVulnerabilidad: fetchedCondiciones,
             vulneraciones: fetchedVulneraciones,
             institucionesEducativas: fetchedInstitucionesEducativas,
+            institucionesSanitarias: fetchedInstitucionesSanitarias
           })
         } catch (error) {
           console.error('Error fetching data:', error)

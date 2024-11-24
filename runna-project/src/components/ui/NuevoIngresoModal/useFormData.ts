@@ -88,7 +88,7 @@ export const useFormData = () => {
   }
 
   const addNinoAdolescente = () => {
-    setFormData((prevData) => ({
+    setFormData(prevData => ({
       ...prevData,
       ninosAdolescentes: [
         ...prevData.ninosAdolescentes,
@@ -102,6 +102,17 @@ export const useFormData = () => {
           genero: 'MASCULINO',
           botonAntipanico: false,
           observaciones: '',
+          educacion: {
+            institucion_educativa: '',
+            curso: '',
+            nivel: '',
+            turno: '',
+            comentarios: '',
+          },
+          salud: {
+            institucion_sanitaria: '',
+            observaciones: '',
+          },
         },
       ],
     }))

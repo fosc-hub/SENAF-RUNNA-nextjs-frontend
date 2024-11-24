@@ -222,6 +222,10 @@ export interface TDemanda {
     adulto: boolean;
     nnya: boolean; // Relación lógica con adulto
   }
+  export interface TNNyASalud {
+    institucion_sanitaria: string; // Assuming this is a string, adjust as needed
+    observaciones?: string; // Optional
+}
   export interface TDemandaPersona {
     conviviente?: boolean; // Opcional
     supuesto_autordv?: boolean; // Opcional

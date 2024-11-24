@@ -22,6 +22,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3'
 import { LocalizationProvider, DateTimePicker, DatePicker } from '@mui/x-date-pickers'
 import {createTDemandaMotivoIntervencion} from '../../../api/TableFunctions/demandasMotivoIntervencion'
 import {createTNNyAEducacion} from '../../../api/TableFunctions/nnyaeducacion'
+import {createTNNyASalud} from '../../../api/TableFunctions/nnyaSalud'
 const steps = ['Carátula', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Información Adicional']
 
 export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
@@ -116,7 +117,14 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
             }
             await createTNNyAEducacion(educacionData)
           }
-
+          // Create nnya-salud entry
+          if (personaResponse && personaResponse.id && nino.salud) {
+            const saludData = {
+              ...nino.salud,
+              nnya: personaResponse.id
+            }
+            await createTNNyASalud(saludData)
+          }
           return personaResponse
         })
       )
