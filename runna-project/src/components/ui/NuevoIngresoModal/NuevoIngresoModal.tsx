@@ -24,6 +24,8 @@ import {createTDemandaMotivoIntervencion} from '../../../api/TableFunctions/dema
 import {createTNNyAEducacion} from '../../../api/TableFunctions/nnyaeducacion'
 import {createTNNyASalud} from '../../../api/TableFunctions/nnyaSalud'
 import {createTDemandaPersona} from '../../../api/TableFunctions/demandaPersonas'
+import { createLocalizacionPersona } from '../../../api/TableFunctions/localizacionPersona'
+
 const steps = ['Carátula', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Información Adicional']
 
 export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
@@ -126,15 +128,23 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
             }
             await createTNNyASalud(saludData)
           }
+                    // Associate persona with localizacion
+                    await createLocalizacionPersona({
+                      principal: true,
+                      persona: personaResponse.id,
+                      localizacion: nino.useDefaultLocalizacion
+                        ? localizacionResponse.id
+                        : (await createLocalizacion(nino.localizacion)).id,
+                    });
           return personaResponse
         })
       )
 
       // Create personas for adultos convivientes
-      addDebugInfo('Creating personas for adultos convivientes')
+      addDebugInfo('Creating personas for adultos convivientes');
       const adultosConvivientesPersonas = await Promise.all(
-        formData.adultosConvivientes.map((adulto) =>
-          createTPersona({
+        formData.adultosConvivientes.map(async (adulto) => {
+          const personaResponse = await createTPersona({
             ...adulto,
             situacion_dni: adulto.situacionDni || 'EN_TRAMITE',
             fecha_nacimiento: formatDate(adulto.fechaNacimiento ? new Date(adulto.fechaNacimiento) : null),
@@ -142,9 +152,20 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
             dni: adulto.dni ? parseInt(adulto.dni) : null,
             adulto: true,
             nnya: false,
-          })
-        )
-      )
+          });
+
+          // Associate persona with localizacion
+          await createLocalizacionPersona({
+            principal: true,
+            persona: personaResponse.id,
+            localizacion: adulto.useDefaultLocalizacion
+              ? localizacionResponse.id
+              : (await createLocalizacion(adulto.localizacion)).id,
+          });
+
+          return personaResponse;
+        })
+      );
 
       // Create demanda
       addDebugInfo('Preparing demanda data')

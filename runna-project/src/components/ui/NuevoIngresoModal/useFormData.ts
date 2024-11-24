@@ -102,6 +102,8 @@ export const useFormData = () => {
           genero: 'MASCULINO',
           botonAntipanico: false,
           observaciones: '',
+          useDefaultLocalizacion: true,
+          localizacion: { ...initialFormData.localizacion },
           educacion: {
             institucion_educativa: '',
             curso: '',
@@ -152,6 +154,8 @@ export const useFormData = () => {
           observaciones: '',
           supuesto_autordv: false,
           conviviente: true,
+          useDefaultLocalizacion: true,
+          localizacion: { ...initialFormData.localizacion },
         },
       ],
     }))
