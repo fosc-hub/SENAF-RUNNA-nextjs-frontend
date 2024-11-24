@@ -23,6 +23,7 @@ import { LocalizationProvider, DateTimePicker, DatePicker } from '@mui/x-date-pi
 import {createTDemandaMotivoIntervencion} from '../../../api/TableFunctions/demandasMotivoIntervencion'
 import {createTNNyAEducacion} from '../../../api/TableFunctions/nnyaeducacion'
 import {createTNNyASalud} from '../../../api/TableFunctions/nnyaSalud'
+import {createTDemandaPersona} from '../../../api/TableFunctions/demandaPersonas'
 const steps = ['Carátula', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Información Adicional']
 
 export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
@@ -173,6 +174,33 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
       if (!demandaResponse || !demandaResponse.id) {
         throw new Error('Failed to create demanda')
       }
+      // Create demanda-persona entries
+      addDebugInfo('Creating demanda-persona entries')
+      const demandaPersonaPromises = [
+        ...ninosAdolescentesPersonas.map((persona, index) =>
+          createTDemandaPersona({
+            conviviente: true,
+            supuesto_autordv: false,
+            supuesto_autordv_principal: false,
+            nnya_principal: index === 0,
+            demanda: demandaResponse.id,
+            persona: persona.id,
+          })
+        ),
+        ...adultosConvivientesPersonas.map((persona, index) =>
+          createTDemandaPersona({
+            conviviente: true,
+            supuesto_autordv: formData.adultosConvivientes[index].supuesto_autordv || false,
+            supuesto_autordv_principal: index === 0 && formData.adultosConvivientes[index].supuesto_autordv,
+            nnya_principal: false,
+            demanda: demandaResponse.id,
+            persona: persona.id,
+          })
+        ),
+      ]
+
+      const demandaPersonaResponses = await Promise.all(demandaPersonaPromises)
+      addDebugInfo(`Created ${demandaPersonaResponses.length} demanda-persona entries`)
 
       // Create vulneraciones
       addDebugInfo('Creating vulneraciones')

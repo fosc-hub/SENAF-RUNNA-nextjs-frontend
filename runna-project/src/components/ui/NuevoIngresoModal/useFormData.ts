@@ -150,6 +150,8 @@ export const useFormData = () => {
           genero: 'MASCULINO',
           botonAntipanico: false,
           observaciones: '',
+          supuesto_autordv: false,
+          conviviente: true,
         },
       ],
     }))

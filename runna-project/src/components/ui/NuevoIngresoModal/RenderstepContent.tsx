@@ -605,6 +605,25 @@ export const renderStepContent = ({
               </FormControl>
               <FormControlLabel
                 control={
+                  <Checkbox
+                    checked={adulto.supuesto_autordv}
+                    onChange={(e) => handleInputChange(`adultosConvivientes[${index}].supuesto_autordv`, e.target.checked)}
+                  />
+                }
+                label="Supuesto autor DV"
+              />
+              
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={adulto.conviviente}
+                    onChange={(e) => handleInputChange(`adultosConvivientes[${index}].conviviente`, e.target.checked)}
+                  />
+                }
+                label="Conviviente"
+              />
+              <FormControlLabel
+                control={
                   <Switch
                     checked={adulto.botonAntipanico}
                     onChange={(e) => handleInputChange(`adultosConvivientes[${index}].botonAntipanico`, e.target.checked)}
