@@ -36,6 +36,7 @@ const initialFormData = {
   ninosAdolescentes: [],
   adultosConvivientes: [],
   vulneraciones: [],
+  vinculaciones: [],
   presuntaVulneracion: {
     motivo: '',
     ambitoVulneracion: '',
@@ -161,24 +162,32 @@ export const useFormData = () => {
     }))
   }
 
-  const addAutor = () => {
-    setFormData((prevData) => ({
+  const addVinculacion = () => {
+    setFormData(prevData => ({
       ...prevData,
-      autores: [
-        ...prevData.autores,
+      vinculaciones: [
+        ...prevData.vinculaciones,
         {
-          nombreApellido: '',
-          edad: '',
-          genero: '',
+          persona_1: '',
+          persona_2: '',
           vinculo: '',
-          convive: false,
-          comentarios: '',
-        },
-      ],
+          conviven: false,
+          autordv: false,
+          garantiza_proteccion: false,
+        }
+      ]
     }))
   }
 
-  return { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addAutor, addVulneraciontext,
+  const removeVinculacion = (index) => {
+    setFormData(prevData => ({
+      ...prevData,
+      vinculaciones: prevData.vinculaciones.filter((_, i) => i !== index)
+    }))
+  }
+
+
+  return { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext, addVinculacion, removeVinculacion
   }
 }
 

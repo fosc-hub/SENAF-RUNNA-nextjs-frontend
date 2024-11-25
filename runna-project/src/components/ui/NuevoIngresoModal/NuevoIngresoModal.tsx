@@ -10,9 +10,9 @@ import {
   StepLabel,
 } from '@mui/material'
 import { createLocalizacion } from '../../../api/TableFunctions/localizacion'
-import {createDemand} from '../../../api/TableFunctions/demands'
-import {createTPersona} from '../../../api/TableFunctions/personas'
-import {createTVulneracion} from '../../../api/TableFunctions/vulneraciones'
+import { createDemand } from '../../../api/TableFunctions/demands'
+import { createTPersona } from '../../../api/TableFunctions/personas'
+import { createTVulneracion } from '../../../api/TableFunctions/vulneraciones'
 import { es } from 'date-fns/locale'
 import { X } from 'lucide-react'
 import { useFormData } from './useFormData'
@@ -20,13 +20,13 @@ import { useApiData } from './useApiData'
 import { renderStepContent } from './RenderstepContent'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3'
 import { LocalizationProvider, DateTimePicker, DatePicker } from '@mui/x-date-pickers'
-import {createTDemandaMotivoIntervencion} from '../../../api/TableFunctions/demandasMotivoIntervencion'
-import {createTNNyAEducacion} from '../../../api/TableFunctions/nnyaeducacion'
-import {createTNNyASalud} from '../../../api/TableFunctions/nnyaSalud'
-import {createTDemandaPersona} from '../../../api/TableFunctions/demandaPersonas'
+import { createTDemandaMotivoIntervencion } from '../../../api/TableFunctions/demandasMotivoIntervencion'
+import { createTNNyAEducacion } from '../../../api/TableFunctions/nnyaeducacion'
+import { createTNNyASalud } from '../../../api/TableFunctions/nnyaSalud'
+import { createTDemandaPersona } from '../../../api/TableFunctions/demandaPersonas'
 import { createLocalizacionPersona } from '../../../api/TableFunctions/localizacionPersona'
 
-const steps = ['Carátula', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Información Adicional']
+const steps = ['Carátula', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Vinculos']
 
 export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
   const [activeStep, setActiveStep] = useState(0)
@@ -35,14 +35,14 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
   const [debugInfo, setDebugInfo] = useState([])
   const isSubmittingRef = useRef(false)
 
-  const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addAutor, addVulneraciontext } = useFormData()
+  const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext, addVinculacion, removeVinculacion } = useFormData()
   const apiData = useApiData()
 
   const filteredSubmotivos = useMemo(() => {
     if (!formData.presuntaVulneracion.categoriaMotivos || formData.presuntaVulneracion.categoriaMotivos.length === 0) {
       return []
     }
-    return apiData.categoriaSubmotivos.filter(submotivo => 
+    return apiData.categoriaSubmotivos.filter(submotivo =>
       formData.presuntaVulneracion.categoriaMotivos.includes(submotivo.motivo)
     )
   }, [apiData.categoriaSubmotivos, formData.presuntaVulneracion.categoriaMotivos])
@@ -219,6 +219,7 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
       if (!demandaResponse || !demandaResponse.id) {
         throw new Error('Failed to create demanda')
       }
+
       // Create demanda-persona entries
       addDebugInfo('Creating demanda-persona entries')
       const demandaPersonaPromises = [
@@ -290,6 +291,31 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
         addDebugInfo('No motivo selected, skipping demanda-motivo-intervencion creation')
       }
 
+      // Create vinculaciones
+      addDebugInfo('Creating vinculaciones')
+      const vinculacionesPromises = formData.vinculaciones.map(vinculacion => {
+        const persona1 = vinculacion.persona_1 < formData.ninosAdolescentes.length
+          ? ninosAdolescentesPersonas[vinculacion.persona_1].id
+          : adultosConvivientesPersonas[vinculacion.persona_1 - formData.ninosAdolescentes.length].id
+
+        const persona2 = vinculacion.persona_2 < formData.ninosAdolescentes.length
+          ? ninosAdolescentesPersonas[vinculacion.persona_2].id
+          : adultosConvivientesPersonas[vinculacion.persona_2 - formData.ninosAdolescentes.length].id
+
+        return apiData.addVinculoPersonaPersona({
+          conviven: vinculacion.conviven,
+          autordv: vinculacion.autordv,
+          garantiza_proteccion: vinculacion.garantiza_proteccion,
+          persona_1: persona1,
+          persona_2: persona2,
+          vinculo: vinculacion.vinculo
+        })
+      })
+
+      const vinculacionesResponses = await Promise.all(vinculacionesPromises)
+      addDebugInfo(`Created ${vinculacionesResponses.
+length} vinculaciones`)
+
       onSubmit(demandaResponse)
       onClose()
     } catch (error) {
@@ -338,7 +364,8 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
               handleInputChange,
               addNinoAdolescente,
               addAdultoConviviente,
-              addAutor,
+              addVinculacion,
+              removeVinculacion,
               addVulneraciontext,
               ...apiData,
               addVulneracionApi: apiData.addVulneracion,

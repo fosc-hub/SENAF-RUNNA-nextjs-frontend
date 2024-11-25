@@ -20,6 +20,8 @@ import {getTInstitucionSanitarias} from '../../../api/TableFunctions/institucion
 import { getInstitucionesUsuarioExterno } from '../../../api/TableFunctions/institucionUsuarioExterno' 
 import { getVinculosUsuarioExterno } from '../../../api/TableFunctions/vinculoUsuarioExterno'
 import { getTUsuariosExternos } from '../../../api/TableFunctions/usuarioExterno'
+import {getTVinculos} from '../../../api/TableFunctions/vinculos'
+import { createTVinculoPersonaPersona } from '../../../api/TableFunctions/vinculospersonaspersonas'
 import { get } from 'http'
 
 export const useApiData = () => {
@@ -39,7 +41,8 @@ export const useApiData = () => {
       institucionesEducativas: [],
       institucionesSanitarias: [],
       institucionesUsuarioExterno: [],
-      vinculosUsuarioExterno: []
+      vinculosUsuarioExterno: [],
+      vinculoPersonas: [],
     })
   
     useEffect(() => {
@@ -62,6 +65,7 @@ export const useApiData = () => {
             fetchedInstitucionesSanitarias,
             fetchedInstitucionesUsuarioExterno,
             fetchedVinculosUsuarioExterno,
+            fetchedVinculosPersonas,
           ] = await Promise.all([
             getTUsuariosExternos(),
             getTBarrios(),
@@ -79,6 +83,7 @@ export const useApiData = () => {
             getTInstitucionSanitarias(),
             getInstitucionesUsuarioExterno(),
             getVinculosUsuarioExterno(),
+            getTVinculos(),
 
           ])
   
@@ -99,6 +104,7 @@ export const useApiData = () => {
             institucionesSanitarias: fetchedInstitucionesSanitarias,
             institucionesUsuarioExterno: fetchedInstitucionesUsuarioExterno,
             vinculosUsuarioExterno: fetchedVinculosUsuarioExterno,
+            vinculoPersonas: fetchedVinculosPersonas,
           })
         } catch (error) {
           console.error('Error fetching data:', error)
@@ -146,6 +152,14 @@ export const useApiData = () => {
           throw error
         }
       }
-      return { ...apiData, addVulneracion, addUsuarioExterno }
+      const addVinculoPersonaPersona = async (vinculoPersonaPersonaData) => {
+        try {
+          const newVinculoPersonaPersona = await createTVinculoPersonaPersona(vinculoPersonaPersonaData)
+          return newVinculoPersonaPersona
+        } catch (error) {
+          console.error('Error creating vinculo persona persona:', error)
+          throw error
+        }
+      }
+      return { ...apiData, addVulneracion, addUsuarioExterno, addVinculoPersonaPersona }
     }
-  

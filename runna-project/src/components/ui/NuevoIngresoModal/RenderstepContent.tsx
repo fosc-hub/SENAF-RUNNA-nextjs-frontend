@@ -176,6 +176,9 @@ export const renderStepContent = ({
   institucionesSanitarias,
   institucionesUsuarioExterno,
   vinculosUsuarioExterno,
+  addVinculacion,
+  removeVinculacion,
+  vinculoPersonas,
 }) => {
   const [newVulneracion, setNewVulneracion] = useState({
     principal_demanda: false,
@@ -187,7 +190,102 @@ export const renderStepContent = ({
     nnya: '',
     autor_dv: '',
   })
-
+  const renderVinculacion = (vinculacion, index) => (
+    <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
+      <Grid item xs={12} sm={6}>
+        <FormControl fullWidth>
+          <InputLabel>Persona 1</InputLabel>
+          <Select
+            value={vinculacion.persona_1}
+            onChange={(e) => handleInputChange(`vinculaciones[${index}].persona_1`, e.target.value)}
+            label="Persona 1"
+          >
+            {formData.ninosAdolescentes.map((nnya, i) => (
+              <MenuItem key={`nnya-${i}`} value={i}>
+                {nnya.nombre} {nnya.apellido} (NNyA)
+              </MenuItem>
+            ))}
+            {formData.adultosConvivientes.map((adulto, i) => (
+              <MenuItem key={`adulto-${i}`} value={formData.ninosAdolescentes.length + i}>
+                {adulto.nombre} {adulto.apellido} (Adulto)
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <FormControl fullWidth>
+          <InputLabel>Persona 2</InputLabel>
+          <Select
+            value={vinculacion.persona_2}
+            onChange={(e) => handleInputChange(`vinculaciones[${index}].persona_2`, e.target.value)}
+            label="Persona 2"
+          >
+            {formData.ninosAdolescentes.map((nnya, i) => (
+              <MenuItem key={`nnya-${i}`} value={i}>
+                {nnya.nombre} {nnya.apellido} (NNyA)
+              </MenuItem>
+            ))}
+            {formData.adultosConvivientes.map((adulto, i) => (
+              <MenuItem key={`adulto-${i}`} value={formData.ninosAdolescentes.length + i}>
+                {adulto.nombre} {adulto.apellido} (Adulto)
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <FormControl fullWidth>
+          <InputLabel>Vínculo</InputLabel>
+          <Select
+            value={vinculacion.vinculo}
+            onChange={(e) => handleInputChange(`vinculaciones[${index}].vinculo`, e.target.value)}
+            label="Vínculo"
+          >
+            {vinculoPersonas.map((vinculo) => (
+              <MenuItem key={vinculo.id} value={vinculo.id}>
+                {vinculo.nombre}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={vinculacion.conviven}
+              onChange={(e) => handleInputChange(`vinculaciones[${index}].conviven`, e.target.checked)}
+            />
+          }
+          label="Conviven"
+        />
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={vinculacion.autordv}
+              onChange={(e) => handleInputChange(`vinculaciones[${index}].autordv`, e.target.checked)}
+            />
+          }
+          label="Autor DV"
+        />
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={vinculacion.garantiza_proteccion}
+              onChange={(e) => handleInputChange(`vinculaciones[${index}].garantiza_proteccion`, e.target.checked)}
+            />
+          }
+          label="Garantiza Protección"
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <Button variant="outlined" color="secondary" onClick={() => removeVinculacion(index)}>
+          Eliminar Vinculación
+        </Button>
+      </Grid>
+    </Grid>
+  )
   const [localFilteredSubmotivos, setLocalFilteredSubmotivos] = useState([])
 
   useEffect(() => {
@@ -957,140 +1055,19 @@ export const renderStepContent = ({
         </Box>
       )
 
-    case 4:
-      return (
-        <Box>
-          <Typography color="primary" sx={{ mb: 2 }}>Vulneracion</Typography>
-          {formData.autores.map((autor: any, index: number) => (
-            <Box key={index} sx={{ mb: 3 }}>
-              <TextField
-                fullWidth
-                label="Nombre y Apellido"
-                value={autor.nombreApellido}
-                onChange={(e) => handleInputChange(`autores[${index}].nombreApellido`, e.target.value)}
-              />
-              <Grid container spacing={2}>
-                <Grid item xs={4}>
-                  <TextField
-                    fullWidth
-                    label="Edad"
-                    value={autor.edad}
-                    onChange={(e) => handleInputChange(`autores[${index}].edad`, e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={4}>
-                  <TextField
-                    fullWidth
-                    label="Género"
-                    value={autor.genero}
-                    onChange={(e) => handleInputChange(`autores[${index}].genero`, e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={4}>
-                  <TextField
-                    fullWidth
-                    label="Vínculo"
-                    value={autor.vinculo}
-                    onChange={(e) => handleInputChange(`autores[${index}].vinculo`, e.target.value)}
-                  />
-                </Grid>
-              </Grid>
-              <FormControl component="fieldset">
-                <Typography variant="body2">Convive?</Typography>
-                <RadioGroup
-                  row
-                  value={autor.convive}
-                  onChange={(e) => handleInputChange(`autores[${index}].convive`, e.target.value === 'true')}
-                >
-                  <FormControlLabel value={true} control={<Radio />} label="SI" />
-                  <FormControlLabel value={false} control={<Radio />} label="NO" />
-                </RadioGroup>
-              </FormControl>
-              <TextField
-                fullWidth
-                label="Comentarios"
-                value={autor.comentarios}
-                onChange={(e) => handleInputChange(`autores[${index}].comentarios`, e.target.value)}
-                multiline
-                rows={4}
-              />
-            </Box>
-          ))}
-          <Button
-            startIcon={<AddIcon />}
-            onClick={addAutor}
-            sx={{ color: 'primary.main' }}
-          >
-            Añadir otro autor
-          </Button>
-
-          <Typography color="primary" sx={{ mt: 4, mb: 2 }}>Descripción de la situación</Typography>
-          <TextField
-            fullWidth
-            label="Descripción"
-            value={formData.descripcionSituacion}
-            onChange={(e) => handleInputChange('descripcionSituacion', e.target.value)}
-            multiline
-            rows={4}
-          />
-
-          <Typography color="primary" sx={{ mt: 4, mb: 2 }}>Sobre el usuario de la línea</Typography>
-          <TextField
-            fullWidth
-            label="Nombre y Apellido"
-            value={formData.usuarioLinea.nombreApellido}
-            onChange={(e) => handleInputChange('usuarioLinea.nombreApellido', e.target.value)}
-          />
-          <Grid container spacing={2}>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Edad"
-                value={formData.usuarioLinea.edad}
-                onChange={(e) => handleInputChange('usuarioLinea.edad', e.target.value)}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Género"
-                value={formData.usuarioLinea.genero}
-                onChange={(e) => handleInputChange('usuarioLinea.genero', e.target.value)}
-              />
-            </Grid>
-          </Grid>
-          <TextField
-            fullWidth
-            label="Vínculo"
-            value={formData.usuarioLinea.vinculo}
-            onChange={(e) => handleInputChange('usuarioLinea.vinculo', e.target.value)}
-          />
-          <TextField
-            fullWidth
-            label="Teléfono"
-            value={formData.usuarioLinea.telefono}
-            onChange={(e) => handleInputChange('usuarioLinea.telefono', e.target.value)}
-          />
-          <TextField
-            fullWidth
-            label="Institución o programa"
-            value={formData.usuarioLinea.institucionPrograma}
-            onChange={(e) => handleInputChange('usuarioLinea.institucionPrograma', e.target.value)}
-          />
-          <TextField
-            fullWidth
-            label="Contacto Institución o programa"
-            value={formData.usuarioLinea.contactoInstitucion}
-            onChange={(e) => handleInputChange('usuarioLinea.contactoInstitucion', e.target.value)}
-          />
-          <TextField
-            fullWidth
-            label="Nombre y cargo del responsable"
-            value={formData.usuarioLinea.nombreCargoResponsable}
-            onChange={(e) => handleInputChange('usuarioLinea.nombreCargoResponsable', e.target.value)}
-          />
-        </Box>
-      )
+      case 4:
+        return (
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Vínculos
+            </Typography>
+            {formData.vinculaciones.map((vinculacion, index) => renderVinculacion(vinculacion, index))}
+            <Button variant="contained" color="primary" onClick={addVinculacion} sx={{ mt: 2 }}>
+              Agregar Vinculación
+            </Button>
+          </Box>
+        )
+  
     default:
       return null
   }
