@@ -339,4 +339,15 @@ export interface TLegajo {
     institucion: number; // Relación con la tabla de instituciones
     responsable: number; // Relación con TResponsable
   }
-  
+  export interface TVinculoUsuarioExterno {
+    id: number;
+    nombre: string;
+    descripcion?: string; // Optional description field
+  }
+  export interface TInstitucionUsuarioExterno {
+    id: number;
+    nombre: string;
+    mail: string;
+    telefono: number;
+    localizacion: number; // Relación con la tabla de localización
+  }

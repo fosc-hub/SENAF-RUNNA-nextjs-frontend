@@ -72,10 +72,35 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
       addDebugInfo(`Form Data: ${JSON.stringify(formData, null, 2)}`)
 
       // Validate required fields
-      const requiredFields = ['origen', 'descripcion', 'usuario_externo']
+      const requiredFields = ['origen', 'descripcion', 'usuarioExterno']
       const missingFields = requiredFields.filter(field => !formData[field])
       if (missingFields.length > 0) {
         throw new Error(`Missing required fields: ${missingFields.join(', ')}`)
+      }
+
+      // Handle usuario externo
+      let usuarioExternoId
+      if (formData.createNewUsuarioExterno) {
+        addDebugInfo('Creating new usuario externo')
+        const newUsuarioExterno = await apiData.addUsuarioExterno({
+          nombre: formData.usuarioExterno.nombre,
+          apellido: formData.usuarioExterno.apellido,
+          fecha_nacimiento: formData.usuarioExterno.fecha_nacimiento,
+          genero: formData.usuarioExterno.genero,
+          telefono: formData.usuarioExterno.telefono,
+          mail: formData.usuarioExterno.mail,
+          vinculo: formData.usuarioExterno.vinculo,
+          institucion: formData.usuarioExterno.institucion,
+        })
+        usuarioExternoId = newUsuarioExterno.id
+        addDebugInfo(`New usuario externo created with ID: ${usuarioExternoId}`)
+      } else {
+        usuarioExternoId = formData.usuarioExterno.id
+        addDebugInfo(`Using existing usuario externo with ID: ${usuarioExternoId}`)
+      }
+
+      if (!usuarioExternoId) {
+        throw new Error('Usuario externo ID is missing')
       }
 
       // Create localizacion
@@ -128,14 +153,14 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
             }
             await createTNNyASalud(saludData)
           }
-                    // Associate persona with localizacion
-                    await createLocalizacionPersona({
-                      principal: true,
-                      persona: personaResponse.id,
-                      localizacion: nino.useDefaultLocalizacion
-                        ? localizacionResponse.id
-                        : (await createLocalizacion(nino.localizacion)).id,
-                    });
+          // Associate persona with localizacion
+          await createLocalizacionPersona({
+            principal: true,
+            persona: personaResponse.id,
+            localizacion: nino.useDefaultLocalizacion
+              ? localizacionResponse.id
+              : (await createLocalizacion(nino.localizacion)).id,
+          });
           return personaResponse
         })
       )
@@ -179,13 +204,12 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
         nro_oficio_web: Number(formData.nro_oficio_web) || null,
         descripcion: formData.descripcion,
         localizacion: localizacionResponse.id,
-        usuario_externo: Number(formData.usuario_externo) || null,
+        usuario_externo: usuarioExternoId,
         ninosAdolescentes: ninosAdolescentesPersonas.map((p) => p.id),
         adultosConvivientes: adultosConvivientesPersonas.map((p) => p.id),
         presuntaVulneracion: formData.presuntaVulneracion,
         autores: formData.autores,
         descripcionSituacion: formData.descripcionSituacion,
-        usuarioLinea: formData.usuarioLinea,
       }
 
       addDebugInfo('Creating demanda')

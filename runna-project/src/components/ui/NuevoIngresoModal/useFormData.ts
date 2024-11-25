@@ -21,7 +21,18 @@ const initialFormData = {
     localidad: '',
     cpc: '',
   },
-  usuario_externo: '',
+  usuarioExterno: {
+    id: null,
+    nombre: '',
+    apellido: '',
+    fecha_nacimiento: null,
+    genero: 'MASCULINO',
+    telefono: '',
+    mail: '',
+    vinculo: '',
+    institucion: '',
+  },
+  createNewUsuarioExterno: false,
   ninosAdolescentes: [],
   adultosConvivientes: [],
   vulneraciones: [],
@@ -56,34 +67,23 @@ const initialFormData = {
 
 export const useFormData = () => {
   const [formData, setFormData] = useState(initialFormData)
-
+  
   const handleInputChange = (field, value) => {
-    setFormData((prevData) => {
-      const newData = { ...prevData }
-      const keys = field.split('.')
-      let current = newData
-
-      for (let i = 0; i < keys.length - 1; i++) {
-        const key = keys[i].includes('[') ? keys[i].split('[')[0] : keys[i]
-        const index = keys[i].includes('[') ? parseInt(keys[i].match(/\d+/)?.[0] || '0', 10) : null
-
-        if (index !== null && Array.isArray(current[key])) {
-          if (!current[key][index]) {
-            current[key][index] = {}
-          }
-          current = current[key][index]
+    setFormData(prevData => {
+      const updatedData = { ...prevData }
+      const fieldParts = field.split('.')
+      let current = updatedData
+      for (let i = 0; i < fieldParts.length - 1; i++) {
+        if (fieldParts[i].includes('[')) {
+          const [arrayName, indexStr] = fieldParts[i].split('[')
+          const index = parseInt(indexStr.replace(']', ''))
+          current = current[arrayName][index]
         } else {
-          if (!current[key]) {
-            current[key] = {}
-          }
-          current = current[key]
+          current = current[fieldParts[i]]
         }
       }
-
-      const lastKey = keys[keys.length - 1]
-      current[lastKey] = value
-
-      return newData
+      current[fieldParts[fieldParts.length - 1]] = value
+      return updatedData
     })
   }
 
@@ -178,6 +178,7 @@ export const useFormData = () => {
     }))
   }
 
-  return { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addAutor, addVulneraciontext }
+  return { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addAutor, addVulneraciontext,
+  }
 }
 

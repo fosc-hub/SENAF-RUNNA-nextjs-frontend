@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { createLocalizacion } from '../../../api/TableFunctions/localizacion'
-import { getTUsuariosExternos } from '../../../api/TableFunctions/usuarioExterno'
+import { createTUsuarioExterno } from '../../../api/TableFunctions/usuarioExterno'
 import { createDemand } from '../../../api/TableFunctions/demands'
 import { getTBarrios } from '../../../api/TableFunctions/barrios'
 import { getTLocalidads } from '../../../api/TableFunctions/localidades'
@@ -17,6 +17,9 @@ import {getTVulneracions} from '../../../api/TableFunctions/vulneraciones'
 import {createTVulneracion} from '../../../api/TableFunctions/vulneraciones'
 import {getTInstitucionEducativas} from '../../../api/TableFunctions/institucionesEducativas'
 import {getTInstitucionSanitarias} from '../../../api/TableFunctions/institucionesSanitarias'
+import { getInstitucionesUsuarioExterno } from '../../../api/TableFunctions/institucionUsuarioExterno' 
+import { getVinculosUsuarioExterno } from '../../../api/TableFunctions/vinculoUsuarioExterno'
+import { getTUsuariosExternos } from '../../../api/TableFunctions/usuarioExterno'
 import { get } from 'http'
 
 export const useApiData = () => {
@@ -34,7 +37,9 @@ export const useApiData = () => {
       condicionesVulnerabilidad: [],
       vulneraciones: [],
       institucionesEducativas: [],
-      institucionesSanitarias: []
+      institucionesSanitarias: [],
+      institucionesUsuarioExterno: [],
+      vinculosUsuarioExterno: []
     })
   
     useEffect(() => {
@@ -54,7 +59,9 @@ export const useApiData = () => {
             fetchedCondiciones,
             fetchedVulneraciones,
             fetchedInstitucionesEducativas,
-            fetchedInstitucionesSanitarias
+            fetchedInstitucionesSanitarias,
+            fetchedInstitucionesUsuarioExterno,
+            fetchedVinculosUsuarioExterno,
           ] = await Promise.all([
             getTUsuariosExternos(),
             getTBarrios(),
@@ -69,7 +76,10 @@ export const useApiData = () => {
             getTCondicionesVulnerabilidads(),
             getTVulneracions(),
             getTInstitucionEducativas(),
-            getTInstitucionSanitarias()
+            getTInstitucionSanitarias(),
+            getInstitucionesUsuarioExterno(),
+            getVinculosUsuarioExterno(),
+
           ])
   
           setApiData({
@@ -86,7 +96,9 @@ export const useApiData = () => {
             condicionesVulnerabilidad: fetchedCondiciones,
             vulneraciones: fetchedVulneraciones,
             institucionesEducativas: fetchedInstitucionesEducativas,
-            institucionesSanitarias: fetchedInstitucionesSanitarias
+            institucionesSanitarias: fetchedInstitucionesSanitarias,
+            institucionesUsuarioExterno: fetchedInstitucionesUsuarioExterno,
+            vinculosUsuarioExterno: fetchedVinculosUsuarioExterno,
           })
         } catch (error) {
           console.error('Error fetching data:', error)
@@ -121,7 +133,19 @@ export const useApiData = () => {
           throw new Error('Failed to create data in vulneracion.')
         }
       }
-    
-      return { ...apiData, addVulneracion }
+      const addUsuarioExterno = async (usuarioExternoData) => {
+        try {
+          const newUsuarioExterno = await createTUsuarioExterno(usuarioExternoData)
+          setApiData(prevData => ({
+            ...prevData,
+            usuariosExternos: [...prevData.usuariosExternos, newUsuarioExterno]
+          }))
+          return newUsuarioExterno
+        } catch (error) {
+          console.error('Error creating usuario externo:', error)
+          throw error
+        }
+      }
+      return { ...apiData, addVulneracion, addUsuarioExterno }
     }
   

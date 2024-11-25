@@ -1,7 +1,7 @@
 import { getAll, getOne, create, update, remove } from '../globals';
 import { TVinculoPersonaPersona } from '../interfaces';
 
-const endpoint = 'tvinculopersonapersona';
+const endpoint = 'vinculo-persona-persona';
 
 export const getTVinculoPersonaPersonas = () => getAll<TVinculoPersonaPersona>(endpoint);
 export const getTVinculoPersonaPersona = (id: number) => getOne<TVinculoPersonaPersona>(endpoint, id);
