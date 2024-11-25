@@ -2,14 +2,16 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { Button, Box, Typography, Modal, FormControl, InputLabel, Select, MenuItem } from '@mui/material'
-import { DataGrid, GridRowParams, GridRenderCellParams, GridColDef } from '@mui/x-data-grid'
-import { Search, InfoOutlined } from '@mui/icons-material'
+import { DataGrid, GridRowParams, GridColDef } from '@mui/x-data-grid'
+import { Search } from '@mui/icons-material'
 import DemandaDetalle from './DemandaDetalle'
 import PostConstatacionModal from './PostConstatacionModal'
 import NuevoIngresoModal from './NuevoIngresoModal/NuevoIngresoModal'
 import EvaluacionModal from './EvaluacionModal'
 import { getDemands, createDemand, updateDemand } from '../../api/TableFunctions/demands'
-import { TDemanda, TLocalizacion, TUsuarioLinea } from '../../api/interfaces'
+import { TDemanda, TDemandaPersona, TPersona } from '../../api/interfaces'
+import { getTDemandaPersona } from '../../api/TableFunctions/demandaPersonas'
+import { getTPersona } from '../../api/TableFunctions/personas'
 
 const origenOptions = [
   { value: 'todos', label: 'Todos' },
@@ -25,35 +27,83 @@ const estadoOptions = [
   { value: 'en_evaluacion', label: 'En evaluación' },
 ]
 
-const calificacionOptions = [
-  { value: 'sin_calificar', label: 'Sin calificar' },
-  { value: 'urgente', label: 'Urgente' },
-  { value: 'grave', label: 'Grave' },
-  { value: 'normal', label: 'Normal' },
-]
-
 export function MainContent() {
   const [demands, setDemands] = useState<TDemanda[]>([])
+  const [personaData, setPersonaData] = useState<Record<number, TPersona>>({})
   const [isNuevoIngresoModalOpen, setIsNuevoIngresoModalOpen] = useState(false)
   const [selectedDemand, setSelectedDemand] = useState<TDemanda | null>(null)
   const [showPostConstatacion, setShowPostConstatacion] = useState(false)
   const [showEvaluacionModal, setShowEvaluacionModal] = useState(false)
   const [showDemandaDetalle, setShowDemandaDetalle] = useState(false)
-  const [origen, setOrigen] = useState('')
-  const [estado, setEstado] = useState('')
+  const [origen, setOrigen] = useState('todos')
+  const [estado, setEstado] = useState('todos')
 
-  useEffect(() => {
-    fetchDemands()
+  const fetchAllData = useCallback(async () => {
+    try {
+      const demandsData = await getDemands()
+      console.log('Fetched demands:', demandsData)
+      setDemands(demandsData)
+
+      const personaPromises = demandsData.map(async (demand) => {
+        try {
+          const demandaPersona = await getTDemandaPersona(demand.id!)
+          console.log(`Fetched demandaPersona for demand ${demand.id}:`, demandaPersona)
+          if (demandaPersona && demandaPersona.persona) {
+            const persona = await getTPersona(demandaPersona.persona)
+            console.log(`Fetched persona for demand ${demand.id}:`, persona)
+            return { id: demand.id!, persona }
+          }
+        } catch (error) {
+          console.error(`Error fetching data for demand ${demand.id}:`, error)
+        }
+        return null
+      })
+
+      const personaResults = await Promise.all(personaPromises)
+      const newPersonaData: Record<number, TPersona> = {}
+      personaResults.forEach((result) => {
+        if (result) {
+          newPersonaData[result.id] = result.persona
+        }
+      })
+      console.log('New persona data:', newPersonaData)
+      setPersonaData(newPersonaData)
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    }
   }, [])
 
-  const fetchDemands = async () => {
-    try {
-      const fetchedDemands = await getDemands()
-      setDemands(fetchedDemands)
-    } catch (error) {
-      console.error('Error fetching demands:', error)
-    }
-  }
+  useEffect(() => {
+    fetchAllData()
+  }, [fetchAllData])
+
+  const getPersonaData = useCallback((demandId: number | undefined) => {
+    if (demandId === undefined) return undefined;
+    return personaData[demandId];
+  }, [personaData])
+
+  const enrichedDemands = useMemo(() => {
+    console.log('Enriching demands with persona data:', demands, personaData)
+    return demands.map(demand => {
+      const persona = personaData[demand.id!];
+      const enrichedDemand = {
+        ...demand,
+        nombre: persona?.nombre || '',
+        dni: persona?.dni?.toString() || '',
+      }
+      console.log(`Enriched demand ${demand.id}:`, enrichedDemand)
+      return enrichedDemand
+    })
+  }, [demands, personaData])
+
+
+  const filteredDemands = useMemo(() => {
+    return enrichedDemands.filter(demand => {
+      const origenMatch = origen === 'todos' || demand.origen === origen
+      const estadoMatch = estado === 'todos' || demand.estado === estado
+      return origenMatch && estadoMatch
+    })
+  }, [enrichedDemands, origen, estado])
 
   const handleNuevoRegistro = useCallback(() => {
     setIsNuevoIngresoModalOpen(true)
@@ -66,12 +116,12 @@ export function MainContent() {
   const handleSubmitNuevoIngreso = useCallback(async (formData: Partial<TDemanda>) => {
     try {
       const newDemand = await createDemand(formData)
-      setDemands(prevDemands => [newDemand, ...prevDemands])
+      await fetchAllData() // Refresh all data to get updated relationships
       setIsNuevoIngresoModalOpen(false)
     } catch (error) {
       console.error('Error creating new demand:', error)
     }
-  }, [])
+  }, [fetchAllData])
 
   const handleDemandClick = useCallback((params: GridRowParams<TDemanda>) => {
     setSelectedDemand(params.row)
@@ -95,30 +145,26 @@ export function MainContent() {
     if (selectedDemand) {
       try {
         const updatedDemand = await updateDemand(selectedDemand.id!, { ...selectedDemand, estado: 'Verificada' })
-        setDemands(prevDemands => prevDemands.map(demand => 
-          demand.id === updatedDemand.id ? updatedDemand : demand
-        ))
+        await fetchAllData() // Refresh all data
         setShowDemandaDetalle(false)
         setShowPostConstatacion(true)
       } catch (error) {
         console.error('Error updating demand:', error)
       }
     }
-  }, [selectedDemand])
+  }, [selectedDemand, fetchAllData])
 
   const handleEvaluate = useCallback(async () => {
     if (selectedDemand) {
       try {
         const updatedDemand = await updateDemand(selectedDemand.id!, { ...selectedDemand, estado: 'En evaluación' })
-        setDemands(prevDemands => prevDemands.map(demand => 
-          demand.id === updatedDemand.id ? updatedDemand : demand
-        ))
+        await fetchAllData() // Refresh all data
         setShowPostConstatacion(false)
       } catch (error) {
         console.error('Error updating demand:', error)
       }
     }
-  }, [selectedDemand])
+  }, [selectedDemand, fetchAllData])
 
   const getRowClassName = useCallback((params: GridRowParams<TDemanda>) => {
     switch (params.row.estado) {
@@ -138,11 +184,6 @@ export function MainContent() {
       field: 'id',
       headerName: 'ID',
       width: 70,
-    },
-    {
-      field: 'hora_ingreso',
-      headerName: 'Hora de Ingreso',
-      width: 180,
     },
     {
       field: 'origen',
@@ -170,6 +211,7 @@ export function MainContent() {
       width: 180,
     },
   ], [])
+
 
   return (
     <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 3, overflow: 'auto' }}>
@@ -212,11 +254,11 @@ export function MainContent() {
           </FormControl>
         </Box>
       </Box>
-      
+
       <Box sx={{ height: 400, width: '100%' }}>
-        {demands.length > 0 ? (
+        {filteredDemands.length > 0 ? (
           <DataGrid
-            rows={demands}
+            rows={filteredDemands}
             columns={columns}
             onRowClick={handleDemandClick}
             getRowClassName={getRowClassName}
@@ -240,22 +282,22 @@ export function MainContent() {
             }}
           />
         ) : (
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            height: '100%' 
+          <Box sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%'
           }}>
-            <Box sx={{ 
-              width: 128, 
-              height: 128, 
-              bgcolor: 'grey.100', 
-              borderRadius: '50%', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              mb: 2 
+            <Box sx={{
+              width: 128,
+              height: 128,
+              bgcolor: 'grey.100',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mb: 2
             }}>
               <Search sx={{ fontSize: 64, color: 'text.secondary' }} />
             </Box>
@@ -264,23 +306,23 @@ export function MainContent() {
         )}
       </Box>
 
-      <Modal 
-        open={!!selectedDemand && !showPostConstatacion && !showEvaluacionModal} 
+      <Modal
+        open={!!selectedDemand && !showPostConstatacion && !showEvaluacionModal}
         onClose={handleCloseDetail}
       >
         <Box>
           {selectedDemand && (
-            <DemandaDetalle 
-              demanda={selectedDemand} 
-              onClose={handleCloseDetail} 
+            <DemandaDetalle
+              demanda={selectedDemand}
+              onClose={handleCloseDetail}
               onConstatar={handleConstatar}
             />
           )}
         </Box>
       </Modal>
-      
-      <Modal 
-        open={showPostConstatacion && !!selectedDemand} 
+
+      <Modal
+        open={showPostConstatacion && !!selectedDemand}
         onClose={handleCloseDetail}
       >
         <Box>
@@ -294,11 +336,11 @@ export function MainContent() {
         </Box>
       </Modal>
 
-      <Modal 
-        open={showEvaluacionModal && !!selectedDemand} 
+      <Modal
+        open={showEvaluacionModal && !!selectedDemand}
         onClose={handleCloseDetail}
       >
-        <Box sx={{ 
+        <Box sx={{
           position: 'absolute',
           top: '50%',
           left: '50%',
@@ -329,3 +371,4 @@ export function MainContent() {
     </Box>
   )
 }
+
