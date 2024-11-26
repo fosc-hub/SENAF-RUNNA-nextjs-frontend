@@ -51,49 +51,62 @@ export function MainContent() {
 
   const fetchAllData = useCallback(async () => {
     try {
-      const demandsData = await getDemands();
-      console.log('Fetched demands:', demandsData);
-      setDemands(demandsData);
-  
-      const allPrecalificaciones = await getAll<TPrecalificacionDemanda>('precalificacion-demanda');
-      console.log('Fetched all precalificaciones:', allPrecalificaciones);
-      const precalificacionMap = allPrecalificaciones.reduce<Record<number, TPrecalificacionDemanda>>(
-        (acc, precalificacion) => {
-          acc[precalificacion.demanda] = precalificacion;
-          return acc;
-        },
-        {}
-      );
-      setPrecalificacionData(precalificacionMap);
-  
+      const demandsData = await getDemands()
+      console.log('Fetched demands:', demandsData)
+      setDemands(demandsData)
+
       const personaPromises = demandsData.map(async (demand) => {
         try {
-          const demandaPersona = await getTDemandaPersona(demand.id!);
-          console.log(`Fetched demandaPersona for demand ${demand.id}:`, demandaPersona);
+          const demandaPersona = await getTDemandaPersona(demand.id!)
+          console.log(`Fetched demandaPersona for demand ${demand.id}:`, demandaPersona)
           if (demandaPersona && demandaPersona.persona) {
-            const persona = await getTPersona(demandaPersona.persona);
-            console.log(`Fetched persona for demand ${demand.id}:`, persona);
-            return { id: demand.id!, persona };
+            const persona = await getTPersona(demandaPersona.persona)
+            console.log(`Fetched persona for demand ${demand.id}:`, persona)
+            return { id: demand.id!, persona }
           }
         } catch (error) {
-          console.error(`Error fetching data for demand ${demand.id}:`, error);
+          console.error(`Error fetching data for demand ${demand.id}:`, error)
         }
-        return null;
-      });
-  
-      const personaResults = await Promise.all(personaPromises);
-      const newPersonaData: Record<number, TPersona> = {};
+        return null
+      })
+
+      const precalificacionPromises = demandsData.map(async (demand) => {
+        try {
+          const precalificacion = await getTPrecalificacionDemanda(demand.id!)
+          console.log(`Fetched precalificacion for demand ${demand.id}:`, precalificacion)
+          return { id: demand.id!, precalificacion }
+        } catch (error) {
+          console.error(`Error fetching precalificacion for demand ${demand.id}:`, error)
+        }
+        return null
+      })
+
+      const [personaResults, precalificacionResults] = await Promise.all([
+        Promise.all(personaPromises),
+        Promise.all(precalificacionPromises)
+      ])
+
+      const newPersonaData: Record<number, TPersona> = {}
       personaResults.forEach((result) => {
         if (result) {
-          newPersonaData[result.id] = result.persona;
+          newPersonaData[result.id] = result.persona
         }
-      });
-      setPersonaData(newPersonaData);
+      })
+      console.log('New persona data:', newPersonaData)
+      setPersonaData(newPersonaData)
+
+      const newPrecalificacionData: Record<number, TPrecalificacionDemanda> = {}
+      precalificacionResults.forEach((result) => {
+        if (result) {
+          newPrecalificacionData[result.id] = result.precalificacion
+        }
+      })
+      console.log('New precalificacion data:', newPrecalificacionData)
+      setPrecalificacionData(newPrecalificacionData)
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching data:', error)
     }
-  }, []);
-  
+  }, [])
 
   useEffect(() => {
     fetchAllData()
@@ -215,48 +228,40 @@ const handlePrecalificacionChange = useCallback(
   async (demandId: number, newValue: string) => {
     try {
       const currentDate = new Date().toISOString();
-      let descripcion = '';
+      let updatedPrecalificacion;
 
       if (precalificacionData[demandId]) {
-        const updatedPrecalificacion = {
+        // Update existing precalificacion
+        updatedPrecalificacion = {
           ...precalificacionData[demandId],
           estado_demanda: newValue,
-          descripcion: `Cambio de precalificación de ${precalificacionData[demandId].estado_demanda || 'Sin precalificación'} a ${newValue}`,
-          fecha_y_hora: currentDate,
+          descripcion: `Cambio de precalificación de ${precalificacionData[demandId].estado_demanda} a ${newValue}`,
           ultima_actualizacion: currentDate,
         };
 
         await updatePrecalificacionDemanda(precalificacionData[demandId].id!, updatedPrecalificacion);
-
-        // Update local state
-        setPrecalificacionData((prev) => ({
-          ...prev,
-          [demandId]: updatedPrecalificacion,
-        }));
       } else {
-        const newPrecalificacion = {
+        // Create a new precalificacion
+        updatedPrecalificacion = await createTPrecalificacionDemanda({
           demanda: demandId,
           estado_demanda: newValue,
           descripcion: `Nueva precalificación: ${newValue}`,
           fecha_y_hora: currentDate,
           ultima_actualizacion: currentDate,
-        };
-
-        const createdPrecalificacion = await createTPrecalificacionDemanda(newPrecalificacion);
-
-        // Update local state
-        setPrecalificacionData((prev) => ({
-          ...prev,
-          [demandId]: createdPrecalificacion,
-        }));
+        });
       }
+
+      // Update the state locally
+      setPrecalificacionData((prev) => ({
+        ...prev,
+        [demandId]: updatedPrecalificacion,
+      }));
     } catch (error) {
       console.error('Error updating precalificacion:', error);
     }
   },
   [precalificacionData]
 );
-
 
   
 
