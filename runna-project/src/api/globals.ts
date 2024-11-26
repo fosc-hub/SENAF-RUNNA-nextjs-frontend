@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api';
+const API_BASE_URL = 'http://localhost:8000/api';
 
 // Operación GET para obtener todos
 export const getAll = async <T>(endpoint: string): Promise<T[]> => {
@@ -43,8 +43,9 @@ export const create = async <T>(endpoint: string, data: Partial<T>): Promise<T> 
 // Operación PUT para actualizar
 export const update = async <T>(endpoint: string, id: number, data: Partial<T>): Promise<T> => {
   try {
-    const response = await axios.put<T>(`${API_BASE_URL}/${endpoint}/${id}/`, data);
+    const response = await axios.patch<T>(`${API_BASE_URL}/${endpoint}/${id}/`, data); // Use PATCH instead of PUT
     return response.data;
+    
   } catch (error) {
     console.error(`Error updating ${endpoint} with id ${id}:`, error);
     throw new Error(`Failed to update data in ${endpoint}/${id}.`);

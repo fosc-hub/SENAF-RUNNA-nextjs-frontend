@@ -1,17 +1,29 @@
 'use client'
+import axios from 'axios';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
-import { Button, Box, Typography, Modal, FormControl, InputLabel, Select, MenuItem } from '@mui/material'
-import { DataGrid, GridRowParams, GridColDef } from '@mui/x-data-grid'
+import { 
+  Button, 
+  Box, 
+  Typography, 
+  Modal, 
+  FormControl, 
+  InputLabel, 
+  Select, 
+  MenuItem,
+  SelectChangeEvent 
+} from '@mui/material'
+import { DataGrid, GridRowParams, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { Search } from '@mui/icons-material'
 import DemandaDetalle from './DemandaDetalle'
 import PostConstatacionModal from './PostConstatacionModal'
 import NuevoIngresoModal from './NuevoIngresoModal/NuevoIngresoModal'
 import EvaluacionModal from './EvaluacionModal'
 import { getDemands, createDemand, updateDemand } from '../../api/TableFunctions/demands'
-import { TDemanda, TDemandaPersona, TPersona } from '../../api/interfaces'
+import { TDemanda, TDemandaPersona, TPersona, TPrecalificacionDemanda } from '../../api/interfaces'
 import { getTDemandaPersona } from '../../api/TableFunctions/demandaPersonas'
 import { getTPersona } from '../../api/TableFunctions/personas'
+import { getTPrecalificacionDemanda, createTPrecalificacionDemanda, updateTPrecalificacionDemanda } from '../../api/TableFunctions/precalificacionDemanda'
 
 const origenOptions = [
   { value: 'todos', label: 'Todos' },
@@ -20,58 +32,68 @@ const origenOptions = [
   { value: 'presencial', label: 'Presencial' },
 ]
 
-const estadoOptions = [
-  { value: 'todos', label: 'Todos' },
-  { value: 'no_verificada', label: 'No verificada' },
-  { value: 'verificada', label: 'Verificada' },
-  { value: 'en_evaluacion', label: 'En evaluación' },
+const precalificacionOptions = [
+  { value: 'URGENTE', label: 'Urgente' },
+  { value: 'NO_URGENTE', label: 'No Urgente' },
+  { value: 'COMPLETAR', label: 'Completar' },
 ]
 
 export function MainContent() {
   const [demands, setDemands] = useState<TDemanda[]>([])
   const [personaData, setPersonaData] = useState<Record<number, TPersona>>({})
+  const [precalificacionData, setPrecalificacionData] = useState<Record<number, TPrecalificacionDemanda>>({})
   const [isNuevoIngresoModalOpen, setIsNuevoIngresoModalOpen] = useState(false)
   const [selectedDemand, setSelectedDemand] = useState<TDemanda | null>(null)
   const [showPostConstatacion, setShowPostConstatacion] = useState(false)
   const [showEvaluacionModal, setShowEvaluacionModal] = useState(false)
   const [showDemandaDetalle, setShowDemandaDetalle] = useState(false)
   const [origen, setOrigen] = useState('todos')
-  const [estado, setEstado] = useState('todos')
 
   const fetchAllData = useCallback(async () => {
     try {
-      const demandsData = await getDemands()
-      console.log('Fetched demands:', demandsData)
-      setDemands(demandsData)
-
+      const demandsData = await getDemands();
+      console.log('Fetched demands:', demandsData);
+      setDemands(demandsData);
+  
+      const allPrecalificaciones = await getAll<TPrecalificacionDemanda>('precalificacion-demanda');
+      console.log('Fetched all precalificaciones:', allPrecalificaciones);
+      const precalificacionMap = allPrecalificaciones.reduce<Record<number, TPrecalificacionDemanda>>(
+        (acc, precalificacion) => {
+          acc[precalificacion.demanda] = precalificacion;
+          return acc;
+        },
+        {}
+      );
+      setPrecalificacionData(precalificacionMap);
+  
       const personaPromises = demandsData.map(async (demand) => {
         try {
-          const demandaPersona = await getTDemandaPersona(demand.id!)
-          console.log(`Fetched demandaPersona for demand ${demand.id}:`, demandaPersona)
+          const demandaPersona = await getTDemandaPersona(demand.id!);
+          console.log(`Fetched demandaPersona for demand ${demand.id}:`, demandaPersona);
           if (demandaPersona && demandaPersona.persona) {
-            const persona = await getTPersona(demandaPersona.persona)
-            console.log(`Fetched persona for demand ${demand.id}:`, persona)
-            return { id: demand.id!, persona }
+            const persona = await getTPersona(demandaPersona.persona);
+            console.log(`Fetched persona for demand ${demand.id}:`, persona);
+            return { id: demand.id!, persona };
           }
         } catch (error) {
-          console.error(`Error fetching data for demand ${demand.id}:`, error)
+          console.error(`Error fetching data for demand ${demand.id}:`, error);
         }
-        return null
-      })
-
-      const personaResults = await Promise.all(personaPromises)
-      const newPersonaData: Record<number, TPersona> = {}
+        return null;
+      });
+  
+      const personaResults = await Promise.all(personaPromises);
+      const newPersonaData: Record<number, TPersona> = {};
       personaResults.forEach((result) => {
         if (result) {
-          newPersonaData[result.id] = result.persona
+          newPersonaData[result.id] = result.persona;
         }
-      })
-      console.log('New persona data:', newPersonaData)
-      setPersonaData(newPersonaData)
+      });
+      setPersonaData(newPersonaData);
     } catch (error) {
-      console.error('Error fetching data:', error)
+      console.error('Error fetching data:', error);
     }
-  }, [])
+  }, []);
+  
 
   useEffect(() => {
     fetchAllData()
@@ -82,28 +104,33 @@ export function MainContent() {
     return personaData[demandId];
   }, [personaData])
 
+  const getPrecalificacionData = useCallback((demandId: number | undefined) => {
+    if (demandId === undefined) return undefined;
+    return precalificacionData[demandId];
+  }, [precalificacionData])
+
   const enrichedDemands = useMemo(() => {
-    console.log('Enriching demands with persona data:', demands, personaData)
+    console.log('Enriching demands with persona and precalificacion data:', demands, personaData, precalificacionData)
     return demands.map(demand => {
       const persona = personaData[demand.id!];
+      const precalificacion = precalificacionData[demand.id!];
       const enrichedDemand = {
         ...demand,
         nombre: persona?.nombre || '',
         dni: persona?.dni?.toString() || '',
+        precalificacion: precalificacion?.estado_demanda || '',
       }
       console.log(`Enriched demand ${demand.id}:`, enrichedDemand)
       return enrichedDemand
     })
-  }, [demands, personaData])
-
+  }, [demands, personaData, precalificacionData])
 
   const filteredDemands = useMemo(() => {
     return enrichedDemands.filter(demand => {
       const origenMatch = origen === 'todos' || demand.origen === origen
-      const estadoMatch = estado === 'todos' || demand.estado === estado
-      return origenMatch && estadoMatch
+      return origenMatch
     })
-  }, [enrichedDemands, origen, estado])
+  }, [enrichedDemands, origen])
 
   const handleNuevoRegistro = useCallback(() => {
     setIsNuevoIngresoModalOpen(true)
@@ -165,19 +192,73 @@ export function MainContent() {
       }
     }
   }, [selectedDemand, fetchAllData])
+// Function to update PrecalificacionDemanda without 'demanda' in payload
+const updatePrecalificacionDemanda = async (id: number, payload: Partial<TPrecalificacionDemanda>) => {
+  const { demanda, ...filteredPayload } = payload;
+  const url = `http://localhost:8000/api/precalificacion-demanda/${id}/`; // Correct URL
 
-  const getRowClassName = useCallback((params: GridRowParams<TDemanda>) => {
-    switch (params.row.estado) {
-      case 'Verificada':
-        return 'bg-green-100'
-      case 'No verificada':
-        return 'bg-yellow-100'
-      case 'En evaluación':
-        return 'bg-purple-100'
-      default:
-        return ''
+  console.log('Sending PATCH request to:', url); // Debug log
+  console.log('Payload:', filteredPayload); // Debug log
+
+  try {
+    const response = await axios.patch(url, filteredPayload);
+    console.log('Update successful:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating precalificacion-demanda:', error);
+    throw error;
+  }
+};
+
+
+const handlePrecalificacionChange = useCallback(
+  async (demandId: number, newValue: string) => {
+    try {
+      const currentDate = new Date().toISOString();
+      let descripcion = '';
+
+      if (precalificacionData[demandId]) {
+        const updatedPrecalificacion = {
+          ...precalificacionData[demandId],
+          estado_demanda: newValue,
+          descripcion: `Cambio de precalificación de ${precalificacionData[demandId].estado_demanda || 'Sin precalificación'} a ${newValue}`,
+          fecha_y_hora: currentDate,
+          ultima_actualizacion: currentDate,
+        };
+
+        await updatePrecalificacionDemanda(precalificacionData[demandId].id!, updatedPrecalificacion);
+
+        // Update local state
+        setPrecalificacionData((prev) => ({
+          ...prev,
+          [demandId]: updatedPrecalificacion,
+        }));
+      } else {
+        const newPrecalificacion = {
+          demanda: demandId,
+          estado_demanda: newValue,
+          descripcion: `Nueva precalificación: ${newValue}`,
+          fecha_y_hora: currentDate,
+          ultima_actualizacion: currentDate,
+        };
+
+        const createdPrecalificacion = await createTPrecalificacionDemanda(newPrecalificacion);
+
+        // Update local state
+        setPrecalificacionData((prev) => ({
+          ...prev,
+          [demandId]: createdPrecalificacion,
+        }));
+      }
+    } catch (error) {
+      console.error('Error updating precalificacion:', error);
     }
-  }, [])
+  },
+  [precalificacionData]
+);
+
+
+  
 
   const columns: GridColDef[] = useMemo(() => [
     {
@@ -201,17 +282,30 @@ export function MainContent() {
       width: 130,
     },
     {
-      field: 'estado',
-      headerName: 'Estado',
-      width: 130,
+      field: 'precalificacion',
+      headerName: 'Precalificación',
+      width: 180,
+      renderCell: (params: GridRenderCellParams<TDemanda>) => (
+        <FormControl fullWidth size="small">
+          <Select
+            value={params.value || ''}
+            onChange={(e: SelectChangeEvent) => handlePrecalificacionChange(params.row.id!, e.target.value as string)}
+          >
+            {precalificacionOptions.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      ),
     },
     {
       field: 'ultima_actualizacion',
       headerName: 'Última Actualización',
       width: 180,
     },
-  ], [])
-
+  ], [handlePrecalificacionChange])
 
   return (
     <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 3, overflow: 'auto' }}>
@@ -238,20 +332,6 @@ export function MainContent() {
               ))}
             </Select>
           </FormControl>
-          <FormControl sx={{ minWidth: 120 }} size="small">
-            <InputLabel>Estado</InputLabel>
-            <Select
-              value={estado}
-              onChange={(e) => setEstado(e.target.value)}
-              label="Estado"
-            >
-              {estadoOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
         </Box>
       </Box>
 
@@ -261,7 +341,6 @@ export function MainContent() {
             rows={filteredDemands}
             columns={columns}
             onRowClick={handleDemandClick}
-            getRowClassName={getRowClassName}
             disableRowSelectionOnClick
             initialState={{
               pagination: {
@@ -269,17 +348,6 @@ export function MainContent() {
               },
             }}
             pageSizeOptions={[5, 10, 20]}
-            sx={{
-              '& .bg-green-100': {
-                backgroundColor: '#dcfce7',
-              },
-              '& .bg-yellow-100': {
-                backgroundColor: '#fef9c3',
-              },
-              '& .bg-purple-100': {
-                backgroundColor: '#f3e8ff',
-              },
-            }}
           />
         ) : (
           <Box sx={{
@@ -326,7 +394,8 @@ export function MainContent() {
         onClose={handleCloseDetail}
       >
         <Box>
-          {selectedDemand && (
+          {
+selectedDemand && (
             <PostConstatacionModal
               demanda={selectedDemand}
               onClose={handleCloseDetail}
