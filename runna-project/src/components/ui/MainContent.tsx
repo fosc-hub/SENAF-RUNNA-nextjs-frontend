@@ -15,7 +15,7 @@ import {
 } from '@mui/material'
 import { DataGrid, GridRowParams, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { Search } from '@mui/icons-material'
-import DemandaDetalle from './DemandaDetalle'
+import DemandaDetalle from '../ui/DemandaDetalle/DemandaDetalle'
 import PostConstatacionModal from './PostConstatacionModal'
 import NuevoIngresoModal from './NuevoIngresoModal/NuevoIngresoModal'
 import EvaluacionModal from './EvaluacionModal'
@@ -165,13 +165,7 @@ export function MainContent() {
 
   const handleDemandClick = useCallback((params: GridRowParams<TDemanda>) => {
     setSelectedDemand(params.row)
-    if (params.row.estado === 'Verificada') {
-      setShowPostConstatacion(true)
-    } else if (params.row.estado === 'En evaluación') {
-      setShowEvaluacionModal(true)
-    } else {
-      setShowDemandaDetalle(true)
-    }
+    setShowDemandaDetalle(true)
   }, [])
 
   const handleCloseDetail = useCallback(() => {
@@ -262,8 +256,6 @@ const handlePrecalificacionChange = useCallback(
   },
   [precalificacionData]
 );
-
-  
 
   const columns: GridColDef[] = useMemo(() => [
     {
@@ -379,28 +371,19 @@ const handlePrecalificacionChange = useCallback(
         )}
       </Box>
 
-      <Modal
-        open={!!selectedDemand && !showPostConstatacion && !showEvaluacionModal}
-        onClose={handleCloseDetail}
+      <Modal open={showDemandaDetalle && !!selectedDemand} onClose={handleCloseDetail} BackdropProps={{ invisible: true }}
       >
-        <Box>
+        <Box >
           {selectedDemand && (
-            <DemandaDetalle
-              demanda={selectedDemand}
-              onClose={handleCloseDetail}
-              onConstatar={handleConstatar}
-            />
+            <DemandaDetalle demanda={selectedDemand} isOpen={showDemandaDetalle} onClose={handleCloseDetail} onConstatar={handleConstatar} />
           )}
         </Box>
       </Modal>
 
-      <Modal
-        open={showPostConstatacion && !!selectedDemand}
-        onClose={handleCloseDetail}
+      <Modal open={showPostConstatacion && !!selectedDemand} onClose={handleCloseDetail} BackdropProps={{ invisible: true }}
       >
         <Box>
-          {
-selectedDemand && (
+          {selectedDemand && (
             <PostConstatacionModal
               demanda={selectedDemand}
               onClose={handleCloseDetail}
@@ -410,23 +393,9 @@ selectedDemand && (
         </Box>
       </Modal>
 
-      <Modal
-        open={showEvaluacionModal && !!selectedDemand}
-        onClose={handleCloseDetail}
+      <Modal open={showEvaluacionModal && !!selectedDemand} onClose={handleCloseDetail} BackdropProps={{ invisible: true }}
       >
-        <Box sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          bgcolor: 'background.paper',
-          boxShadow: 24,
-          p: 4,
-          maxWidth: '90vw',
-          maxHeight: '90vh',
-          overflow: 'auto',
-          borderRadius: 1,
-        }}>
+        <Box >
           {selectedDemand && (
             <EvaluacionModal
               isOpen={showEvaluacionModal}
@@ -445,4 +414,3 @@ selectedDemand && (
     </Box>
   )
 }
-
