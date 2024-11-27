@@ -5,7 +5,7 @@ const API_BASE_URL = 'http://localhost:8000/api';
 // Operación GET para obtener todos
 export const getAll = async <T>(endpoint: string): Promise<T[]> => {
   try {
-    const response = await axios.get<T[]>(`${API_BASE_URL}/${endpoint}/`);
+    const response = await axios.get<T[]>(`${API_BASE_URL}/${endpoint}/`, { withCredentials: true });
     return response.data;
   } catch (error) {
     console.error(`Error fetching from ${endpoint}:`, error);
@@ -16,7 +16,7 @@ export const getAll = async <T>(endpoint: string): Promise<T[]> => {
 // Operación GET para un solo recurso
 export const getOne = async <T>(endpoint: string, id: number): Promise<T> => {
   try {
-    const response = await axios.get<T>(`${API_BASE_URL}/${endpoint}/${id}/`);
+    const response = await axios.get<T>(`${API_BASE_URL}/${endpoint}/${id}/`, { withCredentials: true });
     return response.data;
   } catch (error) {
     console.error(`Error fetching ${endpoint} with id ${id}:`, error);
@@ -27,7 +27,7 @@ export const getOne = async <T>(endpoint: string, id: number): Promise<T> => {
 // Operación POST para crear
 export const create = async <T>(endpoint: string, data: Partial<T>): Promise<T> => {
   try {
-    const response = await axios.post<T>(`${API_BASE_URL}/${endpoint}/`, data);
+    const response = await axios.post<T>(`${API_BASE_URL}/${endpoint}/`, data, { withCredentials: true });
     return response.data;
   } catch (error) {
     console.error(`Error creating in ${endpoint}:`, error);
@@ -43,7 +43,7 @@ export const create = async <T>(endpoint: string, data: Partial<T>): Promise<T> 
 // Operación PUT para actualizar
 export const update = async <T>(endpoint: string, id: number, data: Partial<T>): Promise<T> => {
   try {
-    const response = await axios.patch<T>(`${API_BASE_URL}/${endpoint}/${id}/`, data); // Use PATCH instead of PUT
+    const response = await axios.patch<T>(`${API_BASE_URL}/${endpoint}/${id}/`, data, { withCredentials: true }); // Use PATCH instead of PUT
     return response.data;
     
   } catch (error) {
@@ -55,7 +55,7 @@ export const update = async <T>(endpoint: string, id: number, data: Partial<T>):
 // Operación DELETE para eliminar
 export const remove = async (endpoint: string, id: number): Promise<void> => {
   try {
-    await axios.delete(`${API_BASE_URL}/${endpoint}/${id}/`);
+    await axios.delete(`${API_BASE_URL}/${endpoint}/${id}/`, { withCredentials: true });
   } catch (error) {
     console.error(`Error deleting in ${endpoint} with id ${id}:`, error);
     throw new Error(`Failed to delete data in ${endpoint}/${id}.`);
