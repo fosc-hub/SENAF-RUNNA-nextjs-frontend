@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Modal,
   Box,
@@ -23,7 +23,7 @@ import { createDemand, updateDemand } from '../../../api/TableFunctions/demands'
 import { createTPersona } from '../../../api/TableFunctions/personas'
 import { createTVulneracion } from '../../../api/TableFunctions/vulneraciones'
 import { createTVinculoPersonaPersona } from '../../../api/TableFunctions/vinculospersonaspersonas'
-
+import EnviarRespuestaModal from '../EnviarRespuestaModal'
 const steps = ['Carátula', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Vínculos']
 
 interface DemandaDetalleModalProps {
@@ -36,7 +36,17 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }: Demand
   const [activeStep, setActiveStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isEnviarRespuestaOpen, setIsEnviarRespuestaOpen] = useState(false); // State to manage EnviarRespuestaModal
+  useEffect(() => {
+    console.log("isEnviarRespuestaOpen:", isEnviarRespuestaOpen);
+  }, [isEnviarRespuestaOpen]);
+  
+  const handleOpenEnviarRespuesta = () => {
+    console.log("Open Enviar Respuesta Modal");
+    setIsEnviarRespuestaOpen(true);
+  };
 
+    const handleCloseEnviarRespuesta = () => setIsEnviarRespuestaOpen(false); // Close modal
   const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneracion, addVinculacion, removeVinculacion } = useFormData(demanda)
   const apiData = useApiData()
 
@@ -94,6 +104,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }: Demand
   }
 
   return (
+    <>
     <Modal open={isOpen} onClose={onClose}>
       <Box sx={{
         position: 'fixed',
@@ -152,53 +163,61 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }: Demand
           </Box>
 
           <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-            <Button variant="contained" startIcon={<MessageSquare />}>
-              Enviar Respuesta
-            </Button>
-            <Button variant="outlined" startIcon={<AttachFile />}>
-              Archivos adjuntos
-            </Button>
-            <Button variant="outlined" startIcon={<User />}>
-              Asignar
-            </Button>
-            <Button variant="contained">
-              Registrar actividad
-            </Button>
-          </Box>
-
-          {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
-          <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-            {steps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
-          <form onSubmit={handleSubmit}>
-            <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-              {renderStepContent({
-                activeStep,
-                formData,
-                handleInputChange,
-                addNinoAdolescente,
-                addAdultoConviviente,
-                addVulneracion,
-                addVinculacion,
-                removeVinculacion,
-                ...apiData,
-              })}
-            </LocalizationProvider>
-            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
-              <Button onClick={handleBack} disabled={activeStep === 0}>
-                Anterior
+          <Button variant="contained" startIcon={<MessageSquare />} onClick={handleOpenEnviarRespuesta}>
+        Enviar Respuesta
+      </Button>
+              <Button variant="outlined" startIcon={<AttachFile />}>
+                Archivos adjuntos
               </Button>
-              <Button type="submit" variant="contained" color="primary" disabled={isSubmitting}>
-                {isSubmitting ? <CircularProgress size={24} /> : (activeStep === steps.length - 1 ? 'Guardar' : 'Siguiente')}
+              <Button variant="outlined" startIcon={<User />}>
+                Asignar
+              </Button>
+              <Button variant="contained">
+                Registrar actividad
               </Button>
             </Box>
-          </form>
-        </Paper>
-      </Box>
-    </Modal>
-  )
+            <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+              {steps.map((label) => (
+                <Step key={label}>
+                  <StepLabel>{label}</StepLabel>
+                </Step>
+              ))}
+            </Stepper>
+            <form onSubmit={handleSubmit}>
+              {/* Render step content */}
+              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+                {renderStepContent({
+                  activeStep,
+                  formData,
+                  handleInputChange,
+                  addNinoAdolescente,
+                  addAdultoConviviente,
+                  addVulneracion,
+                  addVinculacion,
+                  removeVinculacion,
+                  ...apiData,
+                })}
+              </LocalizationProvider>
+              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
+                <Button onClick={handleBack} disabled={activeStep === 0}>
+                  Anterior
+                </Button>
+                <Button type="submit" variant="contained" color="primary" disabled={isSubmitting}>
+                  {isSubmitting ? <CircularProgress size={24} /> : (activeStep === steps.length - 1 ? 'Guardar' : 'Siguiente')}
+                </Button>
+              </Box>
+            </form>
+          </Paper>
+        </Box>
+      </Modal>
+
+      {/* Enviar Respuesta Modal */}
+      <EnviarRespuestaModal
+        isOpen={isEnviarRespuestaOpen}
+        onClose={handleCloseEnviarRespuesta}
+        demandaId={demanda?.id || 0}
+      />
+
+    </>
+  );
 }
