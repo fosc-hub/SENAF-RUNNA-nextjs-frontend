@@ -55,6 +55,8 @@ export function MainContent() {
   const [showDemandaDetalle, setShowDemandaDetalle] = useState(false)
   const [origen, setOrigen] = useState('todos')
   const { user, loading } = useAuth();
+  const [assignDemandId, setAssignDemandId] = useState<number | null>(null); // State for Assign Demand
+
 
   const fetchAllData = useCallback(async () => {
     try {
@@ -231,10 +233,12 @@ const updatePrecalificacionDemanda = async (id: number, payload: Partial<TPrecal
   }
 };
   const [isAsignarModalOpen, setIsAsignarModalOpen] = useState(false)
-    const handleAsignarSubmit = (data: { collaborator: string, comments: string }) => {
-      console.log('Asignar demanda:', data)
-      setIsAsignarModalOpen(false)
-  } 
+  
+  const handleAsignarSubmit = (data: { collaborator: string; comments: string; demandaId: number | undefined }) => {
+    console.log('Assignment Data:', data);
+    // You can now use data.demandaId along with collaborator and comments
+    setIsAsignarModalOpen(false);
+  }; 
 
 
 const handlePrecalificacionChange = useCallback(
@@ -336,20 +340,21 @@ const columns: GridColDef[] = useMemo(() => {
       field: 'Asignar',
       headerName: 'Asignar',
       width: 180,
-      renderCell: () => (
+      renderCell: (params: GridRenderCellParams<TDemanda>) => (
         <Button
-        variant="outlined"
-        startIcon={<PersonIcon />}
-        onClick={(event) => {
-          event.stopPropagation(); // Prevent row click event
-          setIsAsignarModalOpen(true);
-        }}
-      >
-        Asignar
-      </Button>
+          variant="outlined"
+          startIcon={<PersonIcon />}
+          onClick={(event) => {
+            event.stopPropagation(); // Prevent row click event
+            setAssignDemandId(params.row.id); // Set the demand ID for assignment
+            setIsAsignarModalOpen(true); // Open Assign Demand modal
+          }}
+        >
+          Asignar
+        </Button>
       ),
     });
-  }
+  }  
 
   return baseColumns;
 }, [user, handlePrecalificacionChange]);
@@ -484,10 +489,14 @@ selectedDemand && (
       </Modal>
 
       <AsignarDemandaModal
+          demandaId={assignDemandId} // Pass the demand ID for assignment
           isOpen={isAsignarModalOpen}
-          onClose={() => setIsAsignarModalOpen(false)}
+          onClose={() => {
+            setIsAsignarModalOpen(false);
+            setAssignDemandId(null); // Reset assignDemandId when modal closes
+          }}
           onAssign={handleAsignarSubmit}
-        />
+        />
 
       <NuevoIngresoModal
         isOpen={isNuevoIngresoModalOpen}
