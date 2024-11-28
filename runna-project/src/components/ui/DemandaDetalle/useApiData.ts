@@ -78,7 +78,24 @@ const institucionesSanitarias = [];
             localizacion: personaData.localizacion || {},
             demandaPersonaId: demandaPersona.id,
           };
-          
+          // Fetch localización-persona
+  let localizacionPersona = null;
+  let localizacionDetails = null;
+
+  try {
+    const localizacionPersonaResponse = await fetch(`http://localhost:8000/api/localizacion-persona/?persona=${personaData.id}`);
+    const localizacionPersonaData = await localizacionPersonaResponse.json();
+
+    if (localizacionPersonaData.length > 0) {
+      localizacionPersona = localizacionPersonaData[0];
+      
+      // Fetch the localización details
+      const localizacionResponse = await fetch(`http://localhost:8000/api/localizacion/${localizacionPersona.localizacion}/`);
+      localizacionDetails = await localizacionResponse.json();
+    }
+  } catch (error) {
+    console.error(`Error fetching localizacion for persona ${personaData.id}:`, error);
+  }
           if (personaData.nnya) {
             const educacionResponse = await fetch(`http://localhost:8000/api/nnya-educacion/?nnya=${personaData.id}`);
             const educacionResults = await educacionResponse.json();
@@ -94,6 +111,8 @@ const institucionesSanitarias = [];
               ...personaFields,
               educacion: educacionData,
               salud: saludData,
+              localizacion: localizacionDetails || {}, // Include localización details
+
             });
           }
           

@@ -638,8 +638,14 @@ export const renderStepContent = ({
                     <Grid item xs={12}>
                       <Typography variant="subtitle1">Localización específica</Typography>
                     </Grid>
-                    {renderLocalizacionFields(`ninosAdolescentes[${index}].localizacion`, nino.localizacion, handleInputChange, barrios, localidades, cpcs)}
-                  </Grid>
+                    {renderLocalizacionFields(
+        `ninosAdolescentes[${index}].localizacion`,
+        nino.localizacion || {}, // Fetched localización data
+        handleInputChange,
+        barrios,
+        localidades,
+        cpcs
+      )}                  </Grid>
                 )}
 <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Información Educativa</Typography>
 <FormControl fullWidth>

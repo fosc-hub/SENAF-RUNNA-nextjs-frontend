@@ -252,6 +252,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
                     getMotivoIntervencion: apiData.getMotivoIntervencion,
                     institucionesEducativas: apiData.institucionesEducativas, // Pass institutions here
                     institucionesSanitarias: apiData.institucionesSanitarias,
+                    
                   })
                 ) : (
                   <Typography>Loading data...</Typography>
