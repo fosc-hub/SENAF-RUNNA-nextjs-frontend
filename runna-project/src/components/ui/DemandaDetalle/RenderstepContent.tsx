@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React,{useEffect} from 'react'
 import {
   Typography,
   TextField,
@@ -7,26 +7,16 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  FormControlLabel,
   Switch,
-  Checkbox,
+  FormControlLabel,
   ListItemText,
-  Chip,
-  Box,
-  Button,
-  Radio,
-  RadioGroup,
 } from '@mui/material'
-import { ImportIcon as AddIcon } from 'lucide-react'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3'
 import { LocalizationProvider, DateTimePicker, DatePicker } from '@mui/x-date-pickers'
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3'
 import { es } from 'date-fns/locale'
-import { getTCategoriaMotivo } from '../../../api/TableFunctions/categoriasMotivos'
+
 const formatDate = (date) => date ? date.toISOString().split('T')[0] : null
-const getCategoriaMotivosNombre = (motivoId: number, categoriaMotivos: any[]) => {
-  const categoria = categoriaMotivos.find(cat => cat.id === motivoId)
-  return categoria ? categoria.nombre : 'Desconocido'
-}
+
 const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, localidades, cpcs) => (
   <>
     <Grid item xs={6}>
@@ -46,9 +36,9 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
           onChange={(e) => handleInputChange(`${prefix}.tipo_calle`, e.target.value)}
           label="Tipo de Calle"
         >
-          <MenuItem value="CALLE">CALLE</MenuItem>
-          <MenuItem value="AVENIDA">AVENIDA</MenuItem>
-          <MenuItem value="PASAJE">PASAJE</MenuItem>
+          <MenuItem value="CALLE">Calle</MenuItem>
+          <MenuItem value="AVENIDA">Avenida</MenuItem>
+          <MenuItem value="PASAJE">Pasaje</MenuItem>
         </Select>
       </FormControl>
     </Grid>
@@ -56,7 +46,6 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
       <TextField
         fullWidth
         label="Piso/Depto"
-        type="number"
         value={data.piso_depto}
         onChange={(e) => handleInputChange(`${prefix}.piso_depto`, e.target.value)}
         size="small"
@@ -66,7 +55,6 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
       <TextField
         fullWidth
         label="Lote"
-        type="number"
         value={data.lote}
         onChange={(e) => handleInputChange(`${prefix}.lote`, e.target.value)}
         size="small"
@@ -76,7 +64,6 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
       <TextField
         fullWidth
         label="Manzana"
-        type="number"
         value={data.mza}
         onChange={(e) => handleInputChange(`${prefix}.mza`, e.target.value)}
         size="small"
@@ -86,7 +73,6 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
       <TextField
         fullWidth
         label="Número de Casa"
-        type="number"
         value={data.casa_nro}
         onChange={(e) => handleInputChange(`${prefix}.casa_nro`, e.target.value)}
         size="small"
@@ -96,14 +82,12 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
       <TextField
         fullWidth
         label="Referencia Geográfica"
-        multiline
-        rows={2}
         value={data.referencia_geo}
         onChange={(e) => handleInputChange(`${prefix}.referencia_geo`, e.target.value)}
         size="small"
       />
     </Grid>
-    <Grid item xs={6}>
+    <Grid item xs={4}>
       <FormControl fullWidth size="small">
         <InputLabel>Barrio</InputLabel>
         <Select
@@ -111,7 +95,7 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
           onChange={(e) => handleInputChange(`${prefix}.barrio`, e.target.value)}
           label="Barrio"
         >
-          {barrios.map((barrio) => (
+          {barrios && barrios.map((barrio) => (
             <MenuItem key={barrio.id} value={barrio.id}>
               {barrio.nombre}
             </MenuItem>
@@ -119,7 +103,7 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
         </Select>
       </FormControl>
     </Grid>
-    <Grid item xs={6}>
+    <Grid item xs={4}>
       <FormControl fullWidth size="small">
         <InputLabel>Localidad</InputLabel>
         <Select
@@ -127,7 +111,7 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
           onChange={(e) => handleInputChange(`${prefix}.localidad`, e.target.value)}
           label="Localidad"
         >
-          {localidades.map((localidad) => (
+          {localidades && localidades.map((localidad) => (
             <MenuItem key={localidad.id} value={localidad.id}>
               {localidad.nombre}
             </MenuItem>
@@ -135,7 +119,7 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
         </Select>
       </FormControl>
     </Grid>
-    <Grid item xs={6}>
+    <Grid item xs={4}>
       <FormControl fullWidth size="small">
         <InputLabel>CPC</InputLabel>
         <Select
@@ -143,7 +127,7 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
           onChange={(e) => handleInputChange(`${prefix}.cpc`, e.target.value)}
           label="CPC"
         >
-          {cpcs.map((cpc) => (
+          {cpcs && cpcs.map((cpc) => (
             <MenuItem key={cpc.id} value={cpc.id}>
               {cpc.nombre}
             </MenuItem>
@@ -153,163 +137,29 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
     </Grid>
   </>
 )
+
 export const renderStepContent = ({
-  activeStep,
-  formData,
-  handleInputChange,
-  addNinoAdolescente,
-  addVulneraciontext,
-  addAdultoConviviente,
-  addAutor,
-  usuariosExternos,
-  barrios,
-  localidades,
-  cpcs,
-  motivosIntervencion,
-  categoriaMotivos,
-  categoriaSubmotivos,
-  gravedadVulneraciones,
-  urgenciaVulneraciones,
-  condicionesVulnerabilidad,
-  addVulneracionApi,
-  institucionesEducativas,
-  institucionesSanitarias,
-  institucionesUsuarioExterno,
-  vinculosUsuarioExterno,
-  addVinculacion,
-  removeVinculacion,
-  vinculoPersonas,
-}) => {
-  const [newVulneracion, setNewVulneracion] = useState({
-    principal_demanda: false,
-    transcurre_actualidad: false,
-    categoria_motivo: '',
-    categoria_submotivo: '',
-    gravedad_vulneracion: '',
-    urgencia_vulneracion: '',
-    nnya: '',
-    autor_dv: '',
-  })
-  const renderVinculacion = (vinculacion, index) => (
-    <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
-      <Grid item xs={12} sm={6}>
-        <FormControl fullWidth>
-          <InputLabel>Persona 1</InputLabel>
-          <Select
-            value={vinculacion.persona_1}
-            onChange={(e) => handleInputChange(`vinculaciones[${index}].persona_1`, e.target.value)}
-            label="Persona 1"
-          >
-            {formData.ninosAdolescentes.map((nnya, i) => (
-              <MenuItem key={`nnya-${i}`} value={i}>
-                {nnya.nombre} {nnya.apellido} (NNyA)
-              </MenuItem>
-            ))}
-            {formData.adultosConvivientes.map((adulto, i) => (
-              <MenuItem key={`adulto-${i}`} value={formData.ninosAdolescentes.length + i}>
-                {adulto.nombre} {adulto.apellido} (Adulto)
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <FormControl fullWidth>
-          <InputLabel>Persona 2</InputLabel>
-          <Select
-            value={vinculacion.persona_2}
-            onChange={(e) => handleInputChange(`vinculaciones[${index}].persona_2`, e.target.value)}
-            label="Persona 2"
-          >
-            {formData.ninosAdolescentes.map((nnya, i) => (
-              <MenuItem key={`nnya-${i}`} value={i}>
-                {nnya.nombre} {nnya.apellido} (NNyA)
-              </MenuItem>
-            ))}
-            {formData.adultosConvivientes.map((adulto, i) => (
-              <MenuItem key={`adulto-${i}`} value={formData.ninosAdolescentes.length + i}>
-                {adulto.nombre} {adulto.apellido} (Adulto)
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <FormControl fullWidth>
-          <InputLabel>Vínculo</InputLabel>
-          <Select
-            value={vinculacion.vinculo}
-            onChange={(e) => handleInputChange(`vinculaciones[${index}].vinculo`, e.target.value)}
-            label="Vínculo"
-          >
-            {vinculoPersonas.map((vinculo) => (
-              <MenuItem key={vinculo.id} value={vinculo.id}>
-                {vinculo.nombre}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={vinculacion.conviven}
-              onChange={(e) => handleInputChange(`vinculaciones[${index}].conviven`, e.target.checked)}
-            />
-          }
-          label="Conviven"
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={vinculacion.autordv}
-              onChange={(e) => handleInputChange(`vinculaciones[${index}].autordv`, e.target.checked)}
-            />
-          }
-          label="Autor DV"
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={vinculacion.garantiza_proteccion}
-              onChange={(e) => handleInputChange(`vinculaciones[${index}].garantiza_proteccion`, e.target.checked)}
-            />
-          }
-          label="Garantiza Protección"
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <Button variant="outlined" color="secondary" onClick={() => removeVinculacion(index)}>
-          Eliminar Vinculación
-        </Button>
-      </Grid>
-    </Grid>
-  )
-  const [localFilteredSubmotivos, setLocalFilteredSubmotivos] = useState([])
-
-  useEffect(() => {
-    if (newVulneracion.categoria_motivo) {
-      const filtered = categoriaSubmotivos.filter(submotivo =>
-        submotivo.motivo === newVulneracion.categoria_motivo
-      )
-      setLocalFilteredSubmotivos(filtered)
-    } else {
-      setLocalFilteredSubmotivos([])
-    }
-  }, [newVulneracion.categoria_motivo, categoriaSubmotivos])
-
-  const handleVulneracionChange = (field, value) => {
-    setNewVulneracion(prev => {
-      const updated = { ...prev, [field]: value }
-      if (field === 'categoria_motivo') {
-        updated.categoria_submotivo = ''
-      }
-      return updated
-    })
-  }
-
-
+    activeStep,
+    formData,
+    handleInputChange,
+    motivosIntervencion,
+    barrios,
+    localidades,
+    cpcs,
+    vinculosUsuarioExterno,
+    institucionesUsuarioExterno,
+    usuariosExternos,
+    demandaMotivoIntervencion,
+    demanda,
+    getMotivoIntervencion,
+    currentMotivoIntervencion,
+  }) => {
+    useEffect(() => {
+        if (currentMotivoIntervencion && formData.presuntaVulneracion.motivos !== currentMotivoIntervencion.id) {
+          handleInputChange('presuntaVulneracion.motivos', currentMotivoIntervencion.id);
+        }
+      }, [currentMotivoIntervencion, formData.presuntaVulneracion.motivos, handleInputChange]);
+      
   switch (activeStep) {
     case 0:
       return (
@@ -399,30 +249,46 @@ export const renderStepContent = ({
               size="small"
             />
           </Grid>
-
+          <Grid item xs={12}>
           <FormControl fullWidth>
-            <InputLabel>Motivos de Intervención</InputLabel>
-            <Select
-              value={formData.presuntaVulneracion.motivos || ''}  // Assuming 'motivos' is now a single value
-              onChange={(e) => handleInputChange('presuntaVulneracion.motivos', e.target.value)}
-            >
-              {motivosIntervencion.map((motivo) => (
-                <MenuItem key={motivo.id} value={motivo.id}>
-                  <ListItemText
-                    primary={motivo.nombre}
-                    secondary={`Descripción: ${motivo.descripcion}, Peso: ${motivo.peso}`}
-                  />
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              <InputLabel>Motivos de Intervención</InputLabel>
+              <Select
+                value={formData.presuntaVulneracion.motivos || ''}
+                onChange={async (e) => {
+                  const selectedMotivoId = e.target.value
+                  handleInputChange('presuntaVulneracion.motivos', selectedMotivoId)
 
+                  const existingDemandaMotivo = demandaMotivoIntervencion.find(
+                    dm => dm.demanda === demanda?.id && dm.motivo_intervencion === selectedMotivoId
+                  )
 
+                  if (!existingDemandaMotivo) {
+                    console.log('No existing demanda-motivo-intervencion found for this combination')
+                  } else {
+                    console.log('Existing demanda-motivo-intervencion:', existingDemandaMotivo)
+                  }
+
+                  const motivoDetails = await getMotivoIntervencion(selectedMotivoId)
+                  if (motivoDetails) {
+                    console.log('Motivo details:', motivoDetails)
+                  }
+                }}
+              >
+                {motivosIntervencion.map((motivo) => (
+                  <MenuItem key={motivo.id} value={motivo.id}>
+                    <ListItemText
+                      primary={motivo.nombre}
+                      secondary={`Descripción: ${motivo.descripcion}, Peso: ${motivo.peso}`}
+                    />
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
           <Grid item xs={12}>
             <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Datos de Localización</Typography>
           </Grid>
           {renderLocalizacionFields('localizacion', formData.localizacion, handleInputChange, barrios, localidades, cpcs)}
-
           <Grid item xs={12}>
             <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Usuario Externo</Typography>
           </Grid>
@@ -458,7 +324,7 @@ export const renderStepContent = ({
                 />
               </Grid>
               <Grid item xs={6}>
-              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
                   <DatePicker
                     label="Fecha de Nacimiento"
                     value={formData.usuarioExterno.fecha_nacimiento ? new Date(formData.usuarioExterno.fecha_nacimiento) : null}
@@ -467,7 +333,6 @@ export const renderStepContent = ({
                     inputFormat="yyyy-MM-dd"
                   />
                 </LocalizationProvider>
-                
               </Grid>
               <Grid item xs={6}>
                 <FormControl fullWidth size="small">
@@ -556,518 +421,7 @@ export const renderStepContent = ({
           )}
         </Grid>
       )
-    case 1:
-      return (
-        <Box>
-          <Typography color="primary" sx={{ mb: 2 }}>Niñas, niños y adolescentes convivientes</Typography>
-          {formData.ninosAdolescentes.map((nino, index) => (
-            <Box key={index} sx={{ mb: 3 }}>
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <TextField
-                    fullWidth
-                    label="Nombre"
-                    value={nino.nombre}
-                    onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].nombre`, e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <TextField
-                    fullWidth
-                    label="Apellido"
-                    value={nino.apellido}
-                    onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].apellido`, e.target.value)}
-                  />
-                </Grid>
-              </Grid>
-              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-                <DatePicker
-                  label="Fecha de Nacimiento"
-                  value={nino.fechaNacimiento ? new Date(nino.fechaNacimiento) : null}
-                  onChange={(newValue) => {
-                    handleInputChange(`ninosAdolescentes[${index}].fechaNacimiento`, newValue ? formatDate(newValue) : null);
-                  }}
-                  renderInput={(params) => <TextField {...params} fullWidth />}
-                  inputFormat="yyyy-MM-dd"
-                />
-              </LocalizationProvider>
-              <TextField
-                fullWidth
-                label="Edad Aproximada"
-                type="number"
-                value={nino.edadAproximada}
-                onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].edadAproximada`, e.target.value)}
-              />
-              <TextField
-                fullWidth
-                label="DNI"
-                type="number"
-                value={nino.dni}
-                onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].dni`, e.target.value)}
-              />
-              <FormControl fullWidth>
-                <InputLabel>Situación DNI</InputLabel>
-                <Select
-                  value={nino.situacionDni}
-                  onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].situacionDni`, e.target.value)}
-                  label="Situación DNI"
-                >
-                  <MenuItem value="EN_TRAMITE">En Trámite</MenuItem>
-                  <MenuItem value="VENCIDO">Vencido</MenuItem>
-                  <MenuItem value="EXTRAVIADO">Extraviado</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl fullWidth>
-                <InputLabel>Género</InputLabel>
-                <Select
-                  value={nino.genero}
-                  onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].genero`, e.target.value)}
-                  label="Género"
-                >
-                  <MenuItem value="MASCULINO">Masculino</MenuItem>
-                  <MenuItem value="FEMENINO">Femenino</MenuItem>
-                  <MenuItem value="OTRO">Otro</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={nino.botonAntipanico}
-                    onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].botonAntipanico`, e.target.checked)}
-                  />
-                }
-                label="Botón Antipánico"
-              />
-              <TextField
-                fullWidth
-                label="Observaciones"
-                multiline
-                rows={4}
-                value={nino.observaciones}
-                onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].observaciones`, e.target.value)}
-              />
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={nino.useDefaultLocalizacion}
-                    onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].useDefaultLocalizacion`, e.target.checked)}
-                  />
-                }
-                label="Usar localización de la demanda"
-              />
-              {!nino.useDefaultLocalizacion && (
-                <Grid container spacing={2} sx={{ mt: 2 }}>
-                  <Grid item xs={12}>
-                    <Typography variant="subtitle1">Localización específica</Typography>
-                  </Grid>
-                  {renderLocalizacionFields(`ninosAdolescentes[${index}].localizacion`, nino.localizacion, handleInputChange, barrios, localidades, cpcs)}
-                </Grid>
-              )}
-              <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Información Educativa</Typography>
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Institución Educativa</InputLabel>
-                <Select
-                  value={nino.educacion?.institucion_educativa || ''}
-                  onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].educacion.institucion_educativa`, e.target.value)}
-                  label="Institución Educativa"
-                >
-                  {institucionesEducativas && institucionesEducativas.length > 0 ? (
-                    institucionesEducativas.map((institucion) => (
-                      <MenuItem key={institucion.id} value={institucion.id}>
-                        {institucion.nombre}
-                      </MenuItem>
-                    ))
-                  ) : (
-                    <MenuItem value="" disabled>No hay instituciones disponibles</MenuItem>
-                  )}
-                </Select>
-              </FormControl>
-
-              <TextField
-                fullWidth
-                label="Curso"
-                value={nino.educacion?.curso || ''}
-                onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].educacion.curso`, e.target.value)}
-                sx={{ mb: 2 }}
-              />
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Nivel</InputLabel>
-                <Select
-                  value={nino.educacion?.nivel || ''}
-                  onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].educacion.nivel`, e.target.value)}
-                  label="Nivel"
-                >
-                  <MenuItem value="PRIMARIO">Primario</MenuItem>
-                  <MenuItem value="SECUNDARIO">Secundario</MenuItem>
-                  <MenuItem value="TERCIARIO">Terciario</MenuItem>
-                  <MenuItem value="UNIVERSITARIO">Universitario</MenuItem>
-                  <MenuItem value="OTRO">Otro</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Turno</InputLabel>
-                <Select
-                  value={nino.educacion?.turno || ''}
-                  onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].educacion.turno`, e.target.value)}
-                  label="Turno"
-                >
-                  <MenuItem value="MANIANA">Mañana</MenuItem>
-                  <MenuItem value="TARDE">Tarde</MenuItem>
-                  <MenuItem value="NOCHE">Noche</MenuItem>
-                  <MenuItem value="OTRO">Otro</MenuItem>
-                </Select>
-              </FormControl>
-
-              <TextField
-                fullWidth
-                label="Comentarios Educativos"
-                multiline
-                rows={2}
-                value={nino.educacion?.comentarios || ''}
-                onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].educacion.comentarios`, e.target.value)}
-              />
-              <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Información de Salud</Typography>
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Institución Sanitaria</InputLabel>
-                <Select
-                  value={nino.salud?.institucion_sanitaria || ''}
-                  onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].salud.institucion_sanitaria`, e.target.value)}
-                  label="Institución Sanitaria"
-                >
-                  {institucionesSanitarias.map((institucion) => (
-                    <MenuItem key={institucion.id} value={institucion.id}>
-                      {institucion.nombre}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <TextField
-                fullWidth
-                label="Observaciones de Salud"
-                multiline
-                rows={2}
-                value={nino.salud?.observaciones || ''}
-                onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].salud.observaciones`, e.target.value)}
-              />
-            </Box>
-
-          )
-          )
-          }
-          <Button
-            startIcon={<AddIcon />}
-            onClick={addNinoAdolescente}
-            sx={{ color: 'primary.main' }}
-          >
-            Añadir otro niño o adolescente
-          </Button>
-        </Box>
-      )
-    case 2:
-      return (
-        <Box>
-          <Typography color="primary" sx={{ mb: 2 }}>Adultos convivientes</Typography>
-          {formData.adultosConvivientes.map((adulto, index) => (
-  <Box key={index} sx={{ mb: 3 }}>
-    <Grid container spacing={2}>
-      <Grid item xs={6}>
-        <TextField
-          fullWidth
-          label="Nombre"
-          value={adulto.nombre}
-          onChange={(e) => handleInputChange(`adultosConvivientes[${index}].nombre`, e.target.value)}
-        />
-      </Grid>
-      <Grid item xs={6}>
-        <TextField
-          fullWidth
-          label="Apellido"
-          value={adulto.apellido}
-          onChange={(e) => handleInputChange(`adultosConvivientes[${index}].apellido`, e.target.value)}
-        />
-      </Grid>
-    </Grid>
-
-    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-      <DatePicker
-        label="Fecha de Nacimiento"
-        value={adulto.fechaNacimiento ? new Date(adulto.fechaNacimiento) : null}
-        onChange={(newValue) =>
-          handleInputChange(`adultosConvivientes[${index}].fechaNacimiento`, newValue ? formatDate(newValue) : null)
-        }
-        renderInput={(params) => <TextField {...params} fullWidth />}
-        inputFormat="yyyy-MM-dd"
-      />
-    </LocalizationProvider>
-
-    <TextField
-      fullWidth
-      label="Edad Aproximada"
-      type="number"
-      value={adulto.edadAproximada}
-      onChange={(e) => handleInputChange(`adultosConvivientes[${index}].edadAproximada`, e.target.value)}
-    />
-    <TextField
-      fullWidth
-      label="DNI"
-      type="number"
-      value={adulto.dni}
-      onChange={(e) => handleInputChange(`adultosConvivientes[${index}].dni`, e.target.value)}
-    />
-
-    <FormControl fullWidth>
-      <InputLabel>Situación DNI</InputLabel>
-      <Select
-        value={adulto.situacionDni}
-        onChange={(e) => handleInputChange(`adultosConvivientes[${index}].situacionDni`, e.target.value)}
-        label="Situación DNI"
-      >
-        <MenuItem value="EN_TRAMITE">En Trámite</MenuItem>
-        <MenuItem value="TIENE">Tiene</MenuItem>
-        <MenuItem value="NO_TIENE">No Tiene</MenuItem>
-      </Select>
-    </FormControl>
-
-    <FormControl fullWidth>
-      <InputLabel>Género</InputLabel>
-      <Select
-        value={adulto.genero}
-        onChange={(e) => handleInputChange(`adultosConvivientes[${index}].genero`, e.target.value)}
-        label="Género"
-      >
-        <MenuItem value="MASCULINO">Masculino</MenuItem>
-        <MenuItem value="FEMENINO">Femenino</MenuItem>
-        <MenuItem value="NO_BINARIO">No Binario</MenuItem>
-      </Select>
-    </FormControl>
-
-    <FormControlLabel
-      control={
-        <Checkbox
-          checked={adulto.supuesto_autordv}
-          onChange={(e) => handleInputChange(`adultosConvivientes[${index}].supuesto_autordv`, e.target.checked)}
-        />
-      }
-      label="Supuesto autor DV"
-    />
-
-    <FormControlLabel
-      control={
-        <Checkbox
-          checked={adulto.conviviente}
-          onChange={(e) => handleInputChange(`adultosConvivientes[${index}].conviviente`, e.target.checked)}
-        />
-      }
-      label="Conviviente"
-    />
-
-    <FormControlLabel
-      control={
-        <Switch
-          checked={adulto.botonAntipanico}
-          onChange={(e) => handleInputChange(`adultosConvivientes[${index}].botonAntipanico`, e.target.checked)}
-        />
-      }
-      label="Botón Antipánico"
-    />
-
-    <TextField
-      fullWidth
-      label="Observaciones"
-      multiline
-      rows={4}
-      value={adulto.observaciones}
-      onChange={(e) => handleInputChange(`adultosConvivientes[${index}].observaciones`, e.target.value)}
-    />
-
-    <FormControlLabel
-      control={
-        <Switch
-          checked={adulto.useDefaultLocalizacion}
-          onChange={(e) => handleInputChange(`adultosConvivientes[${index}].useDefaultLocalizacion`, e.target.checked)}
-        />
-      }
-      label="Usar localización de la demanda"
-    />
-
-    {!adulto.useDefaultLocalizacion && (
-      <Grid container spacing={2} sx={{ mt: 2 }}>
-        <Grid item xs={12}>
-          <Typography variant="subtitle1">Localización específica</Typography>
-        </Grid>
-        {renderLocalizacionFields(
-          `adultosConvivientes[${index}].localizacion`,
-          adulto.localizacion,
-          handleInputChange,
-          barrios,
-          localidades,
-          cpcs
-        )}
-      </Grid>
-    )}
-  </Box>
-))}
-
-          
-          <Button
-            startIcon={<AddIcon />}
-            onClick={addAdultoConviviente}
-            sx={{ color: 'primary.main' }}
-          >
-            Añadir otro adulto conviviente
-          </Button>
-        </Box>
-      )
-    case 3:
-      return (
-        <Box>
-          <Typography variant="h6" color="primary" gutterBottom>
-            Presunta Vulneración de Derechos informada
-          </Typography>
-
-          {formData.vulneraciones.map((vulneracion, index) => (
-            <Box key={index} sx={{ mb: 4, p: 2, border: '1px solid #ccc', borderRadius: '4px' }}>
-              <Typography variant="h6" gutterBottom>Vulneración {index + 1}</Typography>
-
-              <FormControl fullWidth margin="normal">
-                <InputLabel id={`categoria-motivos-label-${index}`}>Categoría de Motivos</InputLabel>
-                <Select
-                  labelId={`categoria-motivos-label-${index}`}
-                  value={vulneracion.categoria_motivo}
-                  onChange={(e) => handleInputChange(`vulneraciones[${index}].categoria_motivo`, e.target.value)}
-                >
-                  {categoriaMotivos.map((motivo) => (
-                    <MenuItem key={motivo.id} value={motivo.id}>
-                      {motivo.nombre}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth margin="normal">
-                <InputLabel>Subcategoría</InputLabel>
-                <Select
-                  value={vulneracion.categoria_submotivo}
-                  onChange={(e) => handleInputChange(`vulneraciones[${index}].categoria_submotivo`, e.target.value)}
-                  disabled={!vulneracion.categoria_motivo}
-                >
-                  {categoriaSubmotivos
-                    .filter(submotivo => submotivo.motivo === vulneracion.categoria_motivo)
-                    .map((submotivo) => (
-                      <MenuItem key={submotivo.id} value={submotivo.id}>
-                        {submotivo.nombre}
-                      </MenuItem>
-                    ))
-                  }
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth margin="normal">
-                <InputLabel>Gravedad de la Vulneración</InputLabel>
-                <Select
-                  value={vulneracion.gravedad_vulneracion}
-                  onChange={(e) => handleInputChange(`vulneraciones[${index}].gravedad_vulneracion`, e.target.value)}
-                >
-                  {gravedadVulneraciones.map((gravedad) => (
-                    <MenuItem key={gravedad.id} value={gravedad.id}>
-                      {gravedad.nombre}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth margin="normal">
-                <InputLabel>Urgencia de la Vulneración</InputLabel>
-                <Select
-                  value={vulneracion.urgencia_vulneracion}
-                  onChange={(e) => handleInputChange(`vulneraciones[${index}].urgencia_vulneracion`, e.target.value)}
-                >
-                  {urgenciaVulneraciones.map((urgencia) => (
-                    <MenuItem key={urgencia.id} value={urgencia.id}>
-                      {urgencia.nombre}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth margin="normal">
-                <InputLabel>NNyA</InputLabel>
-                <Select
-                  value={vulneracion.nnya}
-                  onChange={(e) => handleInputChange(`vulneraciones[${index}].nnya`, e.target.value)}
-                >
-                  {formData.ninosAdolescentes.map((nnya, nnyaIndex) => (
-                    <MenuItem key={nnyaIndex} value={nnyaIndex}>
-                      {`${nnya.nombre} ${nnya.apellido}`}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth margin="normal">
-                <InputLabel>Autor DV</InputLabel>
-                <Select
-                  value={vulneracion.autor_dv}
-                  onChange={(e) => handleInputChange(`vulneraciones[${index}].autor_dv`, e.target.value)}
-                >
-                  {formData.adultosConvivientes.map((adulto, adultoIndex) => (
-                    <MenuItem key={adultoIndex} value={adultoIndex}>
-                      {`${adulto.nombre} ${adulto.apellido}`}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <Box sx={{ mt: 2 }}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={vulneracion.principal_demanda}
-                      onChange={(e) => handleInputChange(`vulneraciones[${index}].principal_demanda`, e.target.checked)}
-                    />
-                  }
-                  label="Principal Demanda"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={vulneracion.transcurre_actualidad}
-                      onChange={(e) => handleInputChange(`vulneraciones[${index}].transcurre_actualidad`, e.target.checked)}
-                    />
-                  }
-                  label="Transcurre Actualidad"
-                />
-              </Box>
-            </Box>
-          ))}
-
-          <Button
-            startIcon={<AddIcon />}
-            onClick={addVulneraciontext}
-            sx={{ mt: 2, color: 'primary.main' }}
-          >
-            Añadir otra vulneración
-          </Button>
-
-          <Typography variant="h6" color="primary" gutterBottom sx={{ mt: 4 }}>
-            Vulneraciones Añadidas: {formData.vulneraciones.length}
-          </Typography>
-        </Box>
-      )
-
-      case 4:
-        return (
-          <Box>
-            <Typography variant="h6" gutterBottom>
-              Vínculos
-            </Typography>
-            {formData.vinculaciones.map((vinculacion, index) => renderVinculacion(vinculacion, index))}
-            <Button variant="contained" color="primary" onClick={addVinculacion} sx={{ mt: 2 }}>
-              Agregar Vinculación
-            </Button>
-          </Box>
-        )
-  
+    // Other cases...
     default:
       return null
   }

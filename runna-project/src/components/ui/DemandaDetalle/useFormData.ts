@@ -1,15 +1,15 @@
 import { useState } from 'react'
 
-const initialFormData = {
-  fecha_y_hora_ingreso: new Date(),
-  origen: '',
-  nro_notificacion_102: '',
-  nro_sac: '',
-  nro_suac: '',
-  nro_historia_clinica: '',
-  nro_oficio_web: '',
-  descripcion: '',
-  localizacion: {
+const initialFormData = (demanda) => ({
+  fecha_y_hora_ingreso: demanda?.fecha_y_hora_ingreso ? new Date(demanda.fecha_y_hora_ingreso) : new Date(),
+  origen: demanda?.origen || '',
+  nro_notificacion_102: demanda?.nro_notificacion_102 || '',
+  nro_sac: demanda?.nro_sac || '',
+  nro_suac: demanda?.nro_suac || '',
+  nro_historia_clinica: demanda?.nro_historia_clinica || '',
+  nro_oficio_web: demanda?.nro_oficio_web || '',
+  descripcion: demanda?.descripcion || '',
+  localizacion: demanda?.localizacion || {
     calle: '',
     tipo_calle: 'CALLE',
     piso_depto: '',
@@ -21,7 +21,7 @@ const initialFormData = {
     localidad: '',
     cpc: '',
   },
-  usuarioExterno: {
+  usuarioExterno: demanda?.usuarioExterno || {
     id: null,
     nombre: '',
     apellido: '',
@@ -33,161 +33,37 @@ const initialFormData = {
     institucion: '',
   },
   createNewUsuarioExterno: false,
-  ninosAdolescentes: [],
-  adultosConvivientes: [],
-  vulneraciones: [],
-  vinculaciones: [],
-  presuntaVulneracion: {
-    motivo: '',
-    ambitoVulneracion: '',
-    principalDerechoVulnerado: '',
-    problematicaIdentificada: '',
-    prioridadIntervencion: '',
-    nombreCargoOperador: '',
-    motivos: [],
-    categoriaMotivos: [],
-    categoriaSubmotivos: [],
-    gravedadVulneracion: '',
-    urgenciaVulneracion: '',
-    condicionesVulnerabilidadNNyA: [],
-    condicionesVulnerabilidadAdulto: [],
+  ninosAdolescentes: demanda?.ninosAdolescentes || [],
+  adultosConvivientes: demanda?.adultosConvivientes || [],
+  vulneraciones: demanda?.vulneraciones || [],
+  vinculaciones: demanda?.vinculaciones || [],
+  presuntaVulneracion: demanda?.presuntaVulneracion || {
+    motivos: '',
   },
-  autores: [],
-  descripcionSituacion: '',
-  usuarioLinea: {
-    nombreApellido: '',
-    edad: '',
-    genero: '',
-    vinculo: '',
-    telefono: '',
-    institucionPrograma: '',
-    contactoInstitucion: '',
-    nombreCargoResponsable: '',
-  },
-}
+  calificacion: demanda?.calificacion || '',
+  fechaActualizacion: demanda?.fechaActualizacion || new Date(),
+  historial: demanda?.historial || [],
+  archivosAdjuntos: demanda?.archivosAdjuntos || [],
+  asociadoRegistro: demanda?.asociadoRegistro || false,
+})
 
-export const useFormData = () => {
-  const [formData, setFormData] = useState(initialFormData)
-  
+export const useFormData = (demanda) => {
+  const [formData, setFormData] = useState(initialFormData(demanda))
+
   const handleInputChange = (field, value) => {
     setFormData(prevData => {
-      const updatedData = { ...prevData }
-      const fieldParts = field.split('.')
-      let current = updatedData
+      const updatedData = JSON.parse(JSON.stringify(prevData)); // Deep copy to avoid mutation
+      const fieldParts = field.split('.');
+      let current = updatedData;
       for (let i = 0; i < fieldParts.length - 1; i++) {
-        if (fieldParts[i].includes('[')) {
-          const [arrayName, indexStr] = fieldParts[i].split('[')
-          const index = parseInt(indexStr.replace(']', ''))
-          current = current[arrayName][index]
-        } else {
-          current = current[fieldParts[i]]
-        }
+        current = current[fieldParts[i]];
       }
-      current[fieldParts[fieldParts.length - 1]] = value
-      return updatedData
-    })
-  }
+      current[fieldParts[fieldParts.length - 1]] = value;
+      return updatedData;
+    });
+  };
+  
 
-  const addNinoAdolescente = () => {
-    setFormData(prevData => ({
-      ...prevData,
-      ninosAdolescentes: [
-        ...prevData.ninosAdolescentes,
-        {
-          nombre: '',
-          apellido: '',
-          fechaNacimiento: null,
-          edadAproximada: '',
-          dni: '',
-          situacionDni: 'EN_TRAMITE',
-          genero: 'MASCULINO',
-          botonAntipanico: false,
-          observaciones: '',
-          useDefaultLocalizacion: true,
-          localizacion: { ...initialFormData.localizacion },
-          educacion: {
-            institucion_educativa: '',
-            curso: '',
-            nivel: '',
-            turno: '',
-            comentarios: '',
-          },
-          salud: {
-            institucion_sanitaria: '',
-            observaciones: '',
-          },
-        },
-      ],
-    }))
-  }
-  const addVulneraciontext = () => {
-    setFormData((prevData) => ({
-      ...prevData,
-      vulneraciones: [
-        ...prevData.vulneraciones,
-        {
-          principal_demanda: false,
-          transcurre_actualidad: false,
-          categoria_motivo: '',
-          categoria_submotivo: '',
-          gravedad_vulneracion: '',
-          urgencia_vulneracion: '',
-          nnya: '',
-          autor_dv: '',
-        },
-      ],
-    }))
-  }
-  const addAdultoConviviente = () => {
-    setFormData((prevData) => ({
-      ...prevData,
-      adultosConvivientes: [
-        ...prevData.adultosConvivientes,
-        {
-          nombre: '',
-          apellido: '',
-          fechaNacimiento: null,
-          edadAproximada: '',
-          dni: '',
-          situacionDni: 'EN_TRAMITE',
-          genero: 'MASCULINO',
-          botonAntipanico: false,
-          observaciones: '',
-          supuesto_autordv: false,
-          conviviente: true,
-          useDefaultLocalizacion: true,
-          localizacion: { ...initialFormData.localizacion },
-        },
-      ],
-    }))
-  }
-
-  const addVinculacion = () => {
-    setFormData(prevData => ({
-      ...prevData,
-      vinculaciones: [
-        ...prevData.vinculaciones,
-        {
-          persona_1: '',
-          persona_2: '',
-          vinculo: '',
-          conviven: false,
-          autordv: false,
-          garantiza_proteccion: false,
-        }
-      ]
-    }))
-  }
-
-  const removeVinculacion = (index) => {
-    setFormData(prevData => ({
-      ...prevData,
-      vinculaciones: prevData.vinculaciones.filter((_, i) => i !== index)
-    }))
-  }
-
-
-  return { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext, addVinculacion, removeVinculacion
-  }
+  return { formData, handleInputChange }
 }
 

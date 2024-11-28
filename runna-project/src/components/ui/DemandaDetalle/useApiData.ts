@@ -1,165 +1,67 @@
 import { useState, useEffect } from 'react'
-import { createLocalizacion } from '../../../api/TableFunctions/localizacion'
-import { createTUsuarioExterno } from '../../../api/TableFunctions/usuarioExterno'
-import { createDemand } from '../../../api/TableFunctions/demands'
-import { getTBarrios } from '../../../api/TableFunctions/barrios'
-import { getTLocalidads } from '../../../api/TableFunctions/localidades'
-import { getTProvincias } from '../../../api/TableFunctions/provincias'
-import { getTCPCs } from '../../../api/TableFunctions/cpcs'
-import { createTPersona } from '../../../api/TableFunctions/personas'
 import { getTMotivoIntervencions } from '../../../api/TableFunctions/motivoIntervencion'
-import { getTCategoriaMotivos } from '../../../api/TableFunctions/categoriasMotivos'
-import { getTCategoriaSubmotivos } from '../../../api/TableFunctions/categoriaSubmotivos'
-import { getTGravedadVulneracions } from '../../../api/TableFunctions/gravedadVulneraciones'
-import { getTUrgenciaVulneracions } from '../../../api/TableFunctions/urgenciaVulneraciones'
-import { getTCondicionesVulnerabilidads } from '../../../api/TableFunctions/condicionesVulnerabilidad'
-import {getTVulneracions} from '../../../api/TableFunctions/vulneraciones'
-import {createTVulneracion} from '../../../api/TableFunctions/vulneraciones'
-import {getTInstitucionEducativas} from '../../../api/TableFunctions/institucionesEducativas'
-import {getTInstitucionSanitarias} from '../../../api/TableFunctions/institucionesSanitarias'
-import { getInstitucionesUsuarioExterno } from '../../../api/TableFunctions/institucionUsuarioExterno' 
-import { getVinculosUsuarioExterno } from '../../../api/TableFunctions/vinculoUsuarioExterno'
-import { getTUsuariosExternos } from '../../../api/TableFunctions/usuarioExterno'
-import {getTVinculos} from '../../../api/TableFunctions/vinculos'
-import { createTVinculoPersonaPersona } from '../../../api/TableFunctions/vinculospersonaspersonas'
-import { get } from 'http'
 
-export const useApiData = () => {
-    const [apiData, setApiData] = useState({
-      usuariosExternos: [],
-      barrios: [],
-      localidades: [],
-      provincias: [],
-      cpcs: [],
-      motivosIntervencion: [],
-      categoriaMotivos: [],
-      categoriaSubmotivos: [],
-      gravedadVulneraciones: [],
-      urgenciaVulneraciones: [],
-      condicionesVulnerabilidad: [],
-      vulneraciones: [],
-      institucionesEducativas: [],
-      institucionesSanitarias: [],
-      institucionesUsuarioExterno: [],
-      vinculosUsuarioExterno: [],
-      vinculoPersonas: [],
-    })
-  
-    useEffect(() => {
-      const fetchData = async () => {
-        try {
-          const [
-            fetchedUsuarios,
-            fetchedBarrios,
-            fetchedLocalidades,
-            fetchedProvincias,
-            fetchedCPCs,
-            fetchedMotivos,
-            fetchedCategoriaMotivos,
-            fetchedCategoriaSubmotivos,
-            fetchedGravedades,
-            fetchedUrgencias,
-            fetchedCondiciones,
-            fetchedVulneraciones,
-            fetchedInstitucionesEducativas,
-            fetchedInstitucionesSanitarias,
-            fetchedInstitucionesUsuarioExterno,
-            fetchedVinculosUsuarioExterno,
-            fetchedVinculosPersonas,
-          ] = await Promise.all([
-            getTUsuariosExternos(),
-            getTBarrios(),
-            getTLocalidads(),
-            getTProvincias(),
-            getTCPCs(),
-            getTMotivoIntervencions(),
-            getTCategoriaMotivos(),
-            getTCategoriaSubmotivos(),
-            getTGravedadVulneracions(),
-            getTUrgenciaVulneracions(),
-            getTCondicionesVulnerabilidads(),
-            getTVulneracions(),
-            getTInstitucionEducativas(),
-            getTInstitucionSanitarias(),
-            getInstitucionesUsuarioExterno(),
-            getVinculosUsuarioExterno(),
-            getTVinculos(),
+export const useApiData = (demandaId) => {
+  const [apiData, setApiData] = useState({
+    motivosIntervencion: [],
+    demandaMotivoIntervencion: null,
+    currentMotivoIntervencion: null,
+  })
 
-          ])
+  useEffect(() => {
+    if (!demandaId) return;
   
-          setApiData({
-            usuariosExternos: fetchedUsuarios,
-            barrios: fetchedBarrios,
-            localidades: fetchedLocalidades,
-            provincias: fetchedProvincias,
-            cpcs: fetchedCPCs,
-            motivosIntervencion: fetchedMotivos,
-            categoriaMotivos: fetchedCategoriaMotivos,
-            categoriaSubmotivos: fetchedCategoriaSubmotivos,
-            gravedadVulneraciones: fetchedGravedades,
-            urgenciaVulneraciones: fetchedUrgencias,
-            condicionesVulnerabilidad: fetchedCondiciones,
-            vulneraciones: fetchedVulneraciones,
-            institucionesEducativas: fetchedInstitucionesEducativas,
-            institucionesSanitarias: fetchedInstitucionesSanitarias,
-            institucionesUsuarioExterno: fetchedInstitucionesUsuarioExterno,
-            vinculosUsuarioExterno: fetchedVinculosUsuarioExterno,
-            vinculoPersonas: fetchedVinculosPersonas,
-          })
-        } catch (error) {
-          console.error('Error fetching data:', error)
+    const fetchData = async () => {
+      try {
+        const fetchedMotivos = await getTMotivoIntervencions();
+        const demandaMotivoResponse = await fetch('http://localhost:8000/api/demanda-motivo-intervencion/');
+        const demandaMotivoData = await demandaMotivoResponse.json();
+  
+        const demandaIdNumber = Number(demandaId);
+        const currentDemandaMotivo = demandaMotivoData.find(dm => dm.demanda === demandaIdNumber);
+        let currentMotivoIntervencion = null;
+  
+        if (currentDemandaMotivo) {
+          const motivoResponse = await fetch(`http://localhost:8000/api/motivo-intervencion/${currentDemandaMotivo.motivo_intervencion}/`);
+          currentMotivoIntervencion = await motivoResponse.json();
         }
-      }
   
-      fetchData()
-    }, [])
-    const addVulneracion = async (vulneracionData) => {
-        try {
-          // Create a new object with only the necessary data
-          const serializableVulneracionData = {
-            principal_demanda: vulneracionData.principal_demanda,
-            transcurre_actualidad: vulneracionData.transcurre_actualidad,
-            categoria_motivo: vulneracionData.categoria_motivo,
-            categoria_submotivo: vulneracionData.categoria_submotivo,
-            gravedad_vulneracion: vulneracionData.gravedad_vulneracion,
-            urgencia_vulneracion: vulneracionData.urgencia_vulneracion,
-            nnya: vulneracionData.nnya,
-            autor_dv: vulneracionData.autor_dv,
-            demanda: vulneracionData.demanda,
+        setApiData(prevData => {
+          if (
+            JSON.stringify(prevData) !== JSON.stringify({
+              motivosIntervencion: fetchedMotivos,
+              demandaMotivoIntervencion: demandaMotivoData,
+              currentMotivoIntervencion,
+            })
+          ) {
+            return {
+              motivosIntervencion: fetchedMotivos,
+              demandaMotivoIntervencion: demandaMotivoData,
+              currentMotivoIntervencion,
+            };
           }
-    
-          const newVulneracion = await createTVulneracion(serializableVulneracionData)
-          setApiData(prevData => ({
-            ...prevData,
-            vulneraciones: [...prevData.vulneraciones, newVulneracion]
-          }))
-          return newVulneracion
-        } catch (error) {
-          console.error('Error creating vulneracion:', error)
-          throw new Error('Failed to create data in vulneracion.')
-        }
+          return prevData; // Avoid state updates if data hasn't changed
+        });
+      } catch (error) {
+        console.error('Error fetching data:', error);
       }
-      const addUsuarioExterno = async (usuarioExternoData) => {
-        try {
-          const newUsuarioExterno = await createTUsuarioExterno(usuarioExternoData)
-          setApiData(prevData => ({
-            ...prevData,
-            usuariosExternos: [...prevData.usuariosExternos, newUsuarioExterno]
-          }))
-          return newUsuarioExterno
-        } catch (error) {
-          console.error('Error creating usuario externo:', error)
-          throw error
-        }
-      }
-      const addVinculoPersonaPersona = async (vinculoPersonaPersonaData) => {
-        try {
-          const newVinculoPersonaPersona = await createTVinculoPersonaPersona(vinculoPersonaPersonaData)
-          return newVinculoPersonaPersona
-        } catch (error) {
-          console.error('Error creating vinculo persona persona:', error)
-          throw error
-        }
-      }
-      return { ...apiData, addVulneracion, addUsuarioExterno, addVinculoPersonaPersona }
+    };
+  
+    fetchData();
+  }, [demandaId]);
+  
+
+  const getMotivoIntervencion = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/motivo-intervencion/${id}/`)
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error('Error fetching motivo intervencion:', error)
+      return null
     }
+  }
+
+  return { ...apiData, getMotivoIntervencion }
+}
+
