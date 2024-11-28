@@ -28,12 +28,29 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
   const [activeStep, setActiveStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isEnviarRespuestaOpen, setIsEnviarRespuestaOpen] = useState(false)
+  const [usuariosExternos, setUsuariosExternos] = useState([])
 
   const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneracion, addVinculacion, removeVinculacion } = useFormData(demanda)
-  const apiData = useApiData(demanda?.id, demanda?.localizacion);
+  const apiData = useApiData(demanda?.id, demanda?.localizacion, demanda?.usuarioExterno);
+
   useEffect(() => {
     console.log('Localización ID:', demanda?.localizacion);
   }, [demanda?.localizacion]);
+
+  useEffect(() => {
+    const fetchUsuariosExternos = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/api/usuario-externo/');
+        const data = await response.json();
+        setUsuariosExternos(data);
+      } catch (error) {
+        console.error('Error fetching usuarios externos:', error);
+      }
+    };
+
+    fetchUsuariosExternos();
+  }, []);
+
   const handleOpenEnviarRespuesta = () => setIsEnviarRespuestaOpen(true)
   const handleCloseEnviarRespuesta = () => setIsEnviarRespuestaOpen(false)
 
@@ -44,9 +61,9 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
     }
     console.log('Clicked demanda ID:', demanda.id);
   };
-  
 
   const handleBack = () => setActiveStep((prevStep) => Math.max(prevStep - 1, 0))
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (activeStep !== steps.length - 1) {
@@ -54,8 +71,80 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
       return
     }
     setIsSubmitting(true)
-    // Submit logic here
-    setIsSubmitting(false)
+
+    try {
+      // Save or update usuario externo
+      if (formData.createNewUsuarioExterno || (formData.usuarioExterno.id && formData.usuarioExterno.nombre)) {
+        const usuarioExternoResponse = await fetch(
+          formData.usuarioExterno.id
+            ? `http://localhost:8000/api/usuario-externo/${formData.usuarioExterno.id}/`
+            : 'http://localhost:8000/api/usuario-externo/',
+          {
+            method: formData.usuarioExterno.id ? 'PUT' : 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData.usuarioExterno),
+          }
+        );
+
+        if (!usuarioExternoResponse.ok) {
+          throw new Error('Failed to save usuario externo');
+        }
+
+        const savedUsuarioExterno = await usuarioExternoResponse.json();
+        handleInputChange('usuarioExterno', savedUsuarioExterno);
+      }
+
+      // Save localizacion
+      const localizacionResponse = await fetch(
+        formData.localizacion.id
+          ? `http://localhost:8000/api/localizacion/${formData.localizacion.id}/`
+          : 'http://localhost:8000/api/localizacion/',
+        {
+          method: formData.localizacion.id ? 'PUT' : 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData.localizacion),
+        }
+      );
+
+      if (!localizacionResponse.ok) {
+        throw new Error('Failed to save localizacion');
+      }
+
+      const savedLocalizacion = await localizacionResponse.json();
+      handleInputChange('localizacion', savedLocalizacion);
+
+      // Update demanda with new data
+      const updatedDemanda = {
+        ...demanda,
+        usuarioExterno: formData.usuarioExterno.id,
+        localizacion: savedLocalizacion.id,
+        // Add other fields that need to be updated
+      };
+
+      const demandaResponse = await fetch(`http://localhost:8000/api/demanda/${demanda.id}/`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedDemanda),
+      });
+
+      if (!demandaResponse.ok) {
+        throw new Error('Failed to update demanda');
+      }
+
+      console.log('Form submitted successfully');
+      onClose(); // Close the modal after successful submission
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      // Show error message to the user
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -139,26 +228,30 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
               ))}
             </Stepper>
             <form onSubmit={handleSubmit}>
-            <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-  {apiData.barrios && apiData.localidades && apiData.cpcs ? (
-    renderStepContent({
-      activeStep,
-      formData,
-      handleInputChange,
-      motivosIntervencion: apiData.motivosIntervencion,
-      currentMotivoIntervencion: apiData.currentMotivoIntervencion,
-      demandaMotivoIntervencion: apiData.demandaMotivoIntervencion,
-      barrios: apiData.barrios,
-      localidades: apiData.localidades,
-      cpcs: apiData.cpcs,
-      localizacion: apiData.localizacion,
-      demanda,
-      getMotivoIntervencion: apiData.getMotivoIntervencion,
-    })
-  ) : (
-    <Typography>Loading data...</Typography>
-  )}
-</LocalizationProvider>
+              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+                {apiData.barrios && apiData.localidades && apiData.cpcs ? (
+                  renderStepContent({
+                    activeStep,
+                    formData,
+                    handleInputChange,
+                    motivosIntervencion: apiData.motivosIntervencion,
+                    currentMotivoIntervencion: apiData.currentMotivoIntervencion,
+                    demandaMotivoIntervencion: apiData.demandaMotivoIntervencion,
+                    barrios: apiData.barrios,
+                    localidades: apiData.localidades,
+                    cpcs: apiData.cpcs,
+                    localizacion: apiData.localizacion,
+                    usuarioExterno: apiData.usuarioExterno,
+                    vinculosUsuarioExterno: apiData.vinculosUsuarioExterno,
+                    institucionesUsuarioExterno: apiData.institucionesUsuarioExterno,
+                    usuariosExternos,
+                    demanda,
+                    getMotivoIntervencion: apiData.getMotivoIntervencion,
+                  })
+                ) : (
+                  <Typography>Loading data...</Typography>
+                )}
+              </LocalizationProvider>
               <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
                 <Button onClick={handleBack} disabled={activeStep === 0}>
                   Anterior

@@ -135,7 +135,7 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
   
   
 
-export const renderStepContent = ({
+  export const renderStepContent = ({
     activeStep,
     formData,
     handleInputChange,
@@ -145,13 +145,14 @@ export const renderStepContent = ({
     cpcs,
     vinculosUsuarioExterno,
     institucionesUsuarioExterno,
-    usuariosExternos,
+    usuarioExterno,
+    usuariosExternos, // Add this new prop
     demandaMotivoIntervencion,
     demanda,
     getMotivoIntervencion,
     currentMotivoIntervencion,
     localizacion,
-}) => {
+  }) => {
     useEffect(() => {
         if (localizacion) {
           handleInputChange('localizacion', {
@@ -321,136 +322,202 @@ export const renderStepContent = ({
 )}
 
 
-                    <Grid item xs={12}>
-                        <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Usuario Externo</Typography>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={formData.createNewUsuarioExterno}
-                                    onChange={(e) => handleInputChange('createNewUsuarioExterno', e.target.checked)}
-                                />
-                            }
-                            label="Crear nuevo usuario externo"
-                        />
-                    </Grid>
-                    {formData.createNewUsuarioExterno ? (
-                        <>
-                            <Grid item xs={6}>
-                                <TextField
-                                    fullWidth
-                                    label="Nombre"
-                                    value={formData.usuarioExterno.nombre}
-                                    onChange={(e) => handleInputChange('usuarioExterno.nombre', e.target.value)}
-                                    size="small"
-                                />
-                            </Grid>
-                            <Grid item xs={6}>
-                                <TextField
-                                    fullWidth
-                                    label="Apellido"
-                                    value={formData.usuarioExterno.apellido}
-                                    onChange={(e) => handleInputChange('usuarioExterno.apellido', e.target.value)}
-                                    size="small"
-                                />
-                            </Grid>
-                            <Grid item xs={6}>
-                                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-                                    <DatePicker
-                                        label="Fecha de Nacimiento"
-                                        value={formData.usuarioExterno.fecha_nacimiento ? new Date(formData.usuarioExterno.fecha_nacimiento) : null}
-                                        onChange={(newValue) => handleInputChange('usuarioExterno.fecha_nacimiento', formatDate(newValue))}
-                                        renderInput={(params) => <TextField {...params} fullWidth size="small" />}
-                                        inputFormat="yyyy-MM-dd"
-                                    />
-                                </LocalizationProvider>
-                            </Grid>
-                            <Grid item xs={6}>
-                                <FormControl fullWidth size="small">
-                                    <InputLabel>Género</InputLabel>
-                                    <Select
-                                        value={formData.usuarioExterno.genero}
-                                        onChange={(e) => handleInputChange('usuarioExterno.genero', e.target.value)}
-                                        label="Género"
-                                    >
-                                        <MenuItem value="MASCULINO">Masculino</MenuItem>
-                                        <MenuItem value="FEMENINO">Femenino</MenuItem>
-                                        <MenuItem value="OTRO">Otro</MenuItem>
-                                    </Select>
-                                </FormControl>
-                            </Grid>
-                            <Grid item xs={6}>
-                                <TextField
-                                    fullWidth
-                                    label="Teléfono"
-                                    type="number"
-                                    value={formData.usuarioExterno.telefono}
-                                    onChange={(e) => handleInputChange('usuarioExterno.telefono', e.target.value)}
-                                    size="small"
-                                />
-                            </Grid>
-                            <Grid item xs={6}>
-                                <TextField
-                                    fullWidth
-                                    label="Email"
-                                    type="email"
-                                    value={formData.usuarioExterno.mail}
-                                    onChange={(e) => handleInputChange('usuarioExterno.mail', e.target.value)}
-                                    size="small"
-                                />
-                            </Grid>
-                            <Grid item xs={6}>
-                                <FormControl fullWidth size="small">
-                                    <InputLabel>Vínculo</InputLabel>
-                                    <Select
-                                        value={formData.usuarioExterno.vinculo}
-                                        onChange={(e) => handleInputChange('usuarioExterno.vinculo', e.target.value)}
-                                        label="Vínculo"
-                                    >
-                                        {vinculosUsuarioExterno && vinculosUsuarioExterno.map((vinculo) => (
-                                            <MenuItem key={vinculo.id} value={vinculo.id}>
-                                                {vinculo.nombre}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                            </Grid>
-                            <Grid item xs={6}>
-                                <FormControl fullWidth size="small">
-                                    <InputLabel>Institución</InputLabel>
-                                    <Select
-                                        value={formData.usuarioExterno.institucion}
-                                        onChange={(e) => handleInputChange('usuarioExterno.institucion', e.target.value)}
-                                        label="Institución"
-                                    >
-                                        {institucionesUsuarioExterno && institucionesUsuarioExterno.map((institucion) => (
-                                            <MenuItem key={institucion.id} value={institucion.id}>
-                                                {institucion.nombre}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                            </Grid>
-                        </>
-                    ) : (
-                        <Grid item xs={12}>
-                            <FormControl fullWidth size="small">
-                                <InputLabel>Usuario Externo</InputLabel>
-                                <Select
-                                    value={formData.usuarioExterno.id}
-                                    onChange={(e) => handleInputChange('usuarioExterno.id', e.target.value)}
-                                    label="Usuario Externo"
-                                >
-                                    {usuariosExternos && usuariosExternos.map((usuario) => (
-                                        <MenuItem key={usuario.id} value={usuario.id}>
-                                            {`${usuario.nombre} ${usuario.apellido}`}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </Grid>
-                    )}
+<Grid item xs={12}>
+    <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Usuario Externo</Typography>
+  </Grid>
+  <Grid item xs={12}>
+    <FormControlLabel
+      control={
+        <Switch
+          checked={formData.createNewUsuarioExterno}
+          onChange={(e) => handleInputChange('createNewUsuarioExterno', e.target.checked)}
+        />
+      }
+      label="Crear nuevo usuario externo"
+    />
+  </Grid>
+  {formData.createNewUsuarioExterno ? (
+    <>
+      {/* Fields for creating a new usuario externo */}
+      <Grid item xs={6}>
+        <TextField
+          fullWidth
+          label="Nombre"
+          value={formData.usuarioExterno.nombre}
+          onChange={(e) => handleInputChange('usuarioExterno.nombre', e.target.value)}
+          size="small"
+          required
+        />
+      </Grid>
+      <Grid item xs={6}>
+        <TextField
+          fullWidth
+          label="Apellido"
+          value={formData.usuarioExterno.apellido}
+          onChange={(e) => handleInputChange('usuarioExterno.apellido', e.target.value)}
+          size="small"
+          required
+        />
+      </Grid>
+      <Grid item xs={6}>
+        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+          <DatePicker
+            label="Fecha de Nacimiento"
+            value={formData.usuarioExterno.fecha_nacimiento ? new Date(formData.usuarioExterno.fecha_nacimiento) : null}
+            onChange={(newValue) => handleInputChange('usuarioExterno.fecha_nacimiento', newValue ? newValue.toISOString().split('T')[0] : null)}
+            renderInput={(params) => <TextField {...params} fullWidth size="small" required />}
+          />
+        </LocalizationProvider>
+      </Grid>
+      <Grid item xs={6}>
+        <FormControl fullWidth size="small" required>
+          <InputLabel>Género</InputLabel>
+          <Select
+            value={formData.usuarioExterno.genero}
+            onChange={(e) => handleInputChange('usuarioExterno.genero', e.target.value)}
+            label="Género"
+          >
+            <MenuItem value="MASCULINO">Masculino</MenuItem>
+            <MenuItem value="FEMENINO">Femenino</MenuItem>
+            <MenuItem value="OTRO">Otro</MenuItem>
+          </Select>
+        </FormControl>
+      </Grid>
+      <Grid item xs={6}>
+        <TextField
+          fullWidth
+          label="Teléfono"
+          type="tel"
+          value={formData.usuarioExterno.telefono}
+          onChange={(e) => handleInputChange('usuarioExterno.telefono', e.target.value)}
+          size="small"
+          required
+        />
+      </Grid>
+      <Grid item xs={6}>
+        <TextField
+          fullWidth
+          label="Email"
+          type="email"
+          value={formData.usuarioExterno.mail}
+          onChange={(e) => handleInputChange('usuarioExterno.mail', e.target.value)}
+          size="small"
+          required
+        />
+      </Grid>
+      <Grid item xs={6}>
+        <FormControl fullWidth size="small" required>
+          <InputLabel>Vínculo</InputLabel>
+          <Select
+            value={formData.usuarioExterno.vinculo}
+            onChange={(e) => handleInputChange('usuarioExterno.vinculo', e.target.value)}
+            label="Vínculo"
+          >
+            {vinculosUsuarioExterno.map((vinculo) => (
+              <MenuItem key={vinculo.id} value={vinculo.id}>
+                {vinculo.nombre}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+      <Grid item xs={6}>
+        <FormControl fullWidth size="small" required>
+          <InputLabel>Institución</InputLabel>
+          <Select
+            value={formData.usuarioExterno.institucion}
+            onChange={(e) => handleInputChange('usuarioExterno.institucion', e.target.value)}
+            label="Institución"
+          >
+            {institucionesUsuarioExterno.map((institucion) => (
+              <MenuItem key={institucion.id} value={institucion.id}>
+                {institucion.nombre}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+    </>
+  ) : (
+    <Grid item xs={12}>
+      <FormControl fullWidth size="small">
+        <InputLabel>Usuario Externo</InputLabel>
+        <Select
+          value={formData.usuarioExterno.id || ''}
+          onChange={(e) => {
+            const selectedUser = usuariosExternos.find(user => user.id === e.target.value);
+            handleInputChange('usuarioExterno', selectedUser || initialFormData(null).usuarioExterno);
+          }}
+          label="Usuario Externo"
+        >
+          {usuariosExternos.map((usuario) => (
+            <MenuItem key={usuario.id} value={usuario.id}>
+              {`${usuario.nombre} ${usuario.apellido}`}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    </Grid>
+  )}
+  {/* Display selected usuario externo details */}
+  {!formData.createNewUsuarioExterno && formData.usuarioExterno.id && (
+    <>
+      <Grid item xs={6}>
+        <TextField
+          fullWidth
+          label="Nombre"
+          value={formData.usuarioExterno.nombre || ''}
+          InputProps={{ readOnly: true }}
+          size="small"
+        />
+      </Grid>
+      <Grid item xs={6}>
+        <TextField
+          fullWidth
+          label="Apellido"
+          value={formData.usuarioExterno.apellido || ''}
+          InputProps={{ readOnly: true }}
+          size="small"
+        />
+      </Grid>
+      <Grid item xs={6}>
+        <TextField
+          fullWidth
+          label="Fecha de Nacimiento"
+          value={formData.usuarioExterno.fecha_nacimiento || ''}
+          InputProps={{ readOnly: true }}
+          size="small"
+        />
+      </Grid>
+      <Grid item xs={6}>
+        <TextField
+          fullWidth
+          label="Género"
+          value={formData.usuarioExterno.genero || ''}
+          InputProps={{ readOnly: true }}
+          size="small"
+        />
+      </Grid>
+      <Grid item xs={6}>
+        <TextField
+          fullWidth
+          label="Teléfono"
+          value={formData.usuarioExterno.telefono || ''}
+          InputProps={{ readOnly: true }}
+          size="small"
+        />
+      </Grid>
+      <Grid item xs={6}>
+        <TextField
+          fullWidth
+          label="Email"
+          value={formData.usuarioExterno.mail || ''}
+          InputProps={{ readOnly: true }}
+          size="small"
+        />
+      </Grid>
+    </>
+  )}
                 </Grid>
             )
         // Other cases...

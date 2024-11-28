@@ -1,18 +1,21 @@
 import { useState, useEffect } from 'react';
 import { getTMotivoIntervencions } from '../../../api/TableFunctions/motivoIntervencion';
 
-export const useApiData = (demandaId, localizacionId) => {
+export const useApiData = (demandaId, localizacionId, usuarioExternoId) => {
   const [apiData, setApiData] = useState({
     motivosIntervencion: [],
     demandaMotivoIntervencion: null,
     currentMotivoIntervencion: null,
-    localizacion: {}, // Ensure localizacion contains all fields
+    localizacion: {},
     barrios: [],
     localidades: [],
     cpcs: [],
     selectedBarrio: null,
     selectedLocalidad: null,
     selectedCpc: null,
+    usuarioExterno: null,
+    vinculosUsuarioExterno: [],
+    institucionesUsuarioExterno: [],
   });
 
   useEffect(() => {
@@ -21,7 +24,21 @@ export const useApiData = (demandaId, localizacionId) => {
     const fetchData = async () => {
       try {
         const fetchedMotivos = await getTMotivoIntervencions();
-    
+        let usuarioExternoData = null;
+        if (usuarioExternoId) {
+          const usuarioExternoResponse = await fetch(`http://localhost:8000/api/usuario-externo/${usuarioExternoId}/`);
+          usuarioExternoData = await usuarioExternoResponse.json();
+        }
+                // Fetch vinculos usuario externo
+                const vinculosResponse = await fetch('http://localhost:8000/api/vinculo-usuario-externo/');
+                const vinculosData = await vinculosResponse.json();
+        
+                // Fetch instituciones usuario externo
+                const institucionesResponse = await fetch('http://localhost:8000/api/institucion-usuario-externo/');
+                const institucionesData = await institucionesResponse.json();
+
+
+        
         const demandaMotivoResponse = await fetch('http://localhost:8000/api/demanda-motivo-intervencion/');
         const demandaMotivoData = await demandaMotivoResponse.json();
     
@@ -88,6 +105,9 @@ export const useApiData = (demandaId, localizacionId) => {
           motivosIntervencion: fetchedMotivos,
           demandaMotivoIntervencion: demandaMotivoData,
           currentMotivoIntervencion,
+          usuarioExterno: usuarioExternoData,
+          vinculosUsuarioExterno: vinculosData,
+          institucionesUsuarioExterno: institucionesData,
           localizacion: {
             ...localizacionData,
             barrio: selectedBarrio?.id || localizacionData?.barrio || '',
@@ -132,7 +152,7 @@ export const useApiData = (demandaId, localizacionId) => {
     
   
     fetchData();
-  }, [demandaId, localizacionId]);
+  }, [demandaId, localizacionId, usuarioExternoId]);
   
 
   const getMotivoIntervencion = async (id) => {
