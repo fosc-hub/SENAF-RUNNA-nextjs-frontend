@@ -337,9 +337,16 @@ const columns: GridColDef[] = useMemo(() => {
       headerName: 'Asignar',
       width: 180,
       renderCell: () => (
-        <Button variant="outlined" startIcon={<PersonIcon />} onClick={() => setIsAsignarModalOpen(true)}>
-          Asignar
-        </Button>
+        <Button
+        variant="outlined"
+        startIcon={<PersonIcon />}
+        onClick={(event) => {
+          event.stopPropagation(); // Prevent row click event
+          setIsAsignarModalOpen(true);
+        }}
+      >
+        Asignar
+      </Button>
       ),
     });
   }
