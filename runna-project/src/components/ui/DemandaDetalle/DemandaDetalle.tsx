@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Modal,
   Box,
@@ -30,8 +30,10 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
   const [isEnviarRespuestaOpen, setIsEnviarRespuestaOpen] = useState(false)
 
   const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneracion, addVinculacion, removeVinculacion } = useFormData(demanda)
-  const apiData = useApiData(demanda?.id);
-
+  const apiData = useApiData(demanda?.id, demanda?.localizacion);
+  useEffect(() => {
+    console.log('Localización ID:', demanda?.localizacion);
+  }, [demanda?.localizacion]);
   const handleOpenEnviarRespuesta = () => setIsEnviarRespuestaOpen(true)
   const handleCloseEnviarRespuesta = () => setIsEnviarRespuestaOpen(false)
 
@@ -137,19 +139,26 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
               ))}
             </Stepper>
             <form onSubmit={handleSubmit}>
-              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-                {renderStepContent({
-                  activeStep,
-                  formData,
-                  handleInputChange,
-                  addNinoAdolescente,
-                  addAdultoConviviente,
-                  addVulneracion,
-                  addVinculacion,
-                  removeVinculacion,
-                  ...apiData,
-                })}
-              </LocalizationProvider>
+            <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+  {apiData.barrios && apiData.localidades && apiData.cpcs ? (
+    renderStepContent({
+      activeStep,
+      formData,
+      handleInputChange,
+      motivosIntervencion: apiData.motivosIntervencion,
+      currentMotivoIntervencion: apiData.currentMotivoIntervencion,
+      demandaMotivoIntervencion: apiData.demandaMotivoIntervencion,
+      barrios: apiData.barrios,
+      localidades: apiData.localidades,
+      cpcs: apiData.cpcs,
+      localizacion: apiData.localizacion,
+      demanda,
+      getMotivoIntervencion: apiData.getMotivoIntervencion,
+    })
+  ) : (
+    <Typography>Loading data...</Typography>
+  )}
+</LocalizationProvider>
               <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
                 <Button onClick={handleBack} disabled={activeStep === 0}>
                   Anterior
