@@ -1,33 +1,49 @@
-import React, { useState } from 'react'
-import Link from 'next/link'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+'use client';
+
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 interface MenuItem {
-  name: string
-  isHeader?: boolean
-  count?: number
-  hasSeparator?: boolean
-  belowSeparator?: boolean
-  href?: string
+  name: string;
+  href: string;
 }
 
-const menuItems: MenuItem[] = [
+const adminMenuItems: MenuItem[] = [
   { name: 'Recepción de Demandas', isHeader: true },
-  { name: 'Principal', count: 24, href: '/principal' },
-  { name: 'Sin Leer', count: 10, href: '/sin-leer' },
-  { name: 'Borradores', count: 5, hasSeparator: true, href: '/borradores' },
-  { name: 'Derivados', href: '/derivados' },
-  { name: 'Asignados', belowSeparator: true, href: '/asignados' },
-]
+  { name: 'Todos', href: '/todos' },
+  { name: 'Sin Asignar', href: '/sin-asignar' },
+  { name: 'Asignados', href: '/asignados' },
+];
+
+const userMenuItems: MenuItem[] = [
+  { name: 'Recepción de Demandas', isHeader: true },
+  { name: 'Todos', href: '/todos' },
+  { name: 'Leidos', href: '/leidos' },
+  { name: 'Sin Leer', href: '/sin-leer' },
+];
 
 export default function Sidebar() {
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { user } = useAuth();
+
+  // Determine which menu to show based on user permissions
+  const hasAssignPermission = user?.is_superuser || user?.all_permissions.some(
+    (p) => p.codename === 'add_tdemandaasignado'
+  );
+
+  const menuItems = hasAssignPermission ? adminMenuItems : userMenuItems;
 
   return (
-    <aside className={`relative bg-white border-r border-gray-200 transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'}`}>
+    <aside
+      className={`relative bg-white border-r border-gray-200 transition-all duration-300 ${
+        isCollapsed ? 'w-16' : 'w-64'
+      }`}
+    >
       <nav className="h-full overflow-y-auto">
         <div className="py-4">
-          {menuItems.map((item, index) => (
+        {menuItems.map((item, index) => (
             <React.Fragment key={index}>
               {item.isHeader ? (
                 <h2 className={`px-4 py-2 text-sm font-semibold text-gray-600 ${isCollapsed ? 'sr-only' : ''}`}>
@@ -65,10 +81,10 @@ export default function Sidebar() {
         onClick={() => setIsCollapsed(!isCollapsed)}
         className="absolute top-4 -right-3 bg-white border border-gray-200 rounded-full p-1 text-gray-500 hover:text-gray-700"
         style={{ zIndex: 0 }}
-        aria-label={isCollapsed ? "Expandir sidebar" : "Colapsar sidebar"}
+        aria-label={isCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
       >
         {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
       </button>
     </aside>
-  )
+  );
 }

@@ -3,7 +3,8 @@ import { TNNyASalud } from '../interfaces';
 
 const endpoint = 'nnya-salud';
 
-export const getTNNyASaluds = () => getAll<TNNyASalud>(endpoint);
+export const getTNNyASaluds = (filters?: Record<string, any>) =>
+    getAll<TNNyASalud>(endpoint, filters);
 export const getTNNyASalud = (id: number) => getOne<TNNyASalud>(endpoint, id);
 export const createTNNyASalud = (data: Partial<TNNyASalud>) => create<TNNyASalud>(endpoint, data);
 export const updateTNNyASalud = (id: number, data: Partial<TNNyASalud>) => update<TNNyASalud>(endpoint, id, data);

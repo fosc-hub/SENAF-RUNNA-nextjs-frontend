@@ -3,7 +3,8 @@ import { Localizacion } from '../interfaces';
 
 const endpoint = 'localizacion';
 
-export const getLocalizacions = () => getAll<Localizacion>(endpoint);
+export const getLocalizacions = (filters?: Record<string, any>) =>
+    getAll<Localizacion>(endpoint, filters);
 export const getLocalizacion = (id: number) => getOne<Localizacion>(endpoint, id);
 export const createLocalizacion = async (data: Partial<Localizacion>): Promise<Localizacion> => {
     const response = await create<Localizacion>(endpoint, data);

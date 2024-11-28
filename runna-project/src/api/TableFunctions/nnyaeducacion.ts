@@ -3,7 +3,8 @@ import { TNNyAEducacion } from '../interfaces';
 
 const endpoint = 'nnya-educacion';
 
-export const getTNNyAEducacions = () => getAll<TNNyAEducacion>(endpoint);
+export const getTNNyAEducacions = (filters?: Record<string, any>) =>
+    getAll<TNNyAEducacion>(endpoint, filters);
 export const getTNNyAEducacion = (id: number) => getOne<TNNyAEducacion>(endpoint, id);
 export const createTNNyAEducacion = (data: Partial<TNNyAEducacion>) => create<TNNyAEducacion>(endpoint, data);
 export const updateTNNyAEducacion = (id: number, data: Partial<TNNyAEducacion>) => update<TNNyAEducacion>(endpoint, id, data);

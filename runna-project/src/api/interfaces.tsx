@@ -1,3 +1,22 @@
+
+export interface TUser {
+  id: number,
+  username: string,
+  first_name: string,
+  last_name: string,
+  email: string,
+  fecha_nacimiento: string;
+  genero: string,
+  telefono: number,
+  localidad: TLocalidad | number,
+  is_staff: boolean,
+  is_active: boolean,
+  is_superuser: boolean,
+  groups: [],
+  user_permissions: [],
+  all_permissions: []
+}
+
 export interface TProvincia {
     id: number;
     nombre: string;
@@ -251,9 +270,11 @@ export interface TDemanda {
     institucion?: TInstitucionRespuesta | number; // Relación opcional con TInstitucionRespuesta
     }
   export interface TDemandaAsignado {
+    esta_activo?: boolean; // Opcional
+    recibido?: boolean; // Opcional
     comentarios?: string; // Opcional
     demanda: TDemanda | number; // Relación con TDemanda
-    user: TUsuarioLinea | number; // Relación con TUsuarioLinea
+    user: TUser | number; // Relación con TUsuarioLinea
   }
 
 export interface TActividad {

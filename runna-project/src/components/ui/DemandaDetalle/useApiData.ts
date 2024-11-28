@@ -1,5 +1,36 @@
 import { useState, useEffect } from 'react';
-import { getTMotivoIntervencions } from '../../../api/TableFunctions/motivoIntervencion';
+// import { getTMotivoIntervencions } from '../../../api/TableFunctions/motivoIntervencion';
+import { createLocalizacion, getLocalizacions, getLocalizacion } from '../../../api/TableFunctions/localizacion'
+import { createTUsuarioExterno } from '../../../api/TableFunctions/usuarioExterno'
+import { createDemand } from '../../../api/TableFunctions/demands'
+import { getTBarrio, getTBarrios } from '../../../api/TableFunctions/barrios'
+import { getTLocalidads, getTLocalidad } from '../../../api/TableFunctions/localidades'
+import { getTProvincias } from '../../../api/TableFunctions/provincias'
+import { getTCPC, getTCPCs } from '../../../api/TableFunctions/cpcs'
+import { createTPersona, getTPersona, getTPersonas } from '../../../api/TableFunctions/personas'
+import { getLocalizacionPersonas, getLocalizacionPersona } from '../../../api/TableFunctions/localizacionPersona'
+import { getTMotivoIntervencion, getTMotivoIntervencions } from '../../../api/TableFunctions/motivoIntervencion'
+import { getTCategoriaMotivos } from '../../../api/TableFunctions/categoriasMotivos'
+import { getTCategoriaSubmotivos } from '../../../api/TableFunctions/categoriaSubmotivos'
+import { getTGravedadVulneracions } from '../../../api/TableFunctions/gravedadVulneraciones'
+import { getTUrgenciaVulneracions } from '../../../api/TableFunctions/urgenciaVulneraciones'
+import { getTCondicionesVulnerabilidads } from '../../../api/TableFunctions/condicionesVulnerabilidad'
+import { getTVulneracions} from '../../../api/TableFunctions/vulneraciones'
+import { createTVulneracion} from '../../../api/TableFunctions/vulneraciones'
+import { getTInstitucionEducativas} from '../../../api/TableFunctions/institucionesEducativas'
+import { getTInstitucionSanitarias} from '../../../api/TableFunctions/institucionesSanitarias'
+import { getInstitucionesUsuarioExterno } from '../../../api/TableFunctions/institucionUsuarioExterno' 
+import { getVinculosUsuarioExterno } from '../../../api/TableFunctions/vinculoUsuarioExterno'
+import { getTUsuariosExternos, getTUsuarioExterno } from '../../../api/TableFunctions/usuarioExterno'
+import { getTVinculos} from '../../../api/TableFunctions/vinculos'
+import { createTVinculoPersonaPersona } from '../../../api/TableFunctions/vinculospersonaspersonas'
+import { getTVinculoUsuarioLinea, getTVinculoUsuarioLineas } from '../../../api/TableFunctions/vinculoUsuarioLinea'
+import { getTDemandaPersonas, getTDemandaPersona } from '../../../api/TableFunctions/demandaPersonas';
+import { getTNNyASalud, getTNNyASaluds } from '../../../api/TableFunctions/nnyaSalud';
+import { getTNNyAEducacion, getTNNyAEducacions } from '../../../api/TableFunctions/nnyaeducacion';
+import { getTDemandaMotivoIntervencion, getTDemandaMotivoIntervencions } from '../../../api/TableFunctions/demandasMotivoIntervencion';
+
+
 
 export const useApiData = (demandaId, localizacionId, usuarioExternoId) => {
   
@@ -37,32 +68,26 @@ const institucionesSanitarias = [];
 
         let usuarioExternoData = null;
         if (usuarioExternoId) {
-          const usuarioExternoResponse = await fetch(`http://localhost:8000/api/usuario-externo/${usuarioExternoId}/`);
-          usuarioExternoData = await usuarioExternoResponse.json();
+          const usuarioExternoData = await getTUsuarioExterno(usuarioExternoId);
         }
 
         // Fetch vinculos usuario externo
-        const vinculosResponse = await fetch('http://localhost:8000/api/vinculo-usuario-externo/');
-        const vinculosData = await vinculosResponse.json();
+        const vinculosData = await getTVinculoUsuarioLineas();
 
         // Fetch instituciones usuario externo
-        const institucionesResponse = await fetch('http://localhost:8000/api/institucion-usuario-externo/');
-        const institucionesData = await institucionesResponse.json();
+        const institucionesData = await getInstitucionesUsuarioExterno();
 
         // Fetch demanda-persona data
-        const demandaPersonaResponse = await fetch(`http://localhost:8000/api/demanda-persona/?demanda=${demandaId}`);
-        const demandaPersonaData = await demandaPersonaResponse.json();
+        const demandaPersonaData = await getTDemandaPersonas({ demanda: demandaId });
 
         const nnyaList = [];
         const adultsList = []; // Separate list for adults
-        const educacionInstitucionesResponse = await fetch('http://localhost:8000/api/institucion-educativa/');
-        const institucionesEducativas = await educacionInstitucionesResponse.json();
+        const institucionesEducativas = await getTInstitucionEducativas();
         
-        const sanitariaInstitucionesResponse = await fetch('http://localhost:8000/api/institucion-sanitaria/');
-        const institucionesSanitarias = await sanitariaInstitucionesResponse.json();
+        const institucionesSanitarias = await getTInstitucionSanitarias();
+
         for (const demandaPersona of demandaPersonaData) {
-          const personaResponse = await fetch(`http://localhost:8000/api/persona/${demandaPersona.persona}/`);
-          const personaData = await personaResponse.json();
+          const personaData = await getTPersona(demandaPersona.persona);
         
           const personaFields = {
             id: personaData.id,
@@ -83,12 +108,10 @@ const institucionesSanitarias = [];
         
           // Fetch localization for adults and NNYA
           try {
-            const localizacionPersonaResponse = await fetch(`http://localhost:8000/api/localizacion-persona/?persona=${personaData.id}`);
-            const localizacionPersonaData = await localizacionPersonaResponse.json();
+            const localizacionPersonaData = await getLocalizacionPersonas({ persona: personaData.id });
         
             if (localizacionPersonaData.length > 0) {
-              const localizacionResponse = await fetch(`http://localhost:8000/api/localizacion/${localizacionPersonaData[0].localizacion}/`);
-              personaFields.localizacion = await localizacionResponse.json();
+              personaFields.localizacion = await getLocalizacion(localizacionPersonaData[0].localizacion);
             }
           } catch (error) {
             console.error(`Error fetching localization for persona ${personaData.id}:`, error);
@@ -100,8 +123,7 @@ const institucionesSanitarias = [];
         }
         
         for (const demandaPersona of demandaPersonaData) {
-          const personaResponse = await fetch(`http://localhost:8000/api/persona/${demandaPersona.persona}/`);
-          const personaData = await personaResponse.json();
+          const personaData = await getTPersona(demandaPersona.persona);
 
           const personaFields = {
             id: personaData.id,
@@ -122,26 +144,22 @@ const institucionesSanitarias = [];
   let localizacionDetails = null;
 
   try {
-    const localizacionPersonaResponse = await fetch(`http://localhost:8000/api/localizacion-persona/?persona=${personaData.id}`);
-    const localizacionPersonaData = await localizacionPersonaResponse.json();
+    const localizacionPersonaData = await getLocalizacionPersonas({ persona: personaData.id });
 
     if (localizacionPersonaData.length > 0) {
       localizacionPersona = localizacionPersonaData[0];
       
       // Fetch the localización details
-      const localizacionResponse = await fetch(`http://localhost:8000/api/localizacion/${localizacionPersona.localizacion}/`);
-      localizacionDetails = await localizacionResponse.json();
+      localizacionDetails = await getLocalizacion(localizacionPersona.localizacion);
     }
   } catch (error) {
     console.error(`Error fetching localizacion for persona ${personaData.id}:`, error);
   }
           if (personaData.nnya) {
-            const educacionResponse = await fetch(`http://localhost:8000/api/nnya-educacion/?nnya=${personaData.id}`);
-            const educacionResults = await educacionResponse.json();
+            const educacionResults = await getTNNyAEducacions({ nnya: personaData.id });
             const educacionData = educacionResults.length > 0 ? educacionResults[0] : null;
           
-            const saludResponse = await fetch(`http://localhost:8000/api/nnya-salud/?nnya=${personaData.id}`);
-            const saludResults = await saludResponse.json();
+            const saludResults = await getTNNyASaluds({ nnya: personaData.id });
             const saludData = saludResults.length > 0 ? saludResults[0] : null;
           // Fetch educational and health institutions
 
@@ -157,8 +175,7 @@ const institucionesSanitarias = [];
         }
 
         // Fetch demanda-motivo-intervencion data
-        const demandaMotivoResponse = await fetch('http://localhost:8000/api/demanda-motivo-intervencion/');
-        const demandaMotivoData = await demandaMotivoResponse.json();
+        const demandaMotivoData = await getTDemandaMotivoIntervencions();
 
         const demandaIdNumber = Number(demandaId);
         const currentDemandaMotivo = demandaMotivoData.find(
@@ -167,10 +184,7 @@ const institucionesSanitarias = [];
 
         let currentMotivoIntervencion = null;
         if (currentDemandaMotivo) {
-          const motivoResponse = await fetch(
-            `http://localhost:8000/api/motivo-intervencion/${currentDemandaMotivo.motivo_intervencion}/`
-          );
-          currentMotivoIntervencion = await motivoResponse.json();
+          const currentMotivoIntervencion = await getTMotivoIntervencion(currentDemandaMotivo.motivo_intervencion);
         }
 
         // Fetch localizacion details
@@ -180,43 +194,31 @@ const institucionesSanitarias = [];
         let selectedCpc = null;
 
         if (localizacionId) {
-          const localizacionResponse = await fetch(
-            `http://localhost:8000/api/localizacion/${localizacionId}/`
-          );
-          localizacionData = await localizacionResponse.json();
+          localizacionData = await getLocalizacion(localizacionId);
 
           // Fetch specific barrio, localidad, and cpc
           if (localizacionData.barrio) {
-            const barrioResponse = await fetch(
-              `http://localhost:8000/api/barrio/${localizacionData.barrio}/`
-            );
-            selectedBarrio = await barrioResponse.json();
+            selectedBarrio = await getTBarrio(localizacionData.barrio);
           }
 
           if (localizacionData.localidad) {
-            const localidadResponse = await fetch(
-              `http://localhost:8000/api/localidad/${localizacionData.localidad}/`
-            );
-            selectedLocalidad = await localidadResponse.json();
+            selectedLocalidad = await getTLocalidad(localizacionData.localidad);
           }
 
           if (localizacionData.cpc) {
-            const cpcResponse = await fetch(
-              `http://localhost:8000/api/cpc/${localizacionData.cpc}/`
-            );
-            selectedCpc = await cpcResponse.json();
+            selectedCpc = await getTCPC(localizacionData.cpc);
           }
         }
 
         // Fetch all barrios, localidades, and CPCs
-        const barriosResponse = await fetch('http://localhost:8000/api/barrio/');
-        const barriosData = await barriosResponse.json();
+        const barriosData = await getTBarrios();
+        // const barriosData = barriosResponse;
 
-        const localidadesResponse = await fetch('http://localhost:8000/api/localidad/');
-        const localidadesData = await localidadesResponse.json();
+        const localidadesData = await getTLocalidads();
+        // const localidadesData = await localidadesResponse.json();
 
-        const cpcsResponse = await fetch('http://localhost:8000/api/cpc/');
-        const cpcsData = await cpcsResponse.json();
+        const cpcsData = await getTCPCs();
+        // const cpcsData = await cpcsResponse.json();
 
         // Prepare and set final API data
         setApiData((prevData) => ({
@@ -259,8 +261,7 @@ const institucionesSanitarias = [];
 
   const getMotivoIntervencion = async (id) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/motivo-intervencion/${id}/`);
-      return await response.json();
+      return await getTMotivoIntervencion(id);
     } catch (error) {
       console.error('Error fetching motivo intervencion:', error);
       return null;

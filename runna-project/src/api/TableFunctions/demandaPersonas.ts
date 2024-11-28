@@ -3,7 +3,8 @@ import { TDemandaPersona } from '../interfaces';
 
 const endpoint = 'demanda-persona';
 
-export const getTDemandaPersonas = () => getAll<TDemandaPersona>(endpoint);
+export const getTDemandaPersonas = (filters?: Record<string, any>) =>
+    getAll<TDemandaPersona>(endpoint, filters);
 export const getTDemandaPersona = (id: number) => getOne<TDemandaPersona>(endpoint, id);
 export const createTDemandaPersona = (data: Partial<TDemandaPersona>) => create<TDemandaPersona>(endpoint, data);
 export const updateTDemandaPersona = (id: number, data: Partial<TDemandaPersona>) => update<TDemandaPersona>(endpoint, id, data);

@@ -1,6 +1,10 @@
+
 'use client'
 import axios from 'axios';
-
+import { AsignarDemandaModal } from './AsignarDemandaModal'
+import {
+  Person as PersonIcon,
+} from '@mui/icons-material'
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { 
   Button, 
@@ -24,6 +28,8 @@ import { TDemanda, TDemandaPersona, TPersona, TPrecalificacionDemanda } from '..
 import { getTDemandaPersona } from '../../api/TableFunctions/demandaPersonas'
 import { getTPersona } from '../../api/TableFunctions/personas'
 import { getTPrecalificacionDemanda, createTPrecalificacionDemanda, updateTPrecalificacionDemanda } from '../../api/TableFunctions/precalificacionDemanda'
+import { useAuth } from '../../context/AuthContext';
+
 
 const origenOptions = [
   { value: 'todos', label: 'Todos' },
@@ -48,20 +54,24 @@ export function MainContent() {
   const [showEvaluacionModal, setShowEvaluacionModal] = useState(false)
   const [showDemandaDetalle, setShowDemandaDetalle] = useState(false)
   const [origen, setOrigen] = useState('todos')
+  const { user, loading } = useAuth();
+  const [assignDemandId, setAssignDemandId] = useState<number | null>(null); // State for Assign Demand
+
 
   const fetchAllData = useCallback(async () => {
     try {
       const demandsData = await getDemands()
       console.log('Fetched demands:', demandsData)
       setDemands(demandsData)
+      console.log('User:', user, 'Loading:', loading);
 
       const personaPromises = demandsData.map(async (demand) => {
         try {
           const demandaPersona = await getTDemandaPersona(demand.id!)
-          console.log(`Fetched demandaPersona for demand ${demand.id}:`, demandaPersona)
+          // console.log(`Fetched demandaPersona for demand ${demand.id}:`, demandaPersona)
           if (demandaPersona && demandaPersona.persona) {
             const persona = await getTPersona(demandaPersona.persona)
-            console.log(`Fetched persona for demand ${demand.id}:`, persona)
+            // console.log(`Fetched persona for demand ${demand.id}:`, persona)
             return { id: demand.id!, persona }
           }
         } catch (error) {
@@ -73,7 +83,7 @@ export function MainContent() {
       const precalificacionPromises = demandsData.map(async (demand) => {
         try {
           const precalificacion = await getTPrecalificacionDemanda(demand.id!)
-          console.log(`Fetched precalificacion for demand ${demand.id}:`, precalificacion)
+          // console.log(`Fetched precalificacion for demand ${demand.id}:`, precalificacion)
           return { id: demand.id!, precalificacion }
         } catch (error) {
           console.error(`Error fetching precalificacion for demand ${demand.id}:`, error)
@@ -92,7 +102,7 @@ export function MainContent() {
           newPersonaData[result.id] = result.persona
         }
       })
-      console.log('New persona data:', newPersonaData)
+      // console.log('New persona data:', newPersonaData)
       setPersonaData(newPersonaData)
 
       const newPrecalificacionData: Record<number, TPrecalificacionDemanda> = {}
@@ -101,7 +111,7 @@ export function MainContent() {
           newPrecalificacionData[result.id] = result.precalificacion
         }
       })
-      console.log('New precalificacion data:', newPrecalificacionData)
+      // console.log('New precalificacion data:', newPrecalificacionData)
       setPrecalificacionData(newPrecalificacionData)
     } catch (error) {
       console.error('Error fetching data:', error)
@@ -123,7 +133,7 @@ export function MainContent() {
   }, [precalificacionData])
 
   const enrichedDemands = useMemo(() => {
-    console.log('Enriching demands with persona and precalificacion data:', demands, personaData, precalificacionData)
+    // console.log('Enriching demands with persona and precalificacion data:', demands, personaData, precalificacionData)
     return demands.map(demand => {
       const persona = personaData[demand.id!];
       const precalificacion = precalificacionData[demand.id!];
@@ -133,7 +143,7 @@ export function MainContent() {
         dni: persona?.dni?.toString() || '',
         precalificacion: precalificacion?.estado_demanda || '',
       }
-      console.log(`Enriched demand ${demand.id}:`, enrichedDemand)
+      // console.log(`Enriched demand ${demand.id}:`, enrichedDemand)
       return enrichedDemand
     })
   }, [demands, personaData, precalificacionData])
@@ -159,7 +169,7 @@ export function MainContent() {
       await fetchAllData() // Refresh all data to get updated relationships
       setIsNuevoIngresoModalOpen(false)
     } catch (error) {
-      console.error('Error creating new demand:', error)
+      // console.error('Error creating new demand:', error)
     }
   }, [fetchAllData])
 
@@ -183,7 +193,7 @@ export function MainContent() {
         setShowDemandaDetalle(false)
         setShowPostConstatacion(true)
       } catch (error) {
-        console.error('Error updating demand:', error)
+        // console.error('Error updating demand:', error)
       }
     }
   }, [selectedDemand, fetchAllData])
@@ -195,7 +205,7 @@ export function MainContent() {
         await fetchAllData() // Refresh all data
         setShowPostConstatacion(false)
       } catch (error) {
-        console.error('Error updating demand:', error)
+        // console.error('Error updating demand:', error)
       }
     }
   }, [selectedDemand, fetchAllData])
@@ -216,6 +226,13 @@ const updatePrecalificacionDemanda = async (id: number, payload: Partial<TPrecal
     throw error;
   }
 };
+  const [isAsignarModalOpen, setIsAsignarModalOpen] = useState(false)
+  
+  const handleAsignarSubmit = (data: { collaborator: string; comments: string; demandaId: number | undefined }) => {
+    console.log('Assignment Data:', data);
+    // You can now use data.demandaId along with collaborator and comments
+    setIsAsignarModalOpen(false);
+  }; 
 
 
 const handlePrecalificacionChange = useCallback(
@@ -257,7 +274,10 @@ const handlePrecalificacionChange = useCallback(
   [precalificacionData]
 );
 
-  const columns: GridColDef[] = useMemo(() => [
+  
+
+const columns: GridColDef[] = useMemo(() => {
+  const baseColumns: GridColDef[] = [
     {
       field: 'id',
       headerName: 'ID',
@@ -282,39 +302,72 @@ const handlePrecalificacionChange = useCallback(
       field: 'precalificacion',
       headerName: 'Precalificación',
       width: 180,
-      renderCell: (params: GridRenderCellParams<TDemanda>) => (
-        <FormControl fullWidth size="small">
-          <Select
-            value={params.value || ''}
-            onChange={(e: SelectChangeEvent) => handlePrecalificacionChange(params.row.id!, e.target.value as string)}
-          >
-            {precalificacionOptions.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      ),
+      renderCell: (params: GridRenderCellParams<TDemanda>) => {
+        const isEditable = (user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tprecalificaciondemanda'));
+        return (
+          <FormControl fullWidth size="small">
+            <Select
+              value={params.value || ''}
+              onChange={(e: SelectChangeEvent) => handlePrecalificacionChange(params.row.id!, e.target.value as string)}
+              disabled={!isEditable} // Disable dropdown if permission is missing
+            >
+              {precalificacionOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        );
+      },
     },
     {
       field: 'ultima_actualizacion',
       headerName: 'Última Actualización',
       width: 180,
     },
-  ], [handlePrecalificacionChange])
+  ];
+
+  // Add "Asignar" column only if the user has the permission
+  if (user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tdemandaasignado')) {
+    baseColumns.push({
+      field: 'Asignar',
+      headerName: 'Asignar',
+      width: 180,
+      renderCell: (params: GridRenderCellParams<TDemanda>) => (
+        <Button
+          variant="outlined"
+          startIcon={<PersonIcon />}
+          onClick={(event) => {
+            event.stopPropagation(); // Prevent row click event
+            setAssignDemandId(params.row.id); // Set the demand ID for assignment
+            setIsAsignarModalOpen(true); // Open Assign Demand modal
+          }}
+        >
+          Asignar
+        </Button>
+      ),
+    });
+  }  
+
+  return baseColumns;
+}, [user, handlePrecalificacionChange]);
 
   return (
     <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 3, overflow: 'auto' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Button
-            variant="contained"
-            onClick={handleNuevoRegistro}
-            sx={{ bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' } }}
-          >
-            + Nuevo Registro
-          </Button>
+        {
+            (user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tdemanda')) && (
+              <Button
+                variant="contained"
+                onClick={handleNuevoRegistro}
+                sx={{ bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' } }}
+              >
+                + Nuevo Registro
+              </Button>
+            )
+          }
           <FormControl sx={{ minWidth: 120 }} size="small">
             <InputLabel>Origen</InputLabel>
             <Select
@@ -405,6 +458,16 @@ const handlePrecalificacionChange = useCallback(
           )}
         </Box>
       </Modal>
+
+      <AsignarDemandaModal
+          demandaId={assignDemandId} // Pass the demand ID for assignment
+          isOpen={isAsignarModalOpen}
+          onClose={() => {
+            setIsAsignarModalOpen(false);
+            setAssignDemandId(null); // Reset assignDemandId when modal closes
+          }}
+          onAssign={handleAsignarSubmit}
+        />
 
       <NuevoIngresoModal
         isOpen={isNuevoIngresoModalOpen}

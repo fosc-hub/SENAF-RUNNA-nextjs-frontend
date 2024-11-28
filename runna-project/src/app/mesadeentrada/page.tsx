@@ -1,34 +1,46 @@
-'use client'
+'use client';
 
-import React, { useState } from 'react'
-import Header from '../../components/ui/Header'
-import Sidebar from '../../components/ui/Sidebar'
-import { MainContent } from '../../components/ui/MainContent'
+import React, { useState } from 'react';
+import Header from '../../components/ui/Header';
+import Sidebar from '../../components/ui/Sidebar';
+import { MainContent } from '../../components/ui/MainContent';
+import { AuthProvider, useAuth } from '../../context/AuthContext';
 
-interface User {
-  initials: string
-  name: string
-  role: string
-  legajo: string
+export default function AppWrapper() {
+  return (
+    <AuthProvider>
+      <MesaDeEntradas />
+    </AuthProvider>
+  );
 }
 
-export default function MesaDeEntradas() {
-  const [demands, setDemands] = useState([])
+function MesaDeEntradas() {
+  const [demands, setDemands] = useState([]);
 
-  const user: User = {
-    initials: 'VF',
-    name: 'Verónica Fernandez Wagner',
-    role: 'Admin 27-27255110-9',
-    legajo: '29731'
-  }
+  const { user, loading } = useAuth(); // Now wrapped by AuthProvider
 
   const handleUpdateDemands = (updatedDemands: any) => {
-    setDemands(updatedDemands)
+    setDemands(updatedDemands);
+  };
+
+  if (loading) {
+    return <div>Loading...</div>; // Show a loading spinner or placeholder
+  }
+
+  if (!user) {
+    return <div>Please log in to access this page.</div>; // Handle unauthenticated state
   }
 
   return (
     <div className="flex flex-col h-screen">
-      <Header user={user} />
+      <Header user={
+        {
+          initials: user.initials || user.first_name.charAt(0) + user.last_name.charAt(0),
+          name: user.username,
+          role: user.is_superuser ? 'Administrador del Sistema' : user.groups.length > 0 ? user.groups[0]['name'] : 'Usuario',
+          legajo: user.telefono,
+        }
+      } />
       <div className="bg-white p-4 flex justify-between items-center border-b border-gray-200">
         <h1 className="text-xl font-semibold text-gray-800">
           Bienvenido a <span className="text-sky-500">Mesa de Entradas</span>
@@ -42,5 +54,5 @@ export default function MesaDeEntradas() {
         <MainContent demands={demands} onUpdateDemands={handleUpdateDemands} />
       </div>
     </div>
-  )
+  );
 }

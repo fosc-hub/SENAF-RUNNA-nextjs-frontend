@@ -3,7 +3,8 @@ import { TInstitucionSanitaria } from '../interfaces';
 
 const endpoint = 'institucion-sanitaria';
 
-export const getTInstitucionSanitarias = () => getAll<TInstitucionSanitaria>(endpoint);
+export const getTInstitucionSanitarias = (filters?: Record<string, any>) =>
+    getAll<TInstitucionSanitaria>(endpoint, filters);
 export const getTInstitucionSanitaria = (id: number) => getOne<TInstitucionSanitaria>(endpoint, id);
 export const createTInstitucionSanitaria = (data: Partial<TInstitucionSanitaria>) => create<TInstitucionSanitaria>(endpoint, data);
 export const updateTInstitucionSanitaria = (id: number, data: Partial<TInstitucionSanitaria>) => update<TInstitucionSanitaria>(endpoint, id, data);
