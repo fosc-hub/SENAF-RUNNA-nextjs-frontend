@@ -320,9 +320,7 @@ export const renderStepContent = ({
             <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Datos de Localización</Typography>
           </Grid>
           <Grid item xs={12}>
-            <Typography color="primary" sx={{ mt: 2, mb: 1 }}>
-              Datos de Localización
-            </Typography>
+
           </Grid>
 
           {renderLocalizacionFields(
