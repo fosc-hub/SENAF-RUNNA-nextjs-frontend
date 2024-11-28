@@ -382,6 +382,7 @@ length} vinculaciones`)
           </Box>
         </form>
       </Box>
+
     </Modal>
   )
 }

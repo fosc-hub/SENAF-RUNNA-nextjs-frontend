@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Modal } from './Modal'
 import { Button } from './Button'
 import { Input } from './Input'
@@ -6,199 +6,158 @@ import { Textarea } from './Textarea'
 import { Label } from './Label'
 import { CustomSelect } from './CustomSelect'
 import { Paperclip, X } from 'lucide-react'
-import { createTRespuesta } from '../../api/TableFunctions/respuestas'
-import { getTInstitucionRespuestas } from '../../api/TableFunctions/institucionRespuestas'
-import { TInstitucionRespuesta, TRespuesta } from '../../api/interfaces'
-import {
-  Box,
-  Typography,
-  CircularProgress,
-  Stepper,
-  Step,
-  StepLabel,
-  Paper,
-  IconButton,
-  FormControl,
-  InputLabel,
-  Select,
-  TextField,
-  MenuItem
-} from '@mui/material'
+
 interface EnviarRespuestaModalProps {
   isOpen: boolean
   onClose: () => void
-  demandaId: number
+  onSend: (data: ResponseData) => void
 }
 
-export default function EnviarRespuestaModal({ isOpen, onClose, demandaId }: EnviarRespuestaModalProps) {
-  console.log('EnviarRespuestaModal rendered, isOpen:', isOpen);
-  const [responseData, setResponseData] = useState<TRespuesta>({
-    mail: '',
-    mensaje: '',
-    demanda: demandaId,
-    institucion: 0
+interface ResponseData {
+  institution: string
+  search: string
+  email: string
+  message: string
+  attachments: string[]
+}
+
+const institutionOptions = [
+  { value: 'institucion1', label: 'Institución 1' },
+  { value: 'institucion2', label: 'Institución 2' },
+  { value: 'institucion3', label: 'Institución 3' },
+]
+
+export function EnviarRespuestaModal({ isOpen, onClose, onSend }: EnviarRespuestaModalProps) {
+  const [responseData, setResponseData] = useState<ResponseData>({
+    institution: '',
+    search: '',
+    email: '',
+    message: '',
+    attachments: []
   })
-  const [institutionOptions, setInstitutionOptions] = useState<TInstitucionRespuesta[]>([])
-  const [attachments, setAttachments] = useState<string[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    const fetchInstitutions = async () => {
-      try {
-        const institutions = await getTInstitucionRespuestas()
-        setInstitutionOptions(institutions)
-      } catch (error) {
-        console.error('Error fetching institutions:', error)
-        setError('Failed to load institutions. Please try again.')
-      }
-    }
-
-    fetchInstitutions()
-  }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setResponseData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleInstitutionChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    setResponseData(prev => ({ ...prev, institucion: event.target.value as number }))
+  const handleInstitutionChange = (value: string) => {
+    setResponseData(prev => ({ ...prev, institution: value }))
   }
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (files) {
       const newAttachments = Array.from(files).map(file => file.name)
-      setAttachments(prev => [...prev, ...newAttachments])
+      setResponseData(prev => ({
+        ...prev,
+        attachments: [...prev.attachments, ...newAttachments]
+      }))
     }
   }
 
   const handleRemoveAttachment = (fileName: string) => {
-    setAttachments(prev => prev.filter(name => name !== fileName))
+    setResponseData(prev => ({
+      ...prev,
+      attachments: prev.attachments.filter(name => name !== fileName)
+    }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      await createTRespuesta(responseData)
-      onClose()
-    } catch (error) {
-      console.error('Error creating response:', error)
-      setError('Failed to send response. Please try again.')
-    } finally {
-      setIsLoading(false)
-    }
+    onSend(responseData)
+    onClose()
   }
 
   return (
-    <Modal open={isOpen} onClose={onClose}>
-      <Box sx={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        bgcolor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'flex-start',
-        pt: 5,
-        overflowY: 'auto',
-        zIndex: 1000,
-      }}>
-        <Paper sx={{ width: '100%', maxWidth: '600px', maxHeight: '90vh', overflow: 'auto', p: 3 }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-            <Typography variant="h6">Enviar Respuesta</Typography>
-            <IconButton onClick={onClose} size="small">
-              <X />
-            </IconButton>
-          </Box>
-          <form onSubmit={handleSubmit}>
-            <FormControl fullWidth margin="normal">
-              <InputLabel id="institution-label">Institución</InputLabel>
-              <Select
-                labelId="institution-label"
-                value={responseData.institucion}
-                onChange={handleInstitutionChange}
-                label="Institución"
-              >
-                {institutionOptions.map((inst) => (
-                  <MenuItem key={inst.id} value={inst.id}>{inst.nombre}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <TextField
-              fullWidth
-              margin="normal"
-              label="Mail"
-              name="mail"
-              type="email"
-              value={responseData.mail}
-              onChange={handleInputChange}
-            />
-            <TextField
-              fullWidth
-              margin="normal"
-              label="Mensaje"
-              name="mensaje"
-              multiline
-              rows={4}
-              value={responseData.mensaje}
-              onChange={handleInputChange}
-            />
-            <Box sx={{ mt: 2 }}>
-              <input
-                type="file"
-                id="file-upload"
-                style={{ display: 'none' }}
-                onChange={handleFileUpload}
-                multiple
-              />
-              <label htmlFor="file-upload">
+    <Modal isOpen={isOpen} onClose={onClose} title="Enviar Respuesta">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <CustomSelect
+          label="Institución"
+          options={institutionOptions}
+          value={responseData.institution}
+          onChange={handleInstitutionChange}
+          placeholder="Seleccionar institución"
+        />
+        <div className="space-y-2">
+          <Label htmlFor="search" className="font-bold text-gray-700">Buscar</Label>
+          <Input
+            id="search"
+            name="search"
+            value={responseData.search}
+            onChange={handleInputChange}
+            placeholder="Buscar"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-gray-900 placeholder-gray-500"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="email" className="font-bold text-gray-700">Mail</Label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            value={responseData.email}
+            onChange={handleInputChange}
+            placeholder="Correo electrónico"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-gray-900 placeholder-gray-500"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="message" className="font-bold text-gray-700">Mensaje</Label>
+          <Textarea
+            id="message"
+            name="message"
+            value={responseData.message}
+            onChange={handleInputChange}
+            placeholder="Escriba su mensaje aquí"
+            rows={6}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-gray-900 placeholder-gray-500 resize-none"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label className="font-bold text-gray-700">Archivos adjuntos</Label>
+          <div className="flex flex-wrap gap-2">
+            {responseData.attachments.map((file, index) => (
+              <div key={index} className="flex items-center bg-gray-100 rounded-md p-2">
+                <span className="text-sm text-gray-600">{file}</span>
                 <Button
-                  variant="outlined"
-                  component="span"
-                  startIcon={<Paperclip />}
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="ml-2"
+                  onClick={() => handleRemoveAttachment(file)}
                 >
-                  Adjuntar archivos
+                  <X className="h-4 w-4" />
                 </Button>
-              </label>
-            </Box>
-            <Box sx={{ mt: 2 }}>
-              {attachments.map((file, index) => (
-                <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <Typography variant="body2">{file}</Typography>
-                  <IconButton size="small" onClick={() => handleRemoveAttachment(file)}>
-                    <X />
-                  </IconButton>
-                </Box>
-              ))}
-            </Box>
-            {error && (
-              <Typography color="error" sx={{ mt: 2 }}>
-                {error}
-              </Typography>
-            )}
-            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-              <Button onClick={onClose} sx={{ mr: 2 }}>
-                Cancelar
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="flex justify-between items-center">
+          <div>
+            <input
+              type="file"
+              id="file-upload"
+              className="hidden"
+              onChange={handleFileUpload}
+              multiple
+            />
+            <label htmlFor="file-upload">
+              <Button type="button" variant="outline" size="icon" className="rounded-full">
+                <Paperclip className="h-4 w-4" />
               </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                disabled={isLoading}
-              >
-                {isLoading ? <CircularProgress size={24} /> : 'Enviar Respuesta'}
-              </Button>
-            </Box>
-          </form>
-        </Paper>
-      </Box>
+            </label>
+          </div>
+          <div className="space-x-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700">
+              Enviar Respuesta
+            </Button>
+          </div>
+        </div>
+      </form>
     </Modal>
   )
 }
