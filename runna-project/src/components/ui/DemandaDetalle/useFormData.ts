@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const initialFormData = (demanda) => ({
   fecha_y_hora_ingreso: demanda?.fecha_y_hora_ingreso ? new Date(demanda.fecha_y_hora_ingreso) : new Date(),
@@ -47,23 +47,59 @@ const initialFormData = (demanda) => ({
   asociadoRegistro: demanda?.asociadoRegistro || false,
 })
 
-export const useFormData = (demanda) => {
-  const [formData, setFormData] = useState(initialFormData(demanda))
+
+export const useFormData = (demanda, apiData) => {
+  const [formData, setFormData] = useState(initialFormData(demanda));
+
+  useEffect(() => {
+    if (apiData?.nnyaList && apiData.nnyaList.length > 0) {
+      setFormData((prevData) => ({
+        ...prevData,
+        ninosAdolescentes: apiData.nnyaList.map((nnya) => ({
+          id: nnya.id,
+          nombre: nnya.nombre || '',
+          apellido: nnya.apellido || '',
+          fechaNacimiento: nnya.fechaNacimiento || null,
+          genero: nnya.genero || '',
+          localizacion: nnya.localizacion || {}, // Safeguard for null values
+          educacion: nnya.educacion || {},       // Ensure structure is consistent
+          salud: nnya.salud || {},               // Include health data
+          observaciones: nnya.observaciones || '',
+          demandaPersonaId: nnya.demandaPersonaId,
+        })),
+      }));
+    }
+  }, [apiData?.nnyaList]);
 
   const handleInputChange = (field, value) => {
-    setFormData(prevData => {
-      const updatedData = JSON.parse(JSON.stringify(prevData)); // Deep copy to avoid mutation
+    setFormData((prevData) => {
+      const updatedData = { ...prevData };
       const fieldParts = field.split('.');
       let current = updatedData;
+
       for (let i = 0; i < fieldParts.length - 1; i++) {
         current = current[fieldParts[i]];
       }
+
       current[fieldParts[fieldParts.length - 1]] = value;
       return updatedData;
     });
   };
-  
 
-  return { formData, handleInputChange }
-}
+  const addNinoAdolescente = () => {
+    setFormData((prevData) => ({
+      ...prevData,
+      ninosAdolescentes: [...prevData.ninosAdolescentes, initialFormData(null).ninosAdolescentes[0]],
+    }));
+  };
+
+  const addAdultoConviviente = () => {
+    setFormData((prevData) => ({
+      ...prevData,
+      adultosConvivientes: [...prevData.adultosConvivientes, initialFormData(null).adultosConvivientes[0]],
+    }));
+  };
+
+  return { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente };
+};
 

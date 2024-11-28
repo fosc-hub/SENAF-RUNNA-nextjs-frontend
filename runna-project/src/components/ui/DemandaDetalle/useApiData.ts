@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { getTMotivoIntervencions } from '../../../api/TableFunctions/motivoIntervencion';
 
 export const useApiData = (demandaId, localizacionId, usuarioExternoId) => {
+  
+
   const [apiData, setApiData] = useState({
     motivosIntervencion: [],
     demandaMotivoIntervencion: null,
@@ -16,57 +18,121 @@ export const useApiData = (demandaId, localizacionId, usuarioExternoId) => {
     usuarioExterno: null,
     vinculosUsuarioExterno: [],
     institucionesUsuarioExterno: [],
+    nnyaList: [], // List for NNYA personas
+    adultsList: [],// Optional: List for adult personas
+    institucionesEducativas : [],
+    institucionesSanitarias : [], 
   });
 
   useEffect(() => {
     if (!demandaId && !localizacionId) return;
-  
+
     const fetchData = async () => {
+      const institucionesEducativas = [];
+const institucionesSanitarias = [];
+
       try {
+
         const fetchedMotivos = await getTMotivoIntervencions();
+
         let usuarioExternoData = null;
         if (usuarioExternoId) {
           const usuarioExternoResponse = await fetch(`http://localhost:8000/api/usuario-externo/${usuarioExternoId}/`);
           usuarioExternoData = await usuarioExternoResponse.json();
         }
-                // Fetch vinculos usuario externo
-                const vinculosResponse = await fetch('http://localhost:8000/api/vinculo-usuario-externo/');
-                const vinculosData = await vinculosResponse.json();
+
+        // Fetch vinculos usuario externo
+        const vinculosResponse = await fetch('http://localhost:8000/api/vinculo-usuario-externo/');
+        const vinculosData = await vinculosResponse.json();
+
+        // Fetch instituciones usuario externo
+        const institucionesResponse = await fetch('http://localhost:8000/api/institucion-usuario-externo/');
+        const institucionesData = await institucionesResponse.json();
+
+        // Fetch demanda-persona data
+        const demandaPersonaResponse = await fetch(`http://localhost:8000/api/demanda-persona/?demanda=${demandaId}`);
+        const demandaPersonaData = await demandaPersonaResponse.json();
+
+        const nnyaList = [];
+        const adultsList = []; // Separate list for adults
+        const educacionInstitucionesResponse = await fetch('http://localhost:8000/api/institucion-educativa/');
+        const institucionesEducativas = await educacionInstitucionesResponse.json();
         
-                // Fetch instituciones usuario externo
-                const institucionesResponse = await fetch('http://localhost:8000/api/institucion-usuario-externo/');
-                const institucionesData = await institucionesResponse.json();
+        const sanitariaInstitucionesResponse = await fetch('http://localhost:8000/api/institucion-sanitaria/');
+        const institucionesSanitarias = await sanitariaInstitucionesResponse.json();
+        for (const demandaPersona of demandaPersonaData) {
+          const personaResponse = await fetch(`http://localhost:8000/api/persona/${demandaPersona.persona}/`);
+          const personaData = await personaResponse.json();
+
+          const personaFields = {
+            id: personaData.id,
+            nombre: personaData.nombre || '',
+            apellido: personaData.apellido || '',
+            fechaNacimiento: personaData.fecha_nacimiento || null,
+            edadAproximada: personaData.edad_aproximada || null, // Fetch Edad Aproximada
+            dni: personaData.dni || '', // Fetch DNI
+            situacionDni: personaData.situacion_dni || '', // Fetch Situación DNI
+            genero: personaData.genero || '', // Fetch Género
+            botonAntipanico: personaData.boton_anti_panico || false, // Fetch Botón Antipánico
+            observaciones: personaData.observaciones || '', // Fetch Observaciones
+            localizacion: personaData.localizacion || {},
+            demandaPersonaId: demandaPersona.id,
+          };
+          
+          if (personaData.nnya) {
+            const educacionResponse = await fetch(`http://localhost:8000/api/nnya-educacion/?nnya=${personaData.id}`);
+            const educacionResults = await educacionResponse.json();
+            const educacionData = educacionResults.length > 0 ? educacionResults[0] : null;
+          
+            const saludResponse = await fetch(`http://localhost:8000/api/nnya-salud/?nnya=${personaData.id}`);
+            const saludResults = await saludResponse.json();
+            const saludData = saludResults.length > 0 ? saludResults[0] : null;
+          // Fetch educational and health institutions
 
 
-        
+            nnyaList.push({
+              ...personaFields,
+              educacion: educacionData,
+              salud: saludData,
+            });
+          }
+          
+           else {
+            // Add to adults list
+            adultsList.push(personaFields);
+
+          }
+        }
+
+        // Fetch demanda-motivo-intervencion data
         const demandaMotivoResponse = await fetch('http://localhost:8000/api/demanda-motivo-intervencion/');
         const demandaMotivoData = await demandaMotivoResponse.json();
-    
+
         const demandaIdNumber = Number(demandaId);
         const currentDemandaMotivo = demandaMotivoData.find(
           (dm) => dm.demanda === demandaIdNumber
         );
+
         let currentMotivoIntervencion = null;
-    
         if (currentDemandaMotivo) {
           const motivoResponse = await fetch(
             `http://localhost:8000/api/motivo-intervencion/${currentDemandaMotivo.motivo_intervencion}/`
           );
           currentMotivoIntervencion = await motivoResponse.json();
         }
-    
-        // Fetch localizacion
+
+        // Fetch localizacion details
         let localizacionData = null;
         let selectedBarrio = null;
         let selectedLocalidad = null;
         let selectedCpc = null;
-    
+
         if (localizacionId) {
           const localizacionResponse = await fetch(
             `http://localhost:8000/api/localizacion/${localizacionId}/`
           );
           localizacionData = await localizacionResponse.json();
-    
+
           // Fetch specific barrio, localidad, and cpc
           if (localizacionData.barrio) {
             const barrioResponse = await fetch(
@@ -74,14 +140,14 @@ export const useApiData = (demandaId, localizacionId, usuarioExternoId) => {
             );
             selectedBarrio = await barrioResponse.json();
           }
-    
+
           if (localizacionData.localidad) {
             const localidadResponse = await fetch(
               `http://localhost:8000/api/localidad/${localizacionData.localidad}/`
             );
             selectedLocalidad = await localidadResponse.json();
           }
-    
+
           if (localizacionData.cpc) {
             const cpcResponse = await fetch(
               `http://localhost:8000/api/cpc/${localizacionData.cpc}/`
@@ -89,19 +155,20 @@ export const useApiData = (demandaId, localizacionId, usuarioExternoId) => {
             selectedCpc = await cpcResponse.json();
           }
         }
-    
+
         // Fetch all barrios, localidades, and CPCs
         const barriosResponse = await fetch('http://localhost:8000/api/barrio/');
         const barriosData = await barriosResponse.json();
-    
+
         const localidadesResponse = await fetch('http://localhost:8000/api/localidad/');
         const localidadesData = await localidadesResponse.json();
-    
+
         const cpcsResponse = await fetch('http://localhost:8000/api/cpc/');
         const cpcsData = await cpcsResponse.json();
-    
-        // Prepare new data object
-        const newData = {
+
+        // Prepare and set final API data
+        setApiData((prevData) => ({
+          ...prevData,
           motivosIntervencion: fetchedMotivos,
           demandaMotivoIntervencion: demandaMotivoData,
           currentMotivoIntervencion,
@@ -124,36 +191,19 @@ export const useApiData = (demandaId, localizacionId, usuarioExternoId) => {
           barrios: barriosData,
           localidades: localidadesData,
           cpcs: cpcsData,
-        };
-        
-    
-        // Update state with optimized comparison
-        setApiData((prevData) => {
-          const isDataChanged = JSON.stringify(prevData.localizacion) !== JSON.stringify(newData.localizacion) ||
-                                JSON.stringify(prevData) !== JSON.stringify(newData);
-        
-          if (isDataChanged) {
-            return {
-              ...prevData,
-              ...newData,
-              localizacion: {
-                ...prevData.localizacion, // Keep previous data
-                ...newData.localizacion, // Overwrite with new data
-              },
-            };
-          }
-          return prevData; // Return previous state if nothing has changed
-        });
+          nnyaList,
+          adultsList,
+          institucionesEducativas, // Include fetched institutions
+          institucionesSanitarias, // Include fetched institutions
+        }));
         
       } catch (error) {
         console.error('Error fetching data:', error);
       }
     };
-    
-  
+
     fetchData();
   }, [demandaId, localizacionId, usuarioExternoId]);
-  
 
   const getMotivoIntervencion = async (id) => {
     try {

@@ -30,8 +30,8 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
   const [isEnviarRespuestaOpen, setIsEnviarRespuestaOpen] = useState(false)
   const [usuariosExternos, setUsuariosExternos] = useState([])
 
-  const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneracion, addVinculacion, removeVinculacion } = useFormData(demanda)
   const apiData = useApiData(demanda?.id, demanda?.localizacion, demanda?.usuarioExterno);
+  const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente } = useFormData(demanda, apiData);
 
   useEffect(() => {
     console.log('Localización ID:', demanda?.localizacion);
@@ -232,7 +232,10 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
                 {apiData.barrios && apiData.localidades && apiData.cpcs ? (
                   renderStepContent({
                     activeStep,
-                    formData,
+                    formData: {
+                      ...formData,
+                      ninosAdolescentes: apiData.nnyaList, // Map NNYA data here
+                    },
                     handleInputChange,
                     motivosIntervencion: apiData.motivosIntervencion,
                     currentMotivoIntervencion: apiData.currentMotivoIntervencion,
@@ -247,6 +250,8 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
                     usuariosExternos,
                     demanda,
                     getMotivoIntervencion: apiData.getMotivoIntervencion,
+                    institucionesEducativas: apiData.institucionesEducativas, // Pass institutions here
+                    institucionesSanitarias: apiData.institucionesSanitarias,
                   })
                 ) : (
                   <Typography>Loading data...</Typography>
