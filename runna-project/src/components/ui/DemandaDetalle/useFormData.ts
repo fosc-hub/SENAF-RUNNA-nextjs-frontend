@@ -50,7 +50,22 @@ const initialFormData = (demanda) => ({
 
 export const useFormData = (demanda, apiData) => {
   const [formData, setFormData] = useState(initialFormData(demanda));
-
+  const initialAdult = () => ({
+    id: null,
+    nombre: '',
+    apellido: '',
+    fechaNacimiento: null,
+    genero: 'MASCULINO',
+    edadAproximada: null,
+    dni: '',
+    situacionDni: '',
+    botonAntipanico: false,
+    supuesto_autordv: false,
+    conviviente: false,
+    observaciones: '',
+    useDefaultLocalizacion: true,
+    localizacion: {}, // Initialize with an empty localization object
+  });
   useEffect(() => {
     if (apiData?.nnyaList && apiData.nnyaList.length > 0) {
       setFormData((prevData) => ({
@@ -70,7 +85,18 @@ export const useFormData = (demanda, apiData) => {
       }));
     }
   }, [apiData?.nnyaList]);
-
+  useEffect(() => {
+    if (apiData?.adultsList) {
+      setFormData((prevData) => ({
+        ...prevData,
+        adultosConvivientes: apiData.adultsList.map((adult) => ({
+          ...adult,
+          localizacion: adult.localizacion || {}, // Ensure structure
+        })),
+      }));
+    }
+  }, [apiData.adultsList]);
+  
   const handleInputChange = (field, value) => {
     setFormData((prevData) => {
       const updatedData = { ...prevData };
@@ -89,14 +115,28 @@ export const useFormData = (demanda, apiData) => {
   const addNinoAdolescente = () => {
     setFormData((prevData) => ({
       ...prevData,
-      ninosAdolescentes: [...prevData.ninosAdolescentes, initialFormData(null).ninosAdolescentes[0]],
+      ninosAdolescentes: [
+        ...prevData.ninosAdolescentes,
+        {
+          id: null,
+          nombre: '',
+          apellido: '',
+          fechaNacimiento: null,
+          genero: '',
+          localizacion: {},
+          educacion: {},
+          salud: {},
+          observaciones: '',
+          demandaPersonaId: null,
+        },
+      ],
     }));
   };
 
   const addAdultoConviviente = () => {
     setFormData((prevData) => ({
       ...prevData,
-      adultosConvivientes: [...prevData.adultosConvivientes, initialFormData(null).adultosConvivientes[0]],
+      adultosConvivientes: [...prevData.adultosConvivientes, initialAdult()],
     }));
   };
 

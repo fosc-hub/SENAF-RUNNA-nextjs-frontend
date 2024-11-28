@@ -63,6 +63,45 @@ const institucionesSanitarias = [];
         for (const demandaPersona of demandaPersonaData) {
           const personaResponse = await fetch(`http://localhost:8000/api/persona/${demandaPersona.persona}/`);
           const personaData = await personaResponse.json();
+        
+          const personaFields = {
+            id: personaData.id,
+            nombre: personaData.nombre || '',
+            apellido: personaData.apellido || '',
+            fechaNacimiento: personaData.fecha_nacimiento || null,
+            edadAproximada: personaData.edad_aproximada || null,
+            dni: personaData.dni || '',
+            situacionDni: personaData.situacion_dni || '',
+            genero: personaData.genero || '',
+            botonAntipanico: personaData.boton_anti_panico || false,
+            observaciones: personaData.observaciones || '',
+            conviviente: personaData.conviviente || false,
+            supuesto_autordv: personaData.supuesto_autordv || false, // Specific to adults
+            localizacion: {}, // Placeholder for localization
+            demandaPersonaId: demandaPersona.id,
+          };
+        
+          // Fetch localization for adults and NNYA
+          try {
+            const localizacionPersonaResponse = await fetch(`http://localhost:8000/api/localizacion-persona/?persona=${personaData.id}`);
+            const localizacionPersonaData = await localizacionPersonaResponse.json();
+        
+            if (localizacionPersonaData.length > 0) {
+              const localizacionResponse = await fetch(`http://localhost:8000/api/localizacion/${localizacionPersonaData[0].localizacion}/`);
+              personaFields.localizacion = await localizacionResponse.json();
+            }
+          } catch (error) {
+            console.error(`Error fetching localization for persona ${personaData.id}:`, error);
+          }
+        
+          if (personaData.adulto) {
+            adultsList.push(personaFields);
+          }
+        }
+        
+        for (const demandaPersona of demandaPersonaData) {
+          const personaResponse = await fetch(`http://localhost:8000/api/persona/${demandaPersona.persona}/`);
+          const personaData = await personaResponse.json();
 
           const personaFields = {
             id: personaData.id,
@@ -114,12 +153,6 @@ const institucionesSanitarias = [];
               localizacion: localizacionDetails || {}, // Include localización details
 
             });
-          }
-          
-           else {
-            // Add to adults list
-            adultsList.push(personaFields);
-
           }
         }
 

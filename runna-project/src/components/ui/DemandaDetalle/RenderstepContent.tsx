@@ -762,16 +762,16 @@ export const renderStepContent = ({
         )
       case 2:
         return (
-          <Box>
-            <Typography color="primary" sx={{ mb: 2 }}>Adultos convivientes</Typography>
-            {formData.adultosConvivientes.map((adulto, index) => (
+<Box>
+  <Typography color="primary" sx={{ mb: 2 }}>Adultos convivientes</Typography>
+  {formData.adultosConvivientes.map((adulto, index) => (
     <Box key={index} sx={{ mb: 3 }}>
       <Grid container spacing={2}>
         <Grid item xs={6}>
           <TextField
             fullWidth
             label="Nombre"
-            value={adulto.nombre}
+            value={adulto.nombre || ''}
             onChange={(e) => handleInputChange(`adultosConvivientes[${index}].nombre`, e.target.value)}
           />
         </Grid>
@@ -779,12 +779,11 @@ export const renderStepContent = ({
           <TextField
             fullWidth
             label="Apellido"
-            value={adulto.apellido}
+            value={adulto.apellido || ''}
             onChange={(e) => handleInputChange(`adultosConvivientes[${index}].apellido`, e.target.value)}
           />
         </Grid>
       </Grid>
-  
       <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
         <DatePicker
           label="Fecha de Nacimiento"
@@ -793,29 +792,26 @@ export const renderStepContent = ({
             handleInputChange(`adultosConvivientes[${index}].fechaNacimiento`, newValue ? formatDate(newValue) : null)
           }
           renderInput={(params) => <TextField {...params} fullWidth />}
-          inputFormat="yyyy-MM-dd"
         />
       </LocalizationProvider>
-  
       <TextField
         fullWidth
         label="Edad Aproximada"
         type="number"
-        value={adulto.edadAproximada}
+        value={adulto.edadAproximada || ''}
         onChange={(e) => handleInputChange(`adultosConvivientes[${index}].edadAproximada`, e.target.value)}
       />
       <TextField
         fullWidth
         label="DNI"
         type="number"
-        value={adulto.dni}
+        value={adulto.dni || ''}
         onChange={(e) => handleInputChange(`adultosConvivientes[${index}].dni`, e.target.value)}
       />
-  
       <FormControl fullWidth>
         <InputLabel>Situación DNI</InputLabel>
         <Select
-          value={adulto.situacionDni}
+          value={adulto.situacionDni || ''}
           onChange={(e) => handleInputChange(`adultosConvivientes[${index}].situacionDni`, e.target.value)}
           label="Situación DNI"
         >
@@ -824,96 +820,89 @@ export const renderStepContent = ({
           <MenuItem value="NO_TIENE">No Tiene</MenuItem>
         </Select>
       </FormControl>
-  
       <FormControl fullWidth>
         <InputLabel>Género</InputLabel>
         <Select
-          value={adulto.genero}
+          value={adulto.genero || ''}
           onChange={(e) => handleInputChange(`adultosConvivientes[${index}].genero`, e.target.value)}
           label="Género"
         >
           <MenuItem value="MASCULINO">Masculino</MenuItem>
           <MenuItem value="FEMENINO">Femenino</MenuItem>
-          <MenuItem value="NO_BINARIO">No Binario</MenuItem>
+          <MenuItem value="OTRO">Otro</MenuItem>
         </Select>
       </FormControl>
-  
       <FormControlLabel
         control={
           <Checkbox
-            checked={adulto.supuesto_autordv}
+            checked={adulto.supuesto_autordv || false}
             onChange={(e) => handleInputChange(`adultosConvivientes[${index}].supuesto_autordv`, e.target.checked)}
           />
         }
         label="Supuesto autor DV"
       />
-  
       <FormControlLabel
         control={
           <Checkbox
-            checked={adulto.conviviente}
+            checked={adulto.conviviente || false}
             onChange={(e) => handleInputChange(`adultosConvivientes[${index}].conviviente`, e.target.checked)}
           />
         }
         label="Conviviente"
       />
-  
       <FormControlLabel
         control={
           <Switch
-            checked={adulto.botonAntipanico}
+            checked={adulto.botonAntipanico || false}
             onChange={(e) => handleInputChange(`adultosConvivientes[${index}].botonAntipanico`, e.target.checked)}
           />
         }
         label="Botón Antipánico"
       />
-  
       <TextField
         fullWidth
         label="Observaciones"
         multiline
         rows={4}
-        value={adulto.observaciones}
+        value={adulto.observaciones || ''}
         onChange={(e) => handleInputChange(`adultosConvivientes[${index}].observaciones`, e.target.value)}
       />
-  
       <FormControlLabel
         control={
           <Switch
-            checked={adulto.useDefaultLocalizacion}
+            checked={adulto.useDefaultLocalizacion || false}
             onChange={(e) => handleInputChange(`adultosConvivientes[${index}].useDefaultLocalizacion`, e.target.checked)}
           />
         }
         label="Usar localización de la demanda"
       />
-  
       {!adulto.useDefaultLocalizacion && (
         <Grid container spacing={2} sx={{ mt: 2 }}>
-          <Grid item xs={12}>
-            <Typography variant="subtitle1">Localización específica</Typography>
-          </Grid>
-          {renderLocalizacionFields(
-            `adultosConvivientes[${index}].localizacion`,
-            adulto.localizacion,
-            handleInputChange,
-            barrios,
-            localidades,
-            cpcs
-          )}
+          {!adulto.useDefaultLocalizacion && (
+  <Grid container spacing={2} sx={{ mt: 2 }}>
+    <Grid item xs={12}>
+      <Typography variant="subtitle1">Localización específica</Typography>
+    </Grid>
+    {renderLocalizacionFields(
+      `adultosConvivientes[${index}].localizacion`,
+      adulto.localizacion || {}, // Ensure safe access
+      handleInputChange,
+      barrios,
+      localidades,
+      cpcs
+    )}
+  </Grid>
+)}
+
         </Grid>
       )}
     </Box>
   ))}
-  
-            
-            <Button
-              startIcon={<AddIcon />}
-              onClick={addAdultoConviviente}
-              sx={{ color: 'primary.main' }}
-            >
-              Añadir otro adulto conviviente
-            </Button>
-          </Box>
+  <Button startIcon={<AddIcon />} onClick={addAdultoConviviente} sx={{ color: 'primary.main' }}>
+    Añadir otro adulto conviviente
+  </Button>
+</Box>
+
         )
     default:
       return null
