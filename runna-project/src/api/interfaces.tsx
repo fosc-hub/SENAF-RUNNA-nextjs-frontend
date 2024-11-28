@@ -270,9 +270,11 @@ export interface TDemanda {
     institucion?: TInstitucionRespuesta | number; // Relación opcional con TInstitucionRespuesta
     }
   export interface TDemandaAsignado {
+    esta_activo?: boolean; // Opcional
+    recibido?: boolean; // Opcional
     comentarios?: string; // Opcional
     demanda: TDemanda | number; // Relación con TDemanda
-    user: TUsuarioLinea | number; // Relación con TUsuarioLinea
+    user: TUser | number; // Relación con TUsuarioLinea
   }
 
 export interface TActividad {
