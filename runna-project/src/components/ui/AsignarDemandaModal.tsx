@@ -5,6 +5,7 @@ import { Textarea } from './Textarea';
 import { Label } from './Label';
 import { Paperclip } from 'lucide-react';
 import { getUsers } from '../../api/TableFunctions/users';
+import { createTDemandaAsignado } from '../../api/TableFunctions/DemandaAsignados';
 import { TUser } from '../../api/interfaces';
 
 interface AsignarDemandaModalProps {
@@ -26,6 +27,7 @@ export function AsignarDemandaModal({ demandaId, isOpen, onClose, onAssign }: As
   });
   const [users, setUsers] = useState<TUser[]>([]); // State to store users
   const [loading, setLoading] = useState(false); // State for loading indicator
+  const [error, setError] = useState<string | null>(null); // State for error handling
 
   // Fetch users when the modal opens
   useEffect(() => {
@@ -35,8 +37,10 @@ export function AsignarDemandaModal({ demandaId, isOpen, onClose, onAssign }: As
         try {
           const userList = await getUsers();
           setUsers(userList); // Set the user list
+          setAssignmentData((prev) => ({ ...prev, collaborator: userList[0].id })); // Set the default collaborator
         } catch (error) {
-          console.error('Error fetching users:', error);
+          // console.error('Error fetching users:', error);
+          setError('Error fetching collaborators. Please try again later.');
         } finally {
           setLoading(false);
         }
@@ -47,19 +51,39 @@ export function AsignarDemandaModal({ demandaId, isOpen, onClose, onAssign }: As
 
   const handleInputChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setAssignmentData((prev) => ({ ...prev, [name]: value }));
+    setAssignmentData((prev) => ({ ...prev, [name]: name === 'collaborator' ? Number(value) : value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onAssign({ ...assignmentData, demandaId }); // Include demandaId in the assignment data
-    console.log('demandaId:', demandaId);
-    onClose();
+
+    try {
+      const newTDemandaAsignado = {
+        demanda: demandaId,
+        user: assignmentData.collaborator,
+        comentarios: assignmentData.comments
+      };
+      console.log('Creating TDemandaAsignado:', newTDemandaAsignado);
+
+      // Call the method to create the TDemandaAsignado object
+      const response = await createTDemandaAsignado(newTDemandaAsignado);
+      console.log('TDemandaAsignado created:', response);
+
+      // Trigger the onAssign callback with the assignment data
+      onAssign(assignmentData);
+
+      // Close the modal
+      onClose();
+    } catch (err) {
+      // console.error('Error creating TDemandaAsignado:', err);
+      setError('Failed to assign demand. Please try again.');
+    }
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Asignar Demanda">
       <form onSubmit={handleSubmit} className="space-y-4">
+        {error && <p className="text-red-500">{error}</p>} {/* Show error message */}
         <div className="space-y-2">
           <Label htmlFor="collaborator" className="font-bold text-gray-700">
             Asignar a un colaborador
@@ -79,7 +103,7 @@ export function AsignarDemandaModal({ demandaId, isOpen, onClose, onAssign }: As
               </option>
               {users.map((user) => (
                 <option key={user.id} value={user.id}>
-                  {user.id} {user.username}
+                  {user.id} - {user.username}
                 </option>
               ))}
             </select>
