@@ -27,6 +27,7 @@ import { ArchivosAdjuntosModal } from '../ArchivosAdjuntosModal'
 import { AsignarDemandaModal } from '../AsignarDemandaModal'
 import { RegistrarActividadModal } from '../RegistrarActividadModal'
 import { EnviarRespuestaModal } from '../EnviarRespuestaModal'
+import { createTRespuesta } from '../../../api/TableFunctions/respuestas'
 
 // Assume these are imported from their respective files
 import { useFormData } from './useFormData'
@@ -89,10 +90,26 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
     setIsRegistrarModalOpen(false)
   }
 
-  const handleEnviarRespuestaSubmit = (data: { institution: string; search: string; email: string; message: string; attachments: string[] }) => {
-    console.log('Enviar respuesta:', data)
-    setIsEnviarRespuestaOpen(false)
-  }
+  const handleEnviarRespuestaSubmit = (data: {
+    institucion: number;
+    mail: string;
+    mensaje: string;
+    demanda: number;
+    fecha_y_hora: Date | null
+  }) => {
+    const dataToSend = {
+      mail: data.mail,
+      mensaje: data.mensaje,
+      // fecha_y_hora: data.fecha_y_hora,
+      demanda: data.demanda,
+      institucion: data.institucion,
+    };
+    console.log('Enviar:', dataToSend);
+    createTRespuesta(dataToSend);
+
+    setIsEnviarRespuestaOpen(false);
+  };
+
   const apiData = useApiData(demanda?.id, demanda?.localizacion, demanda?.usuarioExterno);
   const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext,
   } = useFormData(demanda, apiData);
@@ -398,6 +415,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
           isOpen={isEnviarRespuestaOpen}
           onClose={() => setIsEnviarRespuestaOpen(false)}
           onSend={handleEnviarRespuestaSubmit}
+          idDemanda={demanda.id}
         />
     </>
   )
