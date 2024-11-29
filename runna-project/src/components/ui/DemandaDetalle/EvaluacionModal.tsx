@@ -114,19 +114,7 @@ export default function EvaluacionModal({ demanda }: EvaluacionModalProps) {
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography 
-            variant="caption" 
-            sx={{ 
-              color: 'error.main',
-              bgcolor: 'error.light',
-              px: 1,
-              py: 0.5,
-              borderRadius: 1,
-              fontWeight: 600
-            }}
-          >
-            URGENTE
-          </Typography>
+
           <Typography variant="body1" color="text.primary">{demanda.nombre}</Typography>
           <Typography variant="body2" color="text.primary">
             DNI {demanda.dni}
@@ -268,52 +256,11 @@ export default function EvaluacionModal({ demanda }: EvaluacionModalProps) {
           </Box>
         </SectionBox>
 
-        <SectionBox title="Comentarios">
-          <TextField
-            fullWidth
-            multiline
-            rows={3}
-            placeholder="Motivos"
-            name="comentarios"
-            value={formData.comentarios}
-            onChange={handleInputChange}
-            variant="outlined"
-            size="small"
-            sx={{ 
-              '& .MuiInputBase-input': {
-                color: 'text.primary'
-              }
-            }}
-          />
-        </SectionBox>
+
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-          <Button
-            variant="outlined"
-            sx={{ 
-              bgcolor: 'grey.800',
-              color: 'white',
-              borderColor: 'grey.800',
-              '&:hover': {
-                bgcolor: 'grey.900',
-                borderColor: 'grey.900'
-              }
-            }}
-          >
-            Rechazar caso
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            sx={{ 
-              bgcolor: 'primary.main',
-              '&:hover': {
-                bgcolor: 'primary.dark'
-              }
-            }}
-          >
-            Apertura de Legajo
-          </Button>
+
+
         </Box>
       </form>
     </Box>

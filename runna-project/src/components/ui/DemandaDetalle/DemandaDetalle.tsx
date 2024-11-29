@@ -10,6 +10,7 @@ import {
   StepLabel,
   Paper,
   IconButton,
+  TextField
 } from '@mui/material'
 import {
   Close as CloseIcon,
@@ -24,7 +25,6 @@ import { LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3'
 import { es } from 'date-fns/locale'
 import { ArchivosAdjuntosModal } from '../ArchivosAdjuntosModal'
-import { AsignarDemandaModal } from '../AsignarDemandaModal'
 import { RegistrarActividadModal } from '../RegistrarActividadModal'
 import { EnviarRespuestaModal } from '../EnviarRespuestaModal'
 import { DecisionModal } from "./decisonModal"
@@ -39,7 +39,8 @@ interface CollapsibleSectionProps {
   children: React.ReactNode
   isOpen: boolean
   onToggle: () => void
-}
+}  
+
 
 function CollapsibleSection({ title, children, isOpen, onToggle }: CollapsibleSectionProps) {
   return (
@@ -67,27 +68,38 @@ function CollapsibleSection({ title, children, isOpen, onToggle }: CollapsibleSe
 const steps = ['Ingreso', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Vinculos', 'Condiciones de Vulnerabilidad']
 
 export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
+  const [demandState, setDemandState] = useState('constatacion');
   const [activeStep, setActiveStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isArchivosModalOpen, setIsArchivosModalOpen] = useState(false)
-  const [isAsignarModalOpen, setIsAsignarModalOpen] = useState(false)
   const [isRegistrarModalOpen, setIsRegistrarModalOpen] = useState(false)
   const [isEnviarRespuestaOpen, setIsEnviarRespuestaOpen] = useState(false)
   const [usuariosExternos, setUsuariosExternos] = useState([])
   const [isStepContentOpen, setIsStepContentOpen] = useState(true)
   const [isEvaluacionSectionOpen, setIsEvaluacionSectionOpen] = useState(false);
   const [isDecisionModalOpen, setIsDecisionModalOpen] = useState(false)
-
+  useEffect(() => {
+    if (demanda) {
+      if (demanda.constatacion) setDemandState('constatacion');
+      else if (demanda.evaluacion) setDemandState('evaluacion');
+      else if (demanda.decision) setDemandState('decision');
+    }
+  }, [demanda]);
+  const [sections, setSections] = useState({
+    datosRequeridos: true,
+    conexiones: false,
+    derivar: false,
+  });
   
+  const toggleSection = (section: 'datosRequeridos' | 'conexiones' | 'derivar') => {
+    setSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
   const handleArchivosSubmit = (data: { files: string[], comments: string }) => {
     console.log('Archivos adjuntos:', data)
     setIsArchivosModalOpen(false)
   }
 
-  const handleAsignarSubmit = (data: { collaborator: string, comments: string }) => {
-    console.log('Asignar demanda:', data)
-    setIsAsignarModalOpen(false)
-  }
+
 
   const handleRegistrarSubmit = (data: any) => {
     console.log('Registrar actividad:', data)
@@ -178,7 +190,59 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
   };
 
   const handleBack = () => setActiveStep((prevStep) => Math.max(prevStep - 1, 0))
+  const handleEnviarAEvaluacion = async () => {
+    try {
+      const updatedDemanda = {
+        ...demanda,
+        constatacion: false,
+        evaluacion: true,
+      };
 
+      const response = await fetch(`http://localhost:8000/api/demanda/${demanda.id}/`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedDemanda),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update demanda');
+      }
+
+      setDemandState('evaluacion');
+      console.log('Demanda enviada a proceso de evaluación');
+    } catch (error) {
+      console.error('Error al enviar a evaluación:', error);
+    }
+  };
+
+  const handleEnviarADecision = async () => {
+    try {
+      const updatedDemanda = {
+        ...demanda,
+        evaluacion: false,
+        decision: true,
+      };
+
+      const response = await fetch(`http://localhost:8000/api/demanda/${demanda.id}/`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedDemanda),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update demanda');
+      }
+
+      setDemandState('decision');
+      console.log('Demanda enviada a proceso de toma de decisión');
+    } catch (error) {
+      console.error('Error al enviar a toma de decisión:', error);
+    }
+  };
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (activeStep !== steps.length - 1) {
@@ -264,148 +328,160 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
 
   return (
     <>
-      <Modal open={isOpen} onClose={onClose}>
-        <Box sx={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          bgcolor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'flex-start',
-          pt: 5,
-          overflowY: 'auto',
-          zIndex: 1000,
-        }}>
-          <Paper sx={{ width: '100%', maxWidth: '1000px', maxHeight: '90vh', overflow: 'auto', p: 3 }} onClick={handleDemandaClick}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-              <Box>
-                <Typography variant="h4" component="h2">{demanda.nombre}</Typography>
-                <Typography variant="subtitle1" color="text.secondary">DNI {demanda.dni} - {demanda.edad} años</Typography>
-              </Box>
-              <Box display="flex" alignItems="center">
-                {formData.calificacion === 'urgente' && (
-                  <Typography variant="caption" sx={{ bgcolor: 'error.main', color: 'error.contrastText', px: 1, py: 0.5, borderRadius: 1, mr: 2 }}>
-                    URGENTE
-                  </Typography>
-                )}
-                <Typography variant="body2" color="text.secondary" mr={2}>Actualizado: {new Date(formData.fechaActualizacion).toLocaleDateString()}</Typography>
-                <IconButton onClick={onClose} size="small">
-                  <X />
-                </IconButton>
-              </Box>
+        <Modal open={isOpen} onClose={onClose}>
+      <Box sx={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        bgcolor: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        pt: 5,
+        overflowY: 'auto',
+        zIndex: 1000,
+      }}>
+        <Paper sx={{ width: '100%', maxWidth: '1000px', maxHeight: '90vh', overflow: 'auto', p: 3 }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+            <Box>
+              <Typography variant="h4" component="h2">{demanda.nombre}</Typography>
+              <Typography variant="subtitle1" color="text.secondary">DNI {demanda.dni} - {demanda.edad} años</Typography>
             </Box>
+            <Box display="flex" alignItems="center">
+              {formData.calificacion === 'urgente' && (
+                <Typography variant="caption" sx={{ bgcolor: 'error.main', color: 'error.contrastText', px: 1, py: 0.5, borderRadius: 1, mr: 2 }}>
+                  URGENTE
+                </Typography>
+              )}
+              <Typography variant="body2" color="text.secondary" mr={2}>Actualizado: {new Date(formData.fechaActualizacion).toLocaleDateString()}</Typography>
+              <IconButton onClick={onClose} size="small">
+                <X />
+              </IconButton>
+            </Box>
+          </Box>
 
-            {!demanda.asociadoRegistro && (
-              <Paper sx={{ bgcolor: 'warning.light', p: 2, mb: 3 }} elevation={0}>
-                <Typography color="warning.dark">La presente demanda no está asociada a un registro ni legajo.</Typography>
-              </Paper>
-            )}
+          {!demanda.asociadoRegistro && (
+            <Paper sx={{ bgcolor: 'warning.light', p: 2, mb: 3 }} elevation={0}>
+              <Typography color="warning.dark">La presente demanda no está asociada a un registro ni legajo.</Typography>
+            </Paper>
+          )}
 
+          <Typography variant="h6" gutterBottom>Archivos adjuntos ({formData.archivosAdjuntos?.length || 0})</Typography>
+          <Box component="ul" sx={{ mb: 3, pl: 2 }}>
+            {formData.archivosAdjuntos?.map((archivo, index) => (
+              <Typography component="li" key={index}>{archivo}</Typography>
+            ))}
+          </Box>
 
-            <Typography variant="h6" gutterBottom>Archivos adjuntos ({formData.archivosAdjuntos?.length || 0})</Typography>
-            <Box component="ul" sx={{ mb: 3, pl: 2 }}>
-              {formData.archivosAdjuntos?.map((archivo, index) => (
-                <Typography component="li" key={index}>{archivo}</Typography>
+          <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+            <Button variant="contained" startIcon={<MessageIcon />} onClick={() => setIsEnviarRespuestaOpen(true)}>
+              Enviar Respuesta
+            </Button>
+            <Button variant="outlined" startIcon={<AttachFileIcon />} onClick={() => setIsArchivosModalOpen(true)}>
+              Archivos adjuntos
+            </Button>
+            <Button variant="outlined" startIcon={<PersonIcon />} onClick={() => setIsAsignarModalOpen(true)}>
+              Asignar
+            </Button>
+            <Button variant="contained" onClick={() => setIsRegistrarModalOpen(true)}>
+              Registrar actividad
+            </Button>
+
+          </Box>
+
+          <CollapsibleSection
+            title="Datos Requeridos de la Demanda"
+            isOpen={isStepContentOpen}
+            onToggle={() => setIsStepContentOpen(!isStepContentOpen)}
+          >
+            <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+              {steps.map((label) => (
+                <Step key={label}>
+                  <StepLabel>{label}</StepLabel>
+                </Step>
               ))}
-            </Box>
-
-            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-              <Button variant="contained" startIcon={<MessageIcon />} onClick={() => setIsEnviarRespuestaOpen(true)}>
-                Enviar Respuesta
-              </Button>
-              <Button variant="outlined" startIcon={<AttachFileIcon />} onClick={() => setIsArchivosModalOpen(true)}>
-                Archivos adjuntos
-              </Button>
-              <Button variant="outlined" startIcon={<PersonIcon />} onClick={() => setIsAsignarModalOpen(true)}>
-                Asignar
-              </Button>
-              <Button variant="contained" onClick={() => setIsRegistrarModalOpen(true)}>
-                Registrar actividad
-              </Button>
-            </Box>
-            <CollapsibleSection
-              title={`Detalle de la Demanda `}
-              isOpen={isStepContentOpen}
-              onToggle={() => setIsStepContentOpen(!isStepContentOpen)}
-            >
-              <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-                {steps.map((label) => (
-                  <Step key={label}>
-                    <StepLabel>{label}</StepLabel>
-                  </Step>
-                ))}
-              </Stepper>
-
-              <form onSubmit={handleSubmit}>
+            </Stepper>
+            <form onSubmit={handleSubmit}>
               <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-  {apiData.barrios && apiData.localidades && apiData.cpcs ? (
-    renderStepContent({
-      activeStep,
-      formData: {
-        ...formData,
-        ninosAdolescentes: apiData.nnyaList,
-        adultosConvivientes: apiData.adultsList,
-      },
-      handleInputChange,
-      motivosIntervencion: apiData.motivosIntervencion,
-      currentMotivoIntervencion: apiData.currentMotivoIntervencion,
-      demandaMotivoIntervencion: apiData.demandaMotivoIntervencion,
-      barrios: apiData.barrios,
-      localidades: apiData.localidades,
-      cpcs: apiData.cpcs,
-      localizacion: apiData.localizacion,
-      usuarioExterno: apiData.usuarioExterno,
-      vinculosUsuarioExterno: apiData.vinculosUsuarioExterno,
-      institucionesUsuarioExterno: apiData.institucionesUsuarioExterno,
-      usuariosExternos,
-      demanda,
-      getMotivoIntervencion: apiData.getMotivoIntervencion,
-      institucionesEducativas: apiData.institucionesEducativas,
-      institucionesSanitarias: apiData.institucionesSanitarias,
-      addNinoAdolescente,
-      addAdultoConviviente,
-      addVulneraciontext,
-      addVinculacion,
-      removeVinculacion,
-      addCondicionVulnerabilidad,
-      removeCondicionVulnerabilidad,
-      categoriaMotivos: apiData.categoriaMotivos,
-      categoriaSubmotivos: apiData.categoriaSubmotivos,
-      gravedadVulneraciones: apiData.gravedadVulneraciones,
-      urgenciaVulneraciones: apiData.urgenciaVulneraciones,
-      condicionesVulnerabilidadNNyA: apiData.condicionesVulnerabilidadNNyA,
-      condicionesVulnerabilidadAdultos: apiData.condicionesVulnerabilidadAdultos,
-      vinculoPersonas: apiData.vinculoPersonas, // Pass vinculoPersonas here
-      condicionesVulnerabilidad: apiData.condicionesVulnerabilidad,
-      personasWithCondiciones: apiData.personasWithCondiciones,
-      
+                {apiData.barrios && apiData.localidades && apiData.cpcs ? (
+                  renderStepContent({
+                    activeStep,
+                    formData: {
+                      ...formData,
+                      ninosAdolescentes: apiData.nnyaList,
+                    },
+                    handleInputChange,
+                    motivosIntervencion: apiData.motivosIntervencion,
+                    currentMotivoIntervencion: apiData.currentMotivoIntervencion,
+                    demandaMotivoIntervencion: apiData.demandaMotivoIntervencion,
+                    barrios: apiData.barrios,
+                    localidades: apiData.localidades,
+                    cpcs: apiData.cpcs,
+                    localizacion: apiData.localizacion,
+                    usuarioExterno: apiData.usuarioExterno,
+                    vinculosUsuarioExterno: apiData.vinculosUsuarioExterno,
+                    institucionesUsuarioExterno: apiData.institucionesUsuarioExterno,
+                    usuariosExternos,
+                    demanda,
+                    getMotivoIntervencion: apiData.getMotivoIntervencion,
+                    institucionesEducativas: apiData.institucionesEducativas,
+                    institucionesSanitarias: apiData.institucionesSanitarias,
+                    addNinoAdolescente,
+                    addAdultoConviviente,
+                    addVulneraciontext,
+                    categoriaMotivos: apiData.categoriaMotivos,
+                    categoriaSubmotivos: apiData.categoriaSubmotivos,
+                    gravedadVulneraciones: apiData.gravedadVulneraciones,
+                    urgenciaVulneraciones: apiData.urgenciaVulneraciones,
+                  })
+                ) : (
+                  <Typography>Loading data...</Typography>
+                )}
+              </LocalizationProvider>
+              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
+                <Button onClick={handleBack} disabled={activeStep === 0}>
+                  Anterior
+                </Button>
+                <Button type="submit" variant="contained" color="primary" disabled={isSubmitting}>
+                  {isSubmitting ? <CircularProgress size={24} /> : (activeStep === steps.length - 1 ? 'Guardar' : 'Siguiente')}
+                </Button>
+              </Box>
+            </form>
+          </CollapsibleSection>
 
-    })
-  ) : (
-    <Typography>Loading data...</Typography>
-  )}
-</LocalizationProvider>
+          <CollapsibleSection
+              title="Conexiones de la Demanda"
+              isOpen={sections.conexiones}
+              onToggle={() => toggleSection('conexiones')}
+            >
+               
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle1" color="primary" gutterBottom>Vincular con otro caso</Typography>
+                <Box display="flex" alignItems="center">
+                  <TextField 
+                    placeholder="33.333.333" 
+                    sx={{ mr: 2 }}
+                  />
+                  <Button variant="contained" color="primary">
+                    Vincular
+                  </Button>
+                </Box>
+              </Box>
+            </CollapsibleSection>
 
-            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
-              <Button onClick={handleBack} disabled={activeStep === 0}>
-                Anterior
-              </Button>
-              <Button type="submit" variant="contained" color="primary" disabled={isSubmitting}>
-                {isSubmitting ? <CircularProgress size={24} /> : (activeStep === steps.length - 1 ? 'Guardar' : 'Siguiente')}
-              </Button>
-            </Box>
-          </form>
-        </CollapsibleSection>
-        <CollapsibleSection
-              title="Evaluar Caso"
+          {(demandState === 'evaluacion' || demandState === 'decision') && (
+            <CollapsibleSection
+              title="Evaluaciones de la Demanda"
               isOpen={isEvaluacionSectionOpen}
               onToggle={() => setIsEvaluacionSectionOpen(!isEvaluacionSectionOpen)}
             >
               {isEvaluacionSectionOpen && <EvalaucionModal demanda={demanda} />}
             </CollapsibleSection>
+          )}
+
+          {demandState === 'decision' && (
             <CollapsibleSection
               title="Decisión"
               isOpen={isDecisionModalOpen}
@@ -413,9 +489,22 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
             >
               <DecisionModal />
             </CollapsibleSection>
+          )}
+                      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                        {demandState === 'constatacion' && (
+                          <Button variant="contained" color="primary" onClick={handleEnviarAEvaluacion}>
+                            Enviar a proceso de evaluación
+                          </Button>
+                        )}
+                        {demandState === 'evaluacion' && (
+                          <Button variant="contained" color="primary" onClick={handleEnviarADecision}>
+                            Enviar a proceso de toma de decisión
+                          </Button>
+                        )}
+                      </Box>
         </Paper>
       </Box>
-    </Modal >
+    </Modal>
 
       <ArchivosAdjuntosModal
           isOpen={isArchivosModalOpen}
@@ -425,11 +514,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
           initialComments=""
         />
 
-        <AsignarDemandaModal
-          isOpen={isAsignarModalOpen}
-          onClose={() => setIsAsignarModalOpen(false)}
-          onAssign={handleAsignarSubmit}
-        />
+
 
         <RegistrarActividadModal
           isOpen={isRegistrarModalOpen}
