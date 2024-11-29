@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { Box, Typography, TextField, Button, Card, CardContent, CardHeader } from '@mui/material';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import Cookies from 'js-cookie';
 import { getUsers } from '../../api/TableFunctions/user_me';
 
 export default function LoginPage() {
@@ -12,34 +11,38 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
-  const login = async (username, password) => {
-    try {
-        const response = await axios.post('http://localhost:8000/api/login/', {
-            username,
-            password,
-        }, {
-            withCredentials: true,
-        });
 
-      } catch (error) {
-          console.error('Error during login:', error);
-      }
+  // Fix: Add explicit types for the parameters
+  const login = async (username: string, password: string): Promise<void> => {
+    try {
+      const response = await axios.post(
+        'http://localhost:8000/api/login/',
+        { username, password },
+        { withCredentials: true }
+      );
+
+      console.log('Login successful:', response.data);
+    } catch (error) {
+      console.error('Error during login:', error);
+      setError('Login failed. Please check your credentials.');
+    }
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       console.log('username', username);
       console.log('password', password);
-  
+
       // Log in
       await login(username, password);
 
-      const userData = await getUsers()
-      console.log('UserData:', userData)
-  
+      const userData = await getUsers();
+      console.log('UserData:', userData);
+
       // Save user data to localStorage or a global context
       localStorage.setItem('user', JSON.stringify(userData));
-  
+
       // Redirect to the main page
       router.push('/mesadeentrada');
     } catch (err) {

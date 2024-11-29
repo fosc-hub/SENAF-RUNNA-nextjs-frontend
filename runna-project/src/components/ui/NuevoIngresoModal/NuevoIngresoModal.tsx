@@ -34,9 +34,29 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
   const [error, setError] = useState(null)
   const [debugInfo, setDebugInfo] = useState([])
   const isSubmittingRef = useRef(false)
-
+  const [localFilteredSubmotivos, setLocalFilteredSubmotivos] = useState([])
+  const [newVulneracion, setNewVulneracion] = useState({
+    principal_demanda: false,
+    transcurre_actualidad: false,
+    categoria_motivo: '',
+    categoria_submotivo: '',
+    gravedad_vulneracion: '',
+    urgencia_vulneracion: '',
+    nnya: '',
+    autor_dv: '',
+  })
   const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext, addVinculacion, removeVinculacion } = useFormData()
   const apiData = useApiData()
+  useEffect(() => {
+    if (formData.presuntaVulneracion.categoria_motivo) {
+      const filtered = apiData.categoriaSubmotivos.filter(submotivo =>
+        submotivo.motivo === formData.presuntaVulneracion.categoria_motivo
+      )
+      setLocalFilteredSubmotivos(filtered)
+    } else {
+      setLocalFilteredSubmotivos([])
+    }
+  }, [formData.presuntaVulneracion.categoria_motivo, apiData.categoriaSubmotivos])
 
   const filteredSubmotivos = useMemo(() => {
     if (!formData.presuntaVulneracion.categoriaMotivos || formData.presuntaVulneracion.categoriaMotivos.length === 0) {

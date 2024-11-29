@@ -167,30 +167,7 @@ export const renderStepContent = ({
 
 
 }) => {
-  useEffect(() => {
-    if (localizacion) {
-      handleInputChange('localizacion', {
-        ...formData.localizacion,
-        ...localizacion, // Merge fetched data
-      });
-    }
-  }, [localizacion]);
 
-
-
-
-  // Synchronize currentMotivoIntervencion into formData
-  useEffect(() => {
-    if (
-      currentMotivoIntervencion &&
-      formData.presuntaVulneracion.motivos !== currentMotivoIntervencion.id
-    ) {
-      handleInputChange(
-        'presuntaVulneracion.motivos',
-        currentMotivoIntervencion.id
-      );
-    }
-  }, [currentMotivoIntervencion, formData.presuntaVulneracion.motivos, handleInputChange]);
   switch (activeStep) {
     case 0:
       return (

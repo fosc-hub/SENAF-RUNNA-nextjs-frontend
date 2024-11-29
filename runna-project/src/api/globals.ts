@@ -1,3 +1,4 @@
+import axios from 'axios';
 import axiosInstance from './TableFunctions/axiosInstance';
 
 const API_BASE_URL = 'http://localhost:8000/api';
@@ -39,16 +40,23 @@ export const create = async <T>(endpoint: string, data: Partial<T>): Promise<T> 
   try {
     const response = await axiosInstance.post<T>(`${API_BASE_URL}/${endpoint}/`, data);
     return response.data;
-  } catch (error) {
-    console.error(`Error creating in ${endpoint}:`, error);
-    if (error.response) {
-      console.error('Response data:', error.response.data);
-      console.error('Response status:', error.response.status);
-      console.error('Response headers:', error.response.headers);
+  } catch (error: unknown) {
+    // Check if the error is an AxiosError
+    if (axios.isAxiosError(error)) {
+      console.error(`Error creating in ${endpoint}:`, error.message);
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+        console.error('Response headers:', error.response.headers);
+      }
+      throw new Error(`Failed to create data in ${endpoint}. ${error.message}`);
+    } else {
+      console.error(`Unexpected error in ${endpoint}:`, error);
+      throw new Error('An unexpected error occurred.');
     }
-    throw new Error(`Failed to create data in ${endpoint}.`);
   }
 };
+
 
 // Operación PUT para actualizar
 export const update = async <T>(endpoint: string, id: number, data: Partial<T>): Promise<T> => {

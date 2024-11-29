@@ -63,7 +63,27 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
   }
   const apiData = useApiData(demanda?.id, demanda?.localizacion, demanda?.usuarioExterno);
   const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente } = useFormData(demanda, apiData);
+  useEffect(() => {
+    if (apiData.localizacion) {
+      handleInputChange('localizacion', {
+        ...formData.localizacion,
+        ...apiData.localizacion,
+      })
+    }
+  }, [apiData.localizacion])
 
+  // Synchronize currentMotivoIntervencion into formData
+  useEffect(() => {
+    if (
+      apiData.currentMotivoIntervencion &&
+      formData.presuntaVulneracion.motivos !== apiData.currentMotivoIntervencion.id
+    ) {
+      handleInputChange(
+        'presuntaVulneracion.motivos',
+        apiData.currentMotivoIntervencion.id
+      )
+    }
+  }, [apiData.currentMotivoIntervencion, formData.presuntaVulneracion.motivos])
   useEffect(() => {
     console.log('Localización ID:', demanda?.localizacion);
   }, [demanda?.localizacion]);

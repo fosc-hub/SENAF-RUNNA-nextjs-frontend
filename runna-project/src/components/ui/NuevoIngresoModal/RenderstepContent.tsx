@@ -180,16 +180,7 @@ export const renderStepContent = ({
   removeVinculacion,
   vinculoPersonas,
 }) => {
-  const [newVulneracion, setNewVulneracion] = useState({
-    principal_demanda: false,
-    transcurre_actualidad: false,
-    categoria_motivo: '',
-    categoria_submotivo: '',
-    gravedad_vulneracion: '',
-    urgencia_vulneracion: '',
-    nnya: '',
-    autor_dv: '',
-  })
+
   const renderVinculacion = (vinculacion, index) => (
     <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
       <Grid item xs={12} sm={6}>
@@ -286,18 +277,8 @@ export const renderStepContent = ({
       </Grid>
     </Grid>
   )
-  const [localFilteredSubmotivos, setLocalFilteredSubmotivos] = useState([])
 
-  useEffect(() => {
-    if (newVulneracion.categoria_motivo) {
-      const filtered = categoriaSubmotivos.filter(submotivo =>
-        submotivo.motivo === newVulneracion.categoria_motivo
-      )
-      setLocalFilteredSubmotivos(filtered)
-    } else {
-      setLocalFilteredSubmotivos([])
-    }
-  }, [newVulneracion.categoria_motivo, categoriaSubmotivos])
+
 
   const handleVulneracionChange = (field, value) => {
     setNewVulneracion(prev => {
