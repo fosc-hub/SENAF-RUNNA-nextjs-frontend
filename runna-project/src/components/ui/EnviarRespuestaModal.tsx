@@ -10,7 +10,7 @@ import { Select, MenuItem, InputLabel, FormControl, SelectChangeEvent } from '@m
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 import { es } from 'date-fns/locale';
-import { ArchivosAdjuntosModal } from './ArchivosAdjuntosModal';
+
 
 interface EnviarRespuestaModalProps {
   isOpen: boolean;
@@ -38,26 +38,7 @@ export function EnviarRespuestaModal({ isOpen, onClose, onSend, idDemanda }: Env
     demanda: idDemanda, // Asegurar que el demanda se guarde en el estado
   });
 
-
   const [institutionOptions, setInstitutionOptions] = useState<{ value: string; label: string }[]>([]);
-  const [isArchivosModalOpen, setIsArchivosModalOpen] = useState(false);
-
-  const openArchivosModal = () => {
-    setIsArchivosModalOpen(true);
-  };
-
-  const closeArchivosModal = () => {
-    setIsArchivosModalOpen(false);
-  };
-
-  const handleArchivosSave = (data: { files: string[], comments: string }) => {
-    setResponseData((prev) => ({
-      ...prev,
-      attachments: [...prev.attachments, ...data.files],
-    }));
-    closeArchivosModal();
-  };
-
 
   useEffect(() => {
     if (isOpen) {
@@ -103,6 +84,20 @@ export function EnviarRespuestaModal({ isOpen, onClose, onSend, idDemanda }: Env
       attachments: prev.attachments.filter((name) => name !== fileName),
     }));
   };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newFiles = e.target.files;
+    if (newFiles) {
+      setResponseData((prev) => ({
+        ...prev,
+        attachments: [
+          ...prev.attachments,
+          ...Array.from(newFiles).map((file) => file.name),
+        ],
+      }));
+    }
+  };
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -214,9 +209,21 @@ export function EnviarRespuestaModal({ isOpen, onClose, onSend, idDemanda }: Env
 
         <div className="flex justify-between items-center">
           <div>
-            <Button type="button" variant="outline" size="icon" onClick={openArchivosModal}>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => document.getElementById('file-upload')?.click()}
+            >
               <Paperclip className="h-4 w-4" />
             </Button>
+            <Input
+              id="file-upload"
+              type="file"
+              multiple
+              className="hidden"
+              onChange={handleFileUpload}
+            />
           </div>
           <div className="space-x-2">
             <Button type="button" variant="secondary" onClick={onClose}>
@@ -228,14 +235,6 @@ export function EnviarRespuestaModal({ isOpen, onClose, onSend, idDemanda }: Env
           </div>
         </div>
       </form>
-
-      {/* Modal para archivos adjuntos */}
-      <ArchivosAdjuntosModal
-        isOpen={isArchivosModalOpen}
-        onClose={closeArchivosModal}
-        onSave={handleArchivosSave}
-        initialFiles={responseData.attachments}
-      />
     </Modal>
   );
 }
