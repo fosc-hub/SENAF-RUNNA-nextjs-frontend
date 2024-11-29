@@ -9,10 +9,18 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 const theme = createTheme({
   components: {
+    
     MuiFormControlLabel: {
       styleOverrides: {
         label: {
           color: '#333', // Change to your desired color
+        },
+      },
+    },
+    MuiTypography: {
+      styleOverrides: {
+        h6: {
+          color: '#333', // Desired default color for h6
         },
       },
     },
