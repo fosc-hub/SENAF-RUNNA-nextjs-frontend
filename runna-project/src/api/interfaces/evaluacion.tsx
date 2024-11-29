@@ -1,8 +1,10 @@
 export interface TActividadTipo {
+    id: number;
     nombre: string;
 }
 
 export interface TInstitucionActividad {
+    id: number;
     nombre: string;
     mail?: string | null;
     telefono?: number | null;
@@ -10,6 +12,7 @@ export interface TInstitucionActividad {
 }
 
 interface TActividadBase {
+    id: number;
     fecha_y_hora: Date;
     descripcion: string;
     demanda: number;
@@ -20,6 +23,7 @@ interface TActividadBase {
 export interface TActividad extends TActividadBase {}
 
 export interface TInstitucionRespuesta {
+    id: number;
     nombre: string;
     mail?: string | null;
     telefono?: number | null;
@@ -27,6 +31,7 @@ export interface TInstitucionRespuesta {
 }
 
 export interface TRespuesta {
+    id: number;
     fecha_y_hora: Date;
     mail: string;
     mensaje: string;
@@ -35,12 +40,14 @@ export interface TRespuesta {
 }
 
 export interface TIndicadoresValoracion {
+    id: number;
     nombre: string;
     descripcion?: string | null;
     peso: number;
 }
 
 interface TEvaluacionesBase {
+    id: number;
     demanda: number;
     indicador: number;
     si_no: boolean;
@@ -49,6 +56,7 @@ interface TEvaluacionesBase {
 export interface TEvaluaciones extends TEvaluacionesBase {}
 
 export interface TDecision {
+    id: number;
     fecha_y_hora: Date;
     justificacion: string;
     decision: 'APERTURA DE LEGAJO' | 'RECHAZAR CASO';

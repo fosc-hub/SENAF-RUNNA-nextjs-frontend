@@ -1,7 +1,5 @@
 interface TBaseModel {
-    
-    createdAt?: Date;
-    updatedAt?: Date;
+    id: number;
 }
 
 export interface TCategoriaMotivo extends TBaseModel {
@@ -44,17 +42,17 @@ export interface TMotivoIntervencion extends TBaseModel {
 }
 
 interface TVulneracionBase extends TBaseModel {
-    principalDemanda: boolean;
-    transcurreActualidad: boolean;
+    principal_demanda: boolean;
+    transcurre_actualidad: boolean;
     deleted: boolean;
-    sumatoriaDePesos: number;
+    sumatoria_de_pesos: number;
     demanda?: any; // Replace with actual type
     nnya: any; // Replace with actual type
-    autorDv?: any; // Replace with actual type
-    categoriaMotivo: number;
-    categoriaSubmotivo: number;
-    gravedadVulneracion: number;
-    urgenciaVulneracion: number;
+    autor_dv?: any; // Replace with actual type
+    categoria_motivo: number;
+    categoria_submotivo: number;
+    gravedad_vulneracion: number;
+    urgencia_vulneracion: number;
 }
 
 export interface TVulneracion extends TVulneracionBase {

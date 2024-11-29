@@ -1,4 +1,5 @@
 interface TBaseModel {
+    id: number;
     deleted?: boolean;
 }
 

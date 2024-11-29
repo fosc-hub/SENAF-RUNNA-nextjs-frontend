@@ -1,4 +1,5 @@
 export interface TInstitucionUsuarioExterno {
+    id: number;
     nombre: string;
     mail?: string | null;
     telefono?: number | null;
@@ -6,11 +7,13 @@ export interface TInstitucionUsuarioExterno {
 }
 
 export interface TVinculoUsuarioExterno {
+    id: number;
     nombre: string;
     descripcion?: string | null;
 }
 
 export interface TUsuarioExterno {
+    id: number;
     nombre: string;
     apellido: string;
     fecha_nacimiento?: Date | null;
@@ -22,6 +25,7 @@ export interface TUsuarioExterno {
 }
 
 interface TDemandaBase {
+    id: number;
     fecha_y_hora_ingreso: Date;
     origen: 'WEB' | 'TELEFONO' | 'MAIL' | 'PERSONAL' | 'OTRO';
     nro_notificacion_102?: number | null;
@@ -44,6 +48,7 @@ export interface TDemanda extends TDemandaBase {
 }
 
 interface TPrecalificacionDemandaBase {
+    id: number;
     fecha_y_hora: Date;
     descripcion: string;
     estado_demanda: 'URGENTE' | 'NO_URGENTE' | 'COMPLETAR';
@@ -54,6 +59,7 @@ interface TPrecalificacionDemandaBase {
 export interface TPrecalificacionDemanda extends TPrecalificacionDemandaBase {}
 
 interface TDemandaScoreBase {
+    id: number;
     ultima_actualizacion: Date;
     score: number;
     score_condiciones_vulnerabilidad: number;
