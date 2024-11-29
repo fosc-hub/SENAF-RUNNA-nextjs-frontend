@@ -582,15 +582,7 @@ export const renderStepContent = ({
                     <MenuItem value="OTRO">Otro</MenuItem>
                   </Select>
                 </FormControl>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={nino.botonAntipanico}
-                      onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].botonAntipanico`, e.target.checked)}
-                    />
-                  }
-                  label="Botón Antipánico"
-                />
+
                 <TextField
                   fullWidth
                   label="Observaciones"

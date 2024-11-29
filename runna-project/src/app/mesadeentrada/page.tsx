@@ -5,14 +5,29 @@ import Header from '../../components/ui/Header';
 import Sidebar from '../../components/ui/Sidebar';
 import { MainContent } from '../../components/ui/MainContent';
 import { AuthProvider, useAuth } from '../../context/AuthContext';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 
+const theme = createTheme({
+  components: {
+    MuiFormControlLabel: {
+      styleOverrides: {
+        label: {
+          color: '#333', // Change to your desired color
+        },
+      },
+    },
+  },
+});
 export default function AppWrapper() {
   return (
     <AuthProvider>
-      <MesaDeEntradas />
+      <ThemeProvider theme={theme}>
+        <MesaDeEntradas />
+      </ThemeProvider>
     </AuthProvider>
   );
 }
+
 
 function MesaDeEntradas() {
   const [demands, setDemands] = useState([]);
