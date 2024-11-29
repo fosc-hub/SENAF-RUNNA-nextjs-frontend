@@ -150,10 +150,20 @@ export function MainContent() {
 
   const filteredDemands = useMemo(() => {
     return enrichedDemands.filter(demand => {
-      const origenMatch = origen === 'todos' || demand.origen === origen
-      return origenMatch
-    })
-  }, [enrichedDemands, origen])
+      // Prioritization order: decision > evaluacion > constatacion
+      if (demand.decision) {
+        return true; // Include if decision is true, regardless of other fields
+      } else if (demand.evaluacion) {
+        return true; // Include if evaluacion is true and decision is false
+      } else if (demand.constatacion) {
+        return true; // Include if constatacion is true and higher priorities are false
+      }
+  
+      // Exclude demands where archivado or completado are true
+      return !demand.archivado && !demand.completado;
+    });
+  }, [enrichedDemands]);
+  
 
   const handleNuevoRegistro = useCallback(() => {
     setIsNuevoIngresoModalOpen(true)
@@ -352,7 +362,14 @@ const columns: GridColDef[] = useMemo(() => {
 
   return baseColumns;
 }, [user, handlePrecalificacionChange]);
-
+const getRowClassName = (params: GridRowParams) => {
+  const { constatacion, evaluacion, decision, archivado, completado } = params.row;
+  if (constatacion) return 'row-green';
+  if (evaluacion) return 'row-purple';
+  if (decision) return 'row-orange';
+  if (archivado || completado) return '';
+  return '';
+};
   return (
     <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 3, overflow: 'auto' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -368,37 +385,44 @@ const columns: GridColDef[] = useMemo(() => {
               </Button>
             )
           }
-          <FormControl sx={{ minWidth: 120 }} size="small">
-            <InputLabel>Origen</InputLabel>
-            <Select
-              value={origen}
-              onChange={(e) => setOrigen(e.target.value)}
-              label="Origen"
-            >
-              {origenOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
         </Box>
       </Box>
 
       <Box sx={{ height: 400, width: '100%' }}>
         {filteredDemands.length > 0 ? (
-          <DataGrid
-            rows={filteredDemands}
-            columns={columns}
-            onRowClick={handleDemandClick}
-            disableRowSelectionOnClick
-            initialState={{
-              pagination: {
-                paginationModel: { pageSize: 5, page: 0 },
-              },
-            }}
-            pageSizeOptions={[5, 10, 20]}
-          />
+      <DataGrid
+      rows={filteredDemands}
+      columns={columns}
+      onRowClick={handleDemandClick}
+      disableRowSelectionOnClick
+      initialState={{
+        pagination: {
+          paginationModel: { pageSize: 5, page: 0 },
+        },
+      }}
+      pageSizeOptions={[5, 10, 20]}
+      getRowClassName={getRowClassName}
+      sx={{
+        '& .row-green': {
+          backgroundColor: 'rgba(0, 255, 0, 0.1)',
+          '&:hover': {
+            backgroundColor: 'rgba(0, 255, 0, 0.2)',
+          },
+        },
+        '& .row-purple': {
+          backgroundColor: 'rgba(128, 0, 128, 0.1)',
+          '&:hover': {
+            backgroundColor: 'rgba(128, 0, 128, 0.2)',
+          },
+        },
+        '& .row-orange': {
+          backgroundColor: 'rgba(255, 165, 0, 0.1)',
+          '&:hover': {
+            backgroundColor: 'rgba(255, 165, 0, 0.2)',
+          },
+        },
+      }}
+    />
         ) : (
           <Box sx={{
             display: 'flex',
