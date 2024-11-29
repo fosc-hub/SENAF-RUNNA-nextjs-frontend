@@ -25,8 +25,9 @@ import { createTNNyAEducacion } from '../../../api/TableFunctions/nnyaeducacion'
 import { createTNNyASalud } from '../../../api/TableFunctions/nnyaSalud'
 import { createTDemandaPersona } from '../../../api/TableFunctions/demandaPersonas'
 import { createLocalizacionPersona } from '../../../api/TableFunctions/localizacionPersona'
+import { createTPersonaCondicionesVulnerabilidad } from '../../../api/TableFunctions/personaCondicionesVulnerabilidad'
 
-const steps = ['Carátula', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Vinculos']
+const steps = ['Ingreso', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Vinculos', 'Condiciones de Vulnerabilidad']
 
 export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
   const [activeStep, setActiveStep] = useState(0)
@@ -45,7 +46,7 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
     nnya: '',
     autor_dv: '',
   })
-  const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext, addVinculacion, removeVinculacion } = useFormData()
+  const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext, addVinculacion, removeVinculacion, addCondicionVulnerabilidad, removeCondicionVulnerabilidad } = useFormData()
   const apiData = useApiData()
   useEffect(() => {
     if (formData.presuntaVulneracion.categoria_motivo) {
@@ -240,6 +241,25 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
         throw new Error('Failed to create demanda')
       }
 
+      // Create persona-condiciones-vulnerabilidad entries
+addDebugInfo('Creating persona-condiciones-vulnerabilidad entries')
+const condicionesVulnerabilidadPromises = formData.condicionesVulnerabilidad.map(condicion => {
+  const [type, index] = condicion.persona.split('-')
+  const personaId = type === 'nino' 
+    ? ninosAdolescentesPersonas[parseInt(index)].id 
+    : adultosConvivientesPersonas[parseInt(index)].id
+
+  return createTPersonaCondicionesVulnerabilidad({
+    si_no: condicion.si_no,
+    persona: personaId,
+    condicion_vulnerabilidad: condicion.condicion_vulnerabilidad,
+    demanda: demandaResponse.id
+  })
+})
+
+const condicionesVulnerabilidadResponses = await Promise.all(condicionesVulnerabilidadPromises)
+addDebugInfo(`Created ${condicionesVulnerabilidadResponses.length} persona-condiciones-vulnerabilidad entries`)
+
       // Create demanda-persona entries
       addDebugInfo('Creating demanda-persona entries')
       const demandaPersonaPromises = [
@@ -385,6 +405,8 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
               addVinculacion,
               removeVinculacion,
               addVulneraciontext,
+              addCondicionVulnerabilidad,
+              removeCondicionVulnerabilidad,
               ...apiData,
               addVulneracionApi: apiData.addVulneracion,
 

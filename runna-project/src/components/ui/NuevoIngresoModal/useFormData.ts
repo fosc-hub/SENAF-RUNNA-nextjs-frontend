@@ -37,6 +37,7 @@ const initialFormData = {
   adultosConvivientes: [],
   vulneraciones: [],
   vinculaciones: [],
+  condicionesVulnerabilidad:[],
   presuntaVulneracion: {
     motivo: '',
     ambitoVulneracion: '',
@@ -185,9 +186,23 @@ export const useFormData = () => {
       vinculaciones: prevData.vinculaciones.filter((_, i) => i !== index)
     }))
   }
+  const addCondicionVulnerabilidad = () => {
+    setFormData(prevData => ({
+      ...prevData,
+      condicionesVulnerabilidad: [
+        ...prevData.condicionesVulnerabilidad,
+        { persona: '', condicion_vulnerabilidad: '', si_no: false }
+      ]
+    }))
+  }  
+  const removeCondicionVulnerabilidad = (index) => {
+    setFormData(prevData => ({
+      ...prevData,
+      condicionesVulnerabilidad: prevData.condicionesVulnerabilidad.filter((_, i) => i !== index)
+    }))
+  }
 
-
-  return { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext, addVinculacion, removeVinculacion
+  return { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext, addVinculacion, removeVinculacion, addCondicionVulnerabilidad, removeCondicionVulnerabilidad
   }
 }
 
