@@ -8,6 +8,8 @@ import {
   TableHead,
   TableRow,
   Paper,
+  Button,
+  Box,
 } from "@mui/material"
 
 interface DecisionData {
@@ -73,6 +75,16 @@ export function DecisionModal() {
     </>
   )
 
+  const handleRechazar = () => {
+    console.log("Rechazar clicked")
+    // Add logic for rejecting the decision
+  }
+
+  const handleAperturaLegajo = () => {
+    console.log("Apertura de Legajo clicked")
+    // Add logic for opening a new file
+  }
+
   return (
     <div>
       <Typography variant="h5" gutterBottom>
@@ -83,6 +95,22 @@ export function DecisionModal() {
       </Typography>
       {renderScoreTable(decisionData["Demanda Scores"], "Demanda Scores")}
       {renderScoreTable(decisionData["NNyA Scores"], "NNyA Scores")}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+        <Button 
+          variant="contained" 
+          color="secondary" 
+          onClick={handleRechazar}
+        >
+          Rechazar
+        </Button>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={handleAperturaLegajo}
+        >
+          Apertura de Legajo
+        </Button>
+      </Box>
     </div>
   )
 }
