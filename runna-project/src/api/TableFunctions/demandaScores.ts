@@ -1,4 +1,4 @@
-import { getAll, getOne, create, update, remove } from '../globals';
+import { getAll, getOne, create, update, remove } from '../services/apiService';
 import { TDemandaScore } from '../interfaces';
 
 const endpoint = 'tdemandascore';

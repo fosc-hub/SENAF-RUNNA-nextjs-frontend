@@ -9,7 +9,7 @@ import { createTDemandaAsignado } from '../../api/TableFunctions/DemandaAsignado
 import { TUser } from '../../api/interfaces';
 
 interface AsignarDemandaModalProps {
-  demandaId: number;
+  demanda: number;
   isOpen: boolean;
   onClose: () => void;
   onAssign: (data: AssignmentData) => void;

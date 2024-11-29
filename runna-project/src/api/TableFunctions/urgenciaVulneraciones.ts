@@ -1,4 +1,4 @@
-import { getAll, getOne, create, update, remove } from '../globals';
+import { getAll, getOne, create, update, remove } from '../services/apiService';
 import { TUrgenciaVulneracion } from '../interfaces';
 
 const endpoint = 'urgencia-vulneracion';

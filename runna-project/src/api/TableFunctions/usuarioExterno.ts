@@ -1,4 +1,4 @@
-import { getAll, getOne, create, update } from '../globals';
+import { getAll, getOne, create, update } from '../services/apiService';
 import { TUsuarioExterno } from '../interfaces';
 
 const endpoint = 'usuario-externo';

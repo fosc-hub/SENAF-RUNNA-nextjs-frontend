@@ -8,8 +8,8 @@ const getCSRFToken = () => {
 
 // Create an Axios instance
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:8000/api', // Your API base URL
-  withCredentials: true, // Include credentials (cookies) in requests
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api',
+  withCredentials: true,
 });
 
 // Add a request interceptor to attach CSRF token

@@ -32,10 +32,29 @@ import { getTDemandaMotivoIntervencion, getTDemandaMotivoIntervencions } from '.
 
 
 
-export const useApiData = (demandaId, localizacionId, usuarioExternoId) => {
-  
+export const useApiData = (demandaId: number, localizacionId: number, usuarioExternoId: number) => {
 
-  const [apiData, setApiData] = useState({
+  interface ApiData {
+    motivosIntervencion: any[];
+    demandaMotivoIntervencion: any | null;
+    currentMotivoIntervencion: any | null;
+    localizacion: any;
+    barrios: any[];
+    localidades: any[];
+    cpcs: any[];
+    selectedBarrio: any | null;
+    selectedLocalidad: any | null;
+    selectedCpc: any | null;
+    usuarioExterno: any | null;
+    vinculosUsuarioExterno: any[];
+    institucionesUsuarioExterno: any[];
+    nnyaList: any[]; // List for NNYA personas
+    adultsList: any[]; // Optional: List for adult personas
+    institucionesEducativas: any[];
+    institucionesSanitarias: any[];
+  }
+
+  const [apiData, setApiData] = useState<ApiData>({
     motivosIntervencion: [],
     demandaMotivoIntervencion: null,
     currentMotivoIntervencion: null,
@@ -51,9 +70,9 @@ export const useApiData = (demandaId, localizacionId, usuarioExternoId) => {
     vinculosUsuarioExterno: [],
     institucionesUsuarioExterno: [],
     nnyaList: [], // List for NNYA personas
-    adultsList: [],// Optional: List for adult personas
-    institucionesEducativas : [],
-    institucionesSanitarias : [], 
+    adultsList: [], // Optional: List for adult personas
+    institucionesEducativas: [],
+    institucionesSanitarias: [],
   });
 
   useEffect(() => {
@@ -103,8 +122,8 @@ const institucionesSanitarias = [];
         // Fetch demanda-persona data
         const demandaPersonaData = await getTDemandaPersonas({ demanda: demandaId });
 
-        const nnyaList = [];
-        const adultsList = []; // Separate list for adults
+        const nnyaList: any[] = [];
+        const adultsList: any[] = []; // Separate list for adults
         const institucionesEducativas = await getTInstitucionEducativas();
         
         const institucionesSanitarias = await getTInstitucionSanitarias();
@@ -121,10 +140,8 @@ const institucionesSanitarias = [];
             dni: personaData.dni || '',
             situacionDni: personaData.situacion_dni || '',
             genero: personaData.genero || '',
-            botonAntipanico: personaData.boton_anti_panico || false,
+            botonAntipanico: personaData.boton_antipanico || false,
             observaciones: personaData.observaciones || '',
-            conviviente: personaData.conviviente || false,
-            supuesto_autordv: personaData.supuesto_autordv || false, // Specific to adults
             localizacion: {}, // Placeholder for localization
             demandaPersonaId: demandaPersona.id,
           };
@@ -157,9 +174,9 @@ const institucionesSanitarias = [];
             dni: personaData.dni || '', // Fetch DNI
             situacionDni: personaData.situacion_dni || '', // Fetch Situación DNI
             genero: personaData.genero || '', // Fetch Género
-            botonAntipanico: personaData.boton_anti_panico || false, // Fetch Botón Antipánico
+            botonAntipanico: personaData.boton_antipanico || false, // Fetch Botón Antipánico
             observaciones: personaData.observaciones || '', // Fetch Observaciones
-            localizacion: personaData.localizacion || {},
+            // localizacion: personaData.localizacion || {},
             demandaPersonaId: demandaPersona.id,
           };
           // Fetch localización-persona
@@ -287,7 +304,7 @@ const institucionesSanitarias = [];
     fetchData();
   }, [demandaId, localizacionId, usuarioExternoId]);
 
-  const getMotivoIntervencion = async (id) => {
+  const getMotivoIntervencion = async (id: number) => {
     try {
       return await getTMotivoIntervencion(id);
     } catch (error) {
