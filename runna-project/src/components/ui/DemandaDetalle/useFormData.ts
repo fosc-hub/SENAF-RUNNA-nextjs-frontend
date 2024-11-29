@@ -113,33 +113,79 @@ export const useFormData = (demanda, apiData) => {
   };
 
   const addNinoAdolescente = () => {
-    setFormData((prevData) => ({
+    setFormData(prevData => ({
       ...prevData,
       ninosAdolescentes: [
         ...prevData.ninosAdolescentes,
         {
-          id: null,
           nombre: '',
           apellido: '',
           fechaNacimiento: null,
-          genero: '',
-          localizacion: {},
-          educacion: {},
-          salud: {},
+          edadAproximada: '',
+          dni: '',
+          situacionDni: 'EN_TRAMITE',
+          genero: 'MASCULINO',
+          botonAntipanico: false,
           observaciones: '',
-          demandaPersonaId: null,
+          useDefaultLocalizacion: true,
+          localizacion: { ...initialFormData.localizacion },
+          educacion: {
+            institucion_educativa: '',
+            curso: '',
+            nivel: '',
+            turno: '',
+            comentarios: '',
+          },
+          salud: {
+            institucion_sanitaria: '',
+            observaciones: '',
+          },
         },
       ],
-    }));
-  };
-
+    }))
+  }
   const addAdultoConviviente = () => {
     setFormData((prevData) => ({
       ...prevData,
-      adultosConvivientes: [...prevData.adultosConvivientes, initialAdult()],
-    }));
-  };
+      adultosConvivientes: [
+        ...prevData.adultosConvivientes,
+        {
+          nombre: '',
+          apellido: '',
+          fechaNacimiento: null,
+          edadAproximada: '',
+          dni: '',
+          situacionDni: 'EN_TRAMITE',
+          genero: 'MASCULINO',
+          botonAntipanico: false,
+          observaciones: '',
+          supuesto_autordv: false,
+          conviviente: true,
+          useDefaultLocalizacion: true,
+          localizacion: { ...initialFormData.localizacion },
+        },
+      ],
+    }))
+  }
 
-  return { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente };
+  const addVulneraciontext = () => {
+    setFormData((prevData) => ({
+      ...prevData,
+      vulneraciones: [
+        ...prevData.vulneraciones,
+        {
+          principal_demanda: false,
+          transcurre_actualidad: false,
+          categoria_motivo: '',
+          categoria_submotivo: '',
+          gravedad_vulneracion: '',
+          urgencia_vulneracion: '',
+          nnya: '',
+          autor_dv: '',
+        },
+      ],
+    }))
+  }
+  return { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext };
 };
 

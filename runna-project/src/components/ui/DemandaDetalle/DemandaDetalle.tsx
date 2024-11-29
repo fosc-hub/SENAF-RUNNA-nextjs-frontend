@@ -13,7 +13,8 @@ import {
 } from '@mui/material'
 import {
   Close as CloseIcon,
-  Add as AddIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
   AttachFile as AttachFileIcon,
   Person as PersonIcon,
   Message as MessageIcon,
@@ -31,7 +32,24 @@ import { EnviarRespuestaModal } from '../EnviarRespuestaModal'
 import { useFormData } from './useFormData'
 import { useApiData } from './useApiData'
 import { renderStepContent } from './RenderstepContent'
+interface CollapsibleSectionProps {
+  title: string
+  children: React.ReactNode
+  isOpen: boolean
+  onToggle: () => void
+}
 
+function CollapsibleSection({ title, children, isOpen, onToggle }: CollapsibleSectionProps) {
+  return (
+    <Paper sx={{ mb: 3 }} elevation={3}>
+      <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={onToggle}>
+        <Typography variant="h6" color="primary">{title}</Typography>
+        {isOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+      </Box>
+      {isOpen && <Box sx={{ p: 2 }}>{children}</Box>}
+    </Paper>
+  )
+}
 const steps = ['Carátula', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Vínculos']
 
 export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
@@ -62,7 +80,8 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
     setIsEnviarRespuestaOpen(false)
   }
   const apiData = useApiData(demanda?.id, demanda?.localizacion, demanda?.usuarioExterno);
-  const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente } = useFormData(demanda, apiData);
+  const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente,  addVulneraciontext,
+  } = useFormData(demanda, apiData);
   useEffect(() => {
     if (apiData.localizacion) {
       handleInputChange('localizacion', {
@@ -71,7 +90,12 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
       })
     }
   }, [apiData.localizacion])
-
+  useEffect(() => {
+    if (apiData.nnyaList) {
+      handleInputChange('ninosAdolescentes', apiData.nnyaList);
+    }
+  }, [apiData.nnyaList]);
+  
   // Synchronize currentMotivoIntervencion into formData
   useEffect(() => {
     if (
@@ -87,7 +111,15 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
   useEffect(() => {
     console.log('Localización ID:', demanda?.localizacion);
   }, [demanda?.localizacion]);
-
+  useEffect(() => {
+    if (apiData.vulneraciones?.length) {
+      handleInputChange('vulneraciones', apiData.vulneraciones);
+    }
+  }, [apiData.vulneraciones]);
+  
+  
+  
+  
   useEffect(() => {
     const fetchUsuariosExternos = async () => {
       try {
@@ -278,6 +310,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
                 </Step>
               ))}
             </Stepper>
+            
             <form onSubmit={handleSubmit}>
               <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
                 {apiData.barrios && apiData.localidades && apiData.cpcs ? (
@@ -285,7 +318,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
                     activeStep,
                     formData: {
                       ...formData,
-                      ninosAdolescentes: apiData.nnyaList, // Map NNYA data here
+                      ninosAdolescentes: apiData.nnyaList,
                     },
                     handleInputChange,
                     motivosIntervencion: apiData.motivosIntervencion,
@@ -301,9 +334,16 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
                     usuariosExternos,
                     demanda,
                     getMotivoIntervencion: apiData.getMotivoIntervencion,
-                    institucionesEducativas: apiData.institucionesEducativas, // Pass institutions here
+                    institucionesEducativas: apiData.institucionesEducativas,
                     institucionesSanitarias: apiData.institucionesSanitarias,
-                    
+                    addNinoAdolescente,
+                    addAdultoConviviente,
+                    addVulneraciontext,
+                    categoriaMotivos: apiData.categoriaMotivos, // Pass as a prop
+                    categoriaSubmotivos: apiData.categoriaSubmotivos, // Pass submotivos as well
+                    gravedadVulneraciones: apiData.gravedadVulneraciones,
+                    urgenciaVulneraciones: apiData.urgenciaVulneraciones,
+
                   })
                 ) : (
                   <Typography>Loading data...</Typography>

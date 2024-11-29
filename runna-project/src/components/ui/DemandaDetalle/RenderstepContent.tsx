@@ -16,12 +16,16 @@ import {
   Button,
   Radio,
   RadioGroup,
+  Paper
 } from '@mui/material'
 import { ImportIcon as AddIcon } from 'lucide-react'
 
 import { LocalizationProvider, DateTimePicker, DatePicker } from '@mui/x-date-pickers'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3'
 import { es } from 'date-fns/locale'
+
+const formatDate = (date) => date ? date.toISOString().split('T')[0] : null
+
 
 const formatDate = (date) => date ? date.toISOString().split('T')[0] : null
 
@@ -164,6 +168,13 @@ export const renderStepContent = ({
   addAdultoConviviente,
   institucionesEducativas,
   institucionesSanitarias,
+  addVulneraciontext,
+  addVulneracion,
+  categoriaMotivos, // Receive it as a prop
+  categoriaSubmotivos, // Receive submotivos as a prop
+  gravedadVulneraciones, // Receive gravedadVulneraciones as a prop
+  urgenciaVulneraciones, // Receive urgenciaVulneraciones as a prop
+
 
 
 }) => {
@@ -871,8 +882,184 @@ export const renderStepContent = ({
 </Box>
 
         )
+        case 3:
+          return (
+            <Box>
+            <Typography variant="h6" color="primary" gutterBottom>
+              Presunta Vulneración de Derechos informada
+            </Typography>
+            
+            {formData.vulneraciones.map((vulneracion, index) => (
+              <Box key={index} sx={{ mb: 4, p: 2, border: '1px solid #ccc', borderRadius: '4px' }}>
+                <Typography variant="h6" gutterBottom>Vulneración {index + 1}</Typography>
+                
+                <FormControl fullWidth margin="normal">
+                  <InputLabel>Categoría de Motivo</InputLabel>
+                  <Select
+                    value={vulneracion.categoria_motivo || ''}
+                    onChange={(e) => handleInputChange(`vulneraciones[${index}].categoria_motivo`, e.target.value)}
+                  >
+                    {categoriaMotivos.map((motivo) => (
+                      <MenuItem key={motivo.id} value={motivo.id}>
+                        {motivo.nombre}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+        
+                  {/* Subcategoría */}
+                  <FormControl fullWidth margin="normal">
+                    <InputLabel>Subcategoría</InputLabel>
+                    <Select
+                      value={vulneracion.categoria_submotivo || ''}
+                      onChange={(e) =>
+                        handleInputChange(`vulneraciones[${index}].categoria_submotivo`, e.target.value)
+                      }
+                      disabled={!vulneracion.categoria_motivo}
+                    >
+                      {categoriaSubmotivos
+                        .filter((submotivo) => submotivo.motivo === vulneracion.categoria_motivo)
+                        .map((submotivo) => (
+                          <MenuItem key={submotivo.id} value={submotivo.id}>
+                            {submotivo.nombre}
+                          </MenuItem>
+                        ))}
+                    </Select>
+                  </FormControl>
+        
+                  {/* Gravedad de la Vulneración */}
+                  <FormControl fullWidth margin="normal">
+                    <InputLabel>Gravedad de la Vulneración</InputLabel>
+                    <Select
+                      value={vulneracion.gravedad_vulneracion || ''}
+                      onChange={(e) =>
+                        handleInputChange(`vulneraciones[${index}].gravedad_vulneracion`, e.target.value)
+                      }
+                    >
+                      {gravedadVulneraciones.map((gravedad) => (
+                        <MenuItem key={gravedad.id} value={gravedad.id}>
+                          {gravedad.nombre}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+        
+                  {/* Urgencia de la Vulneración */}
+                  <FormControl fullWidth margin="normal">
+                    <InputLabel>Urgencia de la Vulneración</InputLabel>
+                    <Select
+                      value={vulneracion.urgencia_vulneracion || ''}
+                      onChange={(e) =>
+                        handleInputChange(`vulneraciones[${index}].urgencia_vulneracion`, e.target.value)
+                      }
+                    >
+                      {urgenciaVulneraciones.map((urgencia) => (
+                        <MenuItem key={urgencia.id} value={urgencia.id}>
+                          {urgencia.nombre}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+        
+                  {/* Observaciones */}
+                  <TextField
+                    fullWidth
+                    label="Observaciones"
+                    multiline
+                    rows={4}
+                    value={vulneracion.observaciones || ''}
+                    onChange={(e) =>
+                      handleInputChange(`vulneraciones[${index}].observaciones`, e.target.value)
+                    }
+                  />
+        
+                  {/* NNyA */}
+                  <FormControl fullWidth margin="normal">
+                    <InputLabel>NNyA</InputLabel>
+                    <Select
+                      value={vulneracion.nnya || ''}
+                      onChange={(e) => handleInputChange(`vulneraciones[${index}].nnya`, e.target.value)}
+                    >
+                      {formData.ninosAdolescentes.map((nnya, nnyaIndex) => (
+                        <MenuItem key={nnyaIndex} value={nnyaIndex}>
+                          {`${nnya.nombre} ${nnya.apellido}`}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+        
+                  {/* Autor DV */}
+                  <FormControl fullWidth margin="normal">
+                    <InputLabel>Autor DV</InputLabel>
+                    <Select
+                      value={vulneracion.autor_dv || ''}
+                      onChange={(e) => handleInputChange(`vulneraciones[${index}].autor_dv`, e.target.value)}
+                    >
+                      {formData.adultosConvivientes.map((adulto, adultoIndex) => (
+                        <MenuItem key={adultoIndex} value={adultoIndex}>
+                          {`${adulto.nombre} ${adulto.apellido}`}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+        
+                  {/* Principal Demanda */}
+                  <Box sx={{ mt: 2 }}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={vulneracion.principal_demanda || false}
+                          onChange={(e) =>
+                            handleInputChange(`vulneraciones[${index}].principal_demanda`, e.target.checked)
+                          }
+                        />
+                      }
+                      label="Principal Demanda"
+                    />
+        
+                    {/* Transcurre en Actualidad */}
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={vulneracion.transcurre_actualidad || false}
+                          onChange={(e) =>
+                            handleInputChange(
+                              `vulneraciones[${index}].transcurre_actualidad`,
+                              e.target.checked
+                            )
+                          }
+                        />
+                      }
+                      label="Transcurre en Actualidad"
+                    />
+                  </Box>
+                </Box>
+              ))}
+        
+              <Button
+                startIcon={<AddIcon />}
+                onClick={() =>
+                  handleInputChange('vulneraciones', [
+                    ...formData.vulneraciones,
+                    { categoria_motivo: '', categoria_submotivo: '' },
+                  ])
+                }
+                sx={{ mt: 2, color: 'primary.main' }}
+              >
+                Añadir otra vulneración
+              </Button>
+        
+              <Typography variant="h6" color="primary" gutterBottom sx={{ mt: 4 }}>
+                Vulneraciones Añadidas: {formData.vulneraciones.length}
+              </Typography>
+            </Box>
+          );
+        
+  
     default:
       return null
   }
+
+  
 }
 

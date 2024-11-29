@@ -15,7 +15,7 @@ import { getTCategoriaSubmotivos } from '../../../api/TableFunctions/categoriaSu
 import { getTGravedadVulneracions } from '../../../api/TableFunctions/gravedadVulneraciones'
 import { getTUrgenciaVulneracions } from '../../../api/TableFunctions/urgenciaVulneraciones'
 import { getTCondicionesVulnerabilidads } from '../../../api/TableFunctions/condicionesVulnerabilidad'
-import { getTVulneracions} from '../../../api/TableFunctions/vulneraciones'
+import { getTVulneracions, getTVulneracion} from '../../../api/TableFunctions/vulneraciones'
 import { createTVulneracion} from '../../../api/TableFunctions/vulneraciones'
 import { getTInstitucionEducativas} from '../../../api/TableFunctions/institucionesEducativas'
 import { getTInstitucionSanitarias} from '../../../api/TableFunctions/institucionesSanitarias'
@@ -43,6 +43,7 @@ export const useApiData = (demandaId, localizacionId, usuarioExternoId) => {
     barrios: [],
     localidades: [],
     cpcs: [],
+    vulneraciones: [], // Add this
     selectedBarrio: null,
     selectedLocalidad: null,
     selectedCpc: null,
@@ -63,8 +64,30 @@ export const useApiData = (demandaId, localizacionId, usuarioExternoId) => {
 const institucionesSanitarias = [];
 
       try {
-
+        const categoriaSubmotivos = await getTCategoriaSubmotivos();
+        const categoriaMotivos = await getTCategoriaMotivos();
         const fetchedMotivos = await getTMotivoIntervencions();
+        const gravedadVulneraciones = await getTGravedadVulneracions();
+        const urgenciaVulneraciones = await getTUrgenciaVulneracions();
+        const vulneraciones = await getTVulneracions({ demanda: demandaId });
+        const detailedVulneraciones = vulneraciones.length
+          ? await Promise.all(
+              vulneraciones.map(async (vulneracion) => {
+                try {
+                  const details = await getTVulneracion(vulneracion.id);
+                  return { ...vulneracion, ...details };
+                } catch (error) {
+                  console.error(`Error fetching details for vulneracion ${vulneracion.id}:`, error);
+                  return vulneracion; // Return base vulneracion if details fail
+                }
+              })
+            )
+          : [];
+      
+
+        
+        
+        
 
         let usuarioExternoData = null;
         if (usuarioExternoId) {
@@ -223,6 +246,11 @@ const institucionesSanitarias = [];
         // Prepare and set final API data
         setApiData((prevData) => ({
           ...prevData,
+          categoriaSubmotivos, // Add fetched submotivos to the state
+          categoriaMotivos, // Add fetched data to apiData state
+          vulneraciones: detailedVulneraciones,
+          gravedadVulneraciones, // Add fetched data to the state
+          urgenciaVulneraciones, // Add fetched data to the state
           motivosIntervencion: fetchedMotivos,
           demandaMotivoIntervencion: demandaMotivoData,
           currentMotivoIntervencion,
