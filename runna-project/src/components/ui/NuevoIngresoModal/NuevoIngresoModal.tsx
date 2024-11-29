@@ -314,9 +314,8 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
       // Create vinculaciones
       addDebugInfo('Creating vinculaciones')
       const vinculacionesPromises = formData.vinculaciones.map(vinculacion => {
-        const persona1 = vinculacion.persona_1 < formData.ninosAdolescentes.length
-          ? ninosAdolescentesPersonas[vinculacion.persona_1].id
-          : adultosConvivientesPersonas[vinculacion.persona_1 - formData.ninosAdolescentes.length].id
+        // Always use the first NNyA as persona_1
+        const persona1 = ninosAdolescentesPersonas[0].id
 
         const persona2 = vinculacion.persona_2 < formData.ninosAdolescentes.length
           ? ninosAdolescentesPersonas[vinculacion.persona_2].id
@@ -333,8 +332,7 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
       })
 
       const vinculacionesResponses = await Promise.all(vinculacionesPromises)
-      addDebugInfo(`Created ${vinculacionesResponses.
-length} vinculaciones`)
+      addDebugInfo(`Created ${vinculacionesResponses.length} vinculaciones`)
 
       onSubmit(demandaResponse)
       onClose()
