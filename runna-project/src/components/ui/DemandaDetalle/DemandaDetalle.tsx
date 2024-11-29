@@ -42,14 +42,26 @@ interface CollapsibleSectionProps {
 function CollapsibleSection({ title, children, isOpen, onToggle }: CollapsibleSectionProps) {
   return (
     <Paper sx={{ mb: 3 }} elevation={3}>
-      <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={onToggle}>
-        <Typography variant="h6" color="primary">{title}</Typography>
+      <Box
+        sx={{
+          p: 2,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          cursor: 'pointer',
+        }}
+        onClick={onToggle}
+      >
+        <Typography variant="h6" color="primary">
+          {title}
+        </Typography>
         {isOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
       </Box>
       {isOpen && <Box sx={{ p: 2 }}>{children}</Box>}
     </Paper>
-  )
+  );
 }
+
 const steps = ['Carátula', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Vínculos']
 
 export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
@@ -60,6 +72,8 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
   const [isRegistrarModalOpen, setIsRegistrarModalOpen] = useState(false)
   const [isEnviarRespuestaOpen, setIsEnviarRespuestaOpen] = useState(false)
   const [usuariosExternos, setUsuariosExternos] = useState([])
+  const [isStepContentOpen, setIsStepContentOpen] = useState(true)
+
   const handleArchivosSubmit = (data: { files: string[], comments: string }) => {
     console.log('Archivos adjuntos:', data)
     setIsArchivosModalOpen(false)
@@ -80,7 +94,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
     setIsEnviarRespuestaOpen(false)
   }
   const apiData = useApiData(demanda?.id, demanda?.localizacion, demanda?.usuarioExterno);
-  const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente,  addVulneraciontext,
+  const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext,
   } = useFormData(demanda, apiData);
   useEffect(() => {
     if (apiData.localizacion) {
@@ -95,7 +109,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
       handleInputChange('ninosAdolescentes', apiData.nnyaList);
     }
   }, [apiData.nnyaList]);
-  
+
   // Synchronize currentMotivoIntervencion into formData
   useEffect(() => {
     if (
@@ -116,10 +130,10 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
       handleInputChange('vulneraciones', apiData.vulneraciones);
     }
   }, [apiData.vulneraciones]);
-  
-  
-  
-  
+
+
+
+
   useEffect(() => {
     const fetchUsuariosExternos = async () => {
       try {
@@ -272,15 +286,6 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
               </Paper>
             )}
 
-            <Typography variant="h6" gutterBottom>Historial de la Demanda</Typography>
-            <Box sx={{ mb: 3 }}>
-              {formData.historial?.map((item, index) => (
-                <Box key={index} sx={{ mb: 2, pl: 2, borderLeft: '2px solid', borderColor: 'divider' }}>
-                  <Typography variant="body2" fontWeight="bold">{item.fecha}</Typography>
-                  <Typography variant="body2">{item.descripcion}</Typography>
-                </Box>
-              ))}
-            </Box>
 
             <Typography variant="h6" gutterBottom>Archivos adjuntos ({formData.archivosAdjuntos?.length || 0})</Typography>
             <Box component="ul" sx={{ mb: 3, pl: 2 }}>
@@ -290,77 +295,83 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
             </Box>
 
             <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-          <Button variant="contained" startIcon={<MessageIcon />} onClick={() => setIsEnviarRespuestaOpen(true)}>
-            Enviar Respuesta
-          </Button>
-          <Button variant="outlined" startIcon={<AttachFileIcon />} onClick={() => setIsArchivosModalOpen(true)}>
-            Archivos adjuntos
-          </Button>
-          <Button variant="outlined" startIcon={<PersonIcon />} onClick={() => setIsAsignarModalOpen(true)}>
-            Asignar
-          </Button>
-          <Button variant="contained" onClick={() => setIsRegistrarModalOpen(true)}>
-            Registrar actividad
-          </Button>
-        </Box>
-            <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-              {steps.map((label) => (
-                <Step key={label}>
-                  <StepLabel>{label}</StepLabel>
-                </Step>
-              ))}
-            </Stepper>
-            
-            <form onSubmit={handleSubmit}>
-              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-                {apiData.barrios && apiData.localidades && apiData.cpcs ? (
-                  renderStepContent({
-                    activeStep,
-                    formData: {
-                      ...formData,
-                      ninosAdolescentes: apiData.nnyaList,
-                    },
-                    handleInputChange,
-                    motivosIntervencion: apiData.motivosIntervencion,
-                    currentMotivoIntervencion: apiData.currentMotivoIntervencion,
-                    demandaMotivoIntervencion: apiData.demandaMotivoIntervencion,
-                    barrios: apiData.barrios,
-                    localidades: apiData.localidades,
-                    cpcs: apiData.cpcs,
-                    localizacion: apiData.localizacion,
-                    usuarioExterno: apiData.usuarioExterno,
-                    vinculosUsuarioExterno: apiData.vinculosUsuarioExterno,
-                    institucionesUsuarioExterno: apiData.institucionesUsuarioExterno,
-                    usuariosExternos,
-                    demanda,
-                    getMotivoIntervencion: apiData.getMotivoIntervencion,
-                    institucionesEducativas: apiData.institucionesEducativas,
-                    institucionesSanitarias: apiData.institucionesSanitarias,
-                    addNinoAdolescente,
-                    addAdultoConviviente,
-                    addVulneraciontext,
-                    categoriaMotivos: apiData.categoriaMotivos, // Pass as a prop
-                    categoriaSubmotivos: apiData.categoriaSubmotivos, // Pass submotivos as well
-                    gravedadVulneraciones: apiData.gravedadVulneraciones,
-                    urgenciaVulneraciones: apiData.urgenciaVulneraciones,
+              <Button variant="contained" startIcon={<MessageIcon />} onClick={() => setIsEnviarRespuestaOpen(true)}>
+                Enviar Respuesta
+              </Button>
+              <Button variant="outlined" startIcon={<AttachFileIcon />} onClick={() => setIsArchivosModalOpen(true)}>
+                Archivos adjuntos
+              </Button>
+              <Button variant="outlined" startIcon={<PersonIcon />} onClick={() => setIsAsignarModalOpen(true)}>
+                Asignar
+              </Button>
+              <Button variant="contained" onClick={() => setIsRegistrarModalOpen(true)}>
+                Registrar actividad
+              </Button>
+            </Box>
+            <CollapsibleSection
+              title={`Detalle de la Demanda `}
+              isOpen={isStepContentOpen}
+              onToggle={() => setIsStepContentOpen(!isStepContentOpen)}
+            >
+              <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+                {steps.map((label) => (
+                  <Step key={label}>
+                    <StepLabel>{label}</StepLabel>
+                  </Step>
+                ))}
+              </Stepper>
 
-                  })
-                ) : (
-                  <Typography>Loading data...</Typography>
-                )}
-              </LocalizationProvider>
-              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
-                <Button onClick={handleBack} disabled={activeStep === 0}>
-                  Anterior
-                </Button>
-                <Button type="submit" variant="contained" color="primary" disabled={isSubmitting}>
-                  {isSubmitting ? <CircularProgress size={24} /> : (activeStep === steps.length - 1 ? 'Guardar' : 'Siguiente')}
-                </Button>
-              </Box>
-            </form>
-          </Paper>
-        </Box>
-      </Modal>
+              <form onSubmit={handleSubmit}>
+              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+  {apiData.barrios && apiData.localidades && apiData.cpcs ? (
+    renderStepContent({
+      activeStep,
+      formData: {
+        ...formData,
+        ninosAdolescentes: apiData.nnyaList,
+      },
+      handleInputChange,
+      motivosIntervencion: apiData.motivosIntervencion,
+      currentMotivoIntervencion: apiData.currentMotivoIntervencion,
+      demandaMotivoIntervencion: apiData.demandaMotivoIntervencion,
+      barrios: apiData.barrios,
+      localidades: apiData.localidades,
+      cpcs: apiData.cpcs,
+      localizacion: apiData.localizacion,
+      usuarioExterno: apiData.usuarioExterno,
+      vinculosUsuarioExterno: apiData.vinculosUsuarioExterno,
+      institucionesUsuarioExterno: apiData.institucionesUsuarioExterno,
+      usuariosExternos,
+      demanda,
+      getMotivoIntervencion: apiData.getMotivoIntervencion,
+      institucionesEducativas: apiData.institucionesEducativas,
+      institucionesSanitarias: apiData.institucionesSanitarias,
+      addNinoAdolescente,
+      addAdultoConviviente,
+      addVulneraciontext,
+      categoriaMotivos: apiData.categoriaMotivos,
+      categoriaSubmotivos: apiData.categoriaSubmotivos,
+      gravedadVulneraciones: apiData.gravedadVulneraciones,
+      urgenciaVulneraciones: apiData.urgenciaVulneraciones,
+    })
+  ) : (
+    <Typography>Loading data...</Typography>
+  )}
+</LocalizationProvider>
+
+            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
+              <Button onClick={handleBack} disabled={activeStep === 0}>
+                Anterior
+              </Button>
+              <Button type="submit" variant="contained" color="primary" disabled={isSubmitting}>
+                {isSubmitting ? <CircularProgress size={24} /> : (activeStep === steps.length - 1 ? 'Guardar' : 'Siguiente')}
+              </Button>
+            </Box>
+          </form>
+        </CollapsibleSection>
+        </Paper>
+      </Box>
+    </Modal >
 
       <ArchivosAdjuntosModal
           isOpen={isArchivosModalOpen}
