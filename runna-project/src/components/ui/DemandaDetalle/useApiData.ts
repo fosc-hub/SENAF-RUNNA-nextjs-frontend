@@ -23,7 +23,7 @@ import { getInstitucionesUsuarioExterno } from '../../../api/TableFunctions/inst
 import { getVinculosUsuarioExterno } from '../../../api/TableFunctions/vinculoUsuarioExterno'
 import { getTUsuariosExternos, getTUsuarioExterno } from '../../../api/TableFunctions/usuarioExterno'
 import { getTVinculos} from '../../../api/TableFunctions/vinculos'
-import { createTVinculoPersonaPersona } from '../../../api/TableFunctions/vinculospersonaspersonas'
+import { createTVinculoPersonaPersona, getTVinculoPersonaPersona, getTVinculoPersonaPersonas } from '../../../api/TableFunctions/vinculospersonaspersonas'
 import { getTVinculoUsuarioLinea, getTVinculoUsuarioLineas } from '../../../api/TableFunctions/vinculoUsuarioLinea'
 import { getTDemandaPersonas, getTDemandaPersona } from '../../../api/TableFunctions/demandaPersonas';
 import { getTNNyASalud, getTNNyASaluds } from '../../../api/TableFunctions/nnyaSalud';
@@ -35,6 +35,8 @@ import { getTDemandaMotivoIntervencion, getTDemandaMotivoIntervencions } from '.
 export const useApiData = (demandaId: number, localizacionId: number, usuarioExternoId: number) => {
 
   interface ApiData {
+    vinculaciones: any[]; // Add vinculaciones array
+    vinculoPersonas: any[]; // Add vinculoPersonas array for relationships
     motivosIntervencion: any[];
     demandaMotivoIntervencion: any | null;
     currentMotivoIntervencion: any | null;
@@ -56,6 +58,8 @@ export const useApiData = (demandaId: number, localizacionId: number, usuarioExt
   }
 
   const [apiData, setApiData] = useState<ApiData>({
+    vinculaciones: [], // Add vinculaciones array
+    vinculoPersonas: [], // Add vinculoPersonas array for relationships
     motivosIntervencion: [],
     demandaMotivoIntervencion: null,
     currentMotivoIntervencion: null,
@@ -103,11 +107,6 @@ const institucionesSanitarias = [];
               })
             )
           : [];
-      
-
-        
-        
-        
 
         let usuarioExternoData = null;
         if (usuarioExternoId) {
@@ -122,6 +121,22 @@ const institucionesSanitarias = [];
 
         // Fetch demanda-persona data
         const demandaPersonaData = await getTDemandaPersonas({ demanda: demandaId });
+        const personas = await Promise.all(
+          demandaPersonaData.map(async (demandaPersona) => {
+            const persona = await getTPersona(demandaPersona.persona);
+            return { id: persona.id, ...persona };
+          })
+        );
+        const vinculacionesPromises = personas.map(async (persona) => {
+          try {
+            const vinculacion = await getTVinculoPersonaPersona(persona.id);
+            return vinculacion; // Return the vinculación details
+          } catch (error) {
+            console.error(`Error fetching vinculacion for persona ${persona.id}:`, error);
+            return null; // Handle missing data gracefully
+          }
+        });
+        const vinculaciones = (await Promise.all(vinculacionesPromises)).filter(Boolean);
 
         const nnyaList: any[] = [];
         const adultsList: any[] = []; // Separate list for adults
@@ -260,10 +275,13 @@ const institucionesSanitarias = [];
 
         const cpcsData = await getTCPCs();
         // const cpcsData = await cpcsResponse.json();
+const fetchedVinculaciones = await getTVinculoPersonaPersonas({ demanda: demandaId });
 
         // Prepare and set final API data
         setApiData((prevData) => ({
           ...prevData,
+          vinculaciones,
+          vinculoPersonas: personas,
           categoriaSubmotivos, // Add fetched submotivos to the state
           categoriaMotivos, // Add fetched data to apiData state
           vulneraciones: detailedVulneraciones,

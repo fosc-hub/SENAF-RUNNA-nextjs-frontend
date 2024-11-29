@@ -1,3 +1,4 @@
+import { add } from 'date-fns';
 import { useState, useEffect } from 'react'
 
 const initialFormData = (demanda) => ({
@@ -115,7 +116,29 @@ export const useFormData = (demanda, apiData) => {
       return updatedData
     })
   }
+  const addVinculacion = () => {
+    setFormData(prevData => ({
+      ...prevData,
+      vinculaciones: [
+        ...prevData.vinculaciones,
+        {
+          persona_1: '',
+          persona_2: '',
+          vinculo: '',
+          conviven: false,
+          autordv: false,
+          garantiza_proteccion: false,
+        }
+      ]
+    }))
+  }
 
+  const removeVinculacion = (index) => {
+    setFormData(prevData => ({
+      ...prevData,
+      vinculaciones: prevData.vinculaciones.filter((_, i) => i !== index)
+    }))
+  }
   const addNinoAdolescente = () => {
     setFormData(prevData => ({
       ...prevData,
@@ -190,6 +213,6 @@ export const useFormData = (demanda, apiData) => {
       ],
     }))
   }
-  return { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext };
+  return { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext, addVinculacion, removeVinculacion };
 };
 

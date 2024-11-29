@@ -16,7 +16,8 @@ import {
   Button,
   Radio,
   RadioGroup,
-  Paper
+  Paper,
+  FormGroup,
 } from '@mui/material'
 import { ImportIcon as AddIcon } from 'lucide-react'
 
@@ -163,6 +164,8 @@ export const renderStepContent = ({
   localizacion,
   addNinoAdolescente,
   addAdultoConviviente,
+  addVinculacion,
+  removeVinculacion,
   institucionesEducativas,
   institucionesSanitarias,
   addVulneraciontext,
@@ -171,11 +174,112 @@ export const renderStepContent = ({
   categoriaSubmotivos, // Receive submotivos as a prop
   gravedadVulneraciones, // Receive gravedadVulneraciones as a prop
   urgenciaVulneraciones,
+  condicionesVulnerabilidadNNyA,
+  condicionesVulnerabilidadAdultos,
+  vinculoPersonas // Add this here
 
 
 
 }) => {
+  const renderVinculacion = (vinculacion, index) => (
+    <Grid container spacing={2} key={index} sx={{ mb: 4, p: 2, border: '1px solid #e0e0e0', borderRadius: 2 }}>
+      <Grid item xs={12}>
+        <Typography variant="h6" gutterBottom>Vinculación {index + 1}</Typography>
+      </Grid>
+      
+      <Grid item xs={12} md={6}>
+        <Typography variant="subtitle1" gutterBottom>
+          Persona 1 (NNyA Principal):
+        </Typography>
+        <Typography>
+          {formData.ninosAdolescentes[0].nombre} {formData.ninosAdolescentes[0].apellido}
+        </Typography>
+      </Grid>
+  
+      <Grid item xs={12} md={6}>
+      <FormControl fullWidth>
+  <InputLabel>Persona 2</InputLabel>
+  <Select
+    value={vinculacion.persona_2}
+    onChange={(e) => handleInputChange(`vinculaciones[${index}].persona_2`, e.target.value)}
+    label="Persona 2"
+  >
+    {formData.ninosAdolescentes.map((nino, i) => (
+      <MenuItem key={`nnya-${nino.id}`} value={nino.id}>
+        {nino.nombre} {nino.apellido} (NNyA)
+      </MenuItem>
+    ))}
+    {formData.adultosConvivientes.map((adulto, i) => (
+      <MenuItem key={`adulto-${adulto.id}`} value={adulto.id}>
+        {adulto.nombre} {adulto.apellido} (Adulto)
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>
 
+      </Grid>
+  
+      <Grid item xs={12} md={6}>
+      <FormControl fullWidth>
+  <InputLabel>Vínculo</InputLabel>
+  <Select
+    value={vinculacion.vinculo}
+    onChange={(e) => handleInputChange(`vinculaciones[${index}].vinculo`, e.target.value)}
+    label="Vínculo"
+  >
+    {vinculoPersonas.map((vinculo) => (
+      <MenuItem key={vinculo.id} value={vinculo.id}>
+        {vinculo.nombre}
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>
+
+      </Grid>
+  
+      <Grid item xs={12} md={6}>
+        <FormGroup>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={vinculacion.conviven}
+                onChange={(e) => handleInputChange(`vinculaciones[${index}].conviven`, e.target.checked)}
+              />
+            }
+            label="Conviven"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={vinculacion.autordv}
+                onChange={(e) => handleInputChange(`vinculaciones[${index}].autordv`, e.target.checked)}
+              />
+            }
+            label="Autor DV"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={vinculacion.garantiza_proteccion}
+                onChange={(e) => handleInputChange(`vinculaciones[${index}].garantiza_proteccion`, e.target.checked)}
+              />
+            }
+            label="Garantiza Protección"
+          />
+        </FormGroup>
+      </Grid>
+  
+      <Grid item xs={12}>
+        <Button 
+          variant="outlined" 
+          color="secondary" 
+          onClick={() => removeVinculacion(index)}
+        >
+          Eliminar Vinculación
+        </Button>
+      </Grid>
+    </Grid>
+  )
   switch (activeStep) {
     case 0:
       return (
@@ -1041,7 +1145,18 @@ export const renderStepContent = ({
               </Typography>
             </Box>
           );
-        
+          case 4:
+            return (
+              <Box>
+                <Typography variant="h6" gutterBottom>
+                  Vínculos
+                </Typography>
+                {formData.vinculaciones.map((vinculacion, index) => renderVinculacion(vinculacion, index))}
+                <Button variant="contained" color="primary" onClick={addVinculacion} sx={{ mt: 2 }}>
+                  Agregar Vinculación
+                </Button>
+              </Box>
+            )
   
     default:
       return null

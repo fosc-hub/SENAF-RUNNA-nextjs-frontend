@@ -94,7 +94,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
     setIsEnviarRespuestaOpen(false)
   }
   const apiData = useApiData(demanda?.id, demanda?.localizacion, demanda?.usuarioExterno);
-  const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext,
+  const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext, addVinculacion, removeVinculacion, addCondicionVulnerabilidad, removeCondicionVulnerabilidad
   } = useFormData(demanda, apiData);
   useEffect(() => {
     if (apiData.localizacion) {
@@ -104,6 +104,19 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
       })
     }
   }, [apiData.localizacion])
+  useEffect(() => {
+    if (apiData.vinculaciones) {
+      handleInputChange('vinculaciones', apiData.vinculaciones);
+    }
+  }, [apiData.vinculaciones]);
+  
+  useEffect(() => {
+    if (apiData.vinculoPersonas) {
+      handleInputChange('vinculoPersonas', apiData.vinculoPersonas);
+    }
+  }, [apiData.vinculoPersonas]);
+  
+  
   useEffect(() => {
     if (apiData.nnyaList) {
       handleInputChange('ninosAdolescentes', apiData.nnyaList);
@@ -350,10 +363,17 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
       addNinoAdolescente,
       addAdultoConviviente,
       addVulneraciontext,
+      addVinculacion,
+      removeVinculacion,
       categoriaMotivos: apiData.categoriaMotivos,
       categoriaSubmotivos: apiData.categoriaSubmotivos,
       gravedadVulneraciones: apiData.gravedadVulneraciones,
       urgenciaVulneraciones: apiData.urgenciaVulneraciones,
+      condicionesVulnerabilidadNNyA: apiData.condicionesVulnerabilidadNNyA,
+      condicionesVulnerabilidadAdultos: apiData.condicionesVulnerabilidadAdultos,
+      vinculoPersonas: apiData.vinculoPersonas, // Pass vinculoPersonas here
+      
+
     })
   ) : (
     <Typography>Loading data...</Typography>
