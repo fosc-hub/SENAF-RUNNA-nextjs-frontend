@@ -166,6 +166,8 @@ export const renderStepContent = ({
   addAdultoConviviente,
   addVinculacion,
   removeVinculacion,
+  addCondicionVulnerabilidad,
+  removeCondicionVulnerabilidad,
   institucionesEducativas,
   institucionesSanitarias,
   addVulneraciontext,
@@ -176,7 +178,9 @@ export const renderStepContent = ({
   urgenciaVulneraciones,
   condicionesVulnerabilidadNNyA,
   condicionesVulnerabilidadAdultos,
-  vinculoPersonas // Add this here
+  vinculoPersonas, // Add this here
+  condicionesVulnerabilidad,
+  personasWithCondiciones,
 
 
 
@@ -1157,7 +1161,97 @@ export const renderStepContent = ({
                 </Button>
               </Box>
             )
-  
+            case 5:
+              return (
+                <Box>
+                  <Typography color="primary" sx={{ mb: 2 }}>
+                    Condiciones de Vulnerabilidad
+                  </Typography>
+                  {formData.condicionesVulnerabilidad.map((condicion, index) => {
+                    const isAdulto = condicion.persona.startsWith('adulto-');
+                    const filteredCondiciones = isAdulto
+                      ? condicionesVulnerabilidadAdultos
+                      : condicionesVulnerabilidadNNyA;
+            
+                    return (
+                      <Box key={index} sx={{ mb: 4, p: 2, border: '1px solid #ccc', borderRadius: '4px' }}>
+                        <Typography variant="h6" gutterBottom>
+                          Condición de Vulnerabilidad {index + 1}
+                        </Typography>
+            
+                        <FormControl fullWidth margin="normal">
+                          <InputLabel>Persona</InputLabel>
+                          <Select
+                            value={condicion.persona}
+                            onChange={(e) => handleInputChange(`condicionesVulnerabilidad[${index}].persona`, e.target.value)}
+                            label="Persona"
+                          >
+                            {formData.ninosAdolescentes.map((nino, ninoIndex) => (
+                              <MenuItem key={`nino-${ninoIndex}`} value={`nino-${ninoIndex}`}>
+                                {nino.nombre} {nino.apellido} (NNyA)
+                              </MenuItem>
+                            ))}
+                            {formData.adultosConvivientes.map((adulto, adultoIndex) => (
+                              <MenuItem key={`adulto-${adultoIndex}`} value={`adulto-${adultoIndex}`}>
+                                {adulto.nombre} {adulto.apellido} (Adulto)
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+            
+                        <FormControl fullWidth margin="normal">
+                          <InputLabel>Condición de Vulnerabilidad</InputLabel>
+                          <Select
+                            value={condicion.condicion_vulnerabilidad}
+                            onChange={(e) =>
+                              handleInputChange(`condicionesVulnerabilidad[${index}].condicion_vulnerabilidad`, e.target.value)
+                            }
+                            label="Condición de Vulnerabilidad"
+                          >
+                            {filteredCondiciones.map((cv) => (
+                              <MenuItem key={cv.id} value={cv.id}>
+                                {cv.nombre} - {cv.descripcion}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+            
+                        <FormControl component="fieldset" margin="normal">
+                          <Typography component="legend">¿Aplica esta condición?</Typography>
+                          <RadioGroup
+                            row
+                            value={condicion.si_no ? 'si' : 'no'}
+                            onChange={(e) =>
+                              handleInputChange(`condicionesVulnerabilidad[${index}].si_no`, e.target.value === 'si')
+                            }
+                          >
+                            <FormControlLabel value="si" control={<Radio />} label="Sí" />
+                            <FormControlLabel value="no" control={<Radio />} label="No" />
+                          </RadioGroup>
+                        </FormControl>
+            
+                        <Box sx={{ mt: 2 }}>
+                          <Button
+                            variant="outlined"
+                            color="secondary"
+                            onClick={() => removeCondicionVulnerabilidad(index)}
+                          >
+                            Eliminar Condición de Vulnerabilidad
+                          </Button>
+                        </Box>
+                      </Box>
+                    );
+                  })}
+                  <Button
+                    startIcon={<AddIcon />}
+                    onClick={addCondicionVulnerabilidad}
+                    sx={{ color: 'primary.main', mt: 2 }}
+                  >
+                    Añadir otra Condición de Vulnerabilidad
+                  </Button>
+                </Box>
+              );
+            
     default:
       return null
   }

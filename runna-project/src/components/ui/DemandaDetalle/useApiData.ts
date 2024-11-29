@@ -15,6 +15,7 @@ import { getTCategoriaSubmotivos } from '../../../api/TableFunctions/categoriaSu
 import { getTGravedadVulneracions } from '../../../api/TableFunctions/gravedadVulneraciones'
 import { getTUrgenciaVulneracions } from '../../../api/TableFunctions/urgenciaVulneraciones'
 import { getTCondicionesVulnerabilidads } from '../../../api/TableFunctions/condicionesVulnerabilidad'
+import { getTPersonaCondicionesVulnerabilidads } from '../../../api/TableFunctions/personaCondicionesVulnerabilidad';
 import { getTVulneracions, getTVulneracion} from '../../../api/TableFunctions/vulneraciones'
 import { createTVulneracion} from '../../../api/TableFunctions/vulneraciones'
 import { getTInstitucionEducativas} from '../../../api/TableFunctions/institucionesEducativas'
@@ -55,6 +56,7 @@ export const useApiData = (demandaId: number, localizacionId: number, usuarioExt
     vulneraciones: any[]; // Add this
     institucionesEducativas: any[];
     institucionesSanitarias: any[];
+    condicionesVulnerabilidad: any[]; // Initialize as an empty array
   }
 
   const [apiData, setApiData] = useState<ApiData>({
@@ -78,6 +80,8 @@ export const useApiData = (demandaId: number, localizacionId: number, usuarioExt
     adultsList: [], // Optional: List for adult personas
     institucionesEducativas: [],
     institucionesSanitarias: [],
+    condicionesVulnerabilidad: [], // Initialize as an empty array
+
   });
 
   useEffect(() => {
@@ -88,6 +92,7 @@ export const useApiData = (demandaId: number, localizacionId: number, usuarioExt
 const institucionesSanitarias = [];
 
       try {
+
         const categoriaSubmotivos = await getTCategoriaSubmotivos();
         const categoriaMotivos = await getTCategoriaMotivos();
         const fetchedMotivos = await getTMotivoIntervencions();
@@ -276,10 +281,19 @@ const institucionesSanitarias = [];
         const cpcsData = await getTCPCs();
         // const cpcsData = await cpcsResponse.json();
 const fetchedVinculaciones = await getTVinculoPersonaPersonas({ demanda: demandaId });
-
+const condicionesVulnerabilidad = await getTCondicionesVulnerabilidads();
+const personaCondicionesVulnerabilidad = await getTPersonaCondicionesVulnerabilidads({demanda: demandaId, });
+const personasWithCondiciones = personas.map((persona) => {
+  const condicionesForPersona = personaCondicionesVulnerabilidad.filter(
+    (pcv) => pcv.persona === persona.id
+  );
+  return { ...persona, condicionesVulnerabilidad: condicionesForPersona };
+});
         // Prepare and set final API data
         setApiData((prevData) => ({
           ...prevData,
+          condicionesVulnerabilidad,
+          personasWithCondiciones,
           vinculaciones,
           vinculoPersonas: personas,
           categoriaSubmotivos, // Add fetched submotivos to the state

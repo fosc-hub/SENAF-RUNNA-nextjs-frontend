@@ -213,6 +213,21 @@ export const useFormData = (demanda, apiData) => {
       ],
     }))
   }
-  return { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext, addVinculacion, removeVinculacion };
+  const addCondicionVulnerabilidad = () => {
+    setFormData(prevData => ({
+      ...prevData,
+      condicionesVulnerabilidad: [
+        ...prevData.condicionesVulnerabilidad,
+        { persona: '', condicion_vulnerabilidad: '', si_no: false }
+      ]
+    }))
+  }  
+  const removeCondicionVulnerabilidad = (index) => {
+    setFormData(prevData => ({
+      ...prevData,
+      condicionesVulnerabilidad: prevData.condicionesVulnerabilidad.filter((_, i) => i !== index)
+    }))
+  }
+  return { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext, addVinculacion, removeVinculacion, addCondicionVulnerabilidad, removeCondicionVulnerabilidad };
 };
 

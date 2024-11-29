@@ -27,6 +27,8 @@ import { ArchivosAdjuntosModal } from '../ArchivosAdjuntosModal'
 import { AsignarDemandaModal } from '../AsignarDemandaModal'
 import { RegistrarActividadModal } from '../RegistrarActividadModal'
 import { EnviarRespuestaModal } from '../EnviarRespuestaModal'
+import { DecisionModal } from "./decisonModal"
+import EvalaucionModal  from "./EvaluacionModal"
 
 // Assume these are imported from their respective files
 import { useFormData } from './useFormData'
@@ -62,7 +64,7 @@ function CollapsibleSection({ title, children, isOpen, onToggle }: CollapsibleSe
   );
 }
 
-const steps = ['Carátula', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Vínculos']
+const steps = ['Ingreso', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Vinculos', 'Condiciones de Vulnerabilidad']
 
 export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
   const [activeStep, setActiveStep] = useState(0)
@@ -73,7 +75,10 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
   const [isEnviarRespuestaOpen, setIsEnviarRespuestaOpen] = useState(false)
   const [usuariosExternos, setUsuariosExternos] = useState([])
   const [isStepContentOpen, setIsStepContentOpen] = useState(true)
+  const [isEvaluacionSectionOpen, setIsEvaluacionSectionOpen] = useState(false);
+  const [isDecisionModalOpen, setIsDecisionModalOpen] = useState(false)
 
+  
   const handleArchivosSubmit = (data: { files: string[], comments: string }) => {
     console.log('Archivos adjuntos:', data)
     setIsArchivosModalOpen(false)
@@ -365,6 +370,8 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
       addVulneraciontext,
       addVinculacion,
       removeVinculacion,
+      addCondicionVulnerabilidad,
+      removeCondicionVulnerabilidad,
       categoriaMotivos: apiData.categoriaMotivos,
       categoriaSubmotivos: apiData.categoriaSubmotivos,
       gravedadVulneraciones: apiData.gravedadVulneraciones,
@@ -372,6 +379,8 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
       condicionesVulnerabilidadNNyA: apiData.condicionesVulnerabilidadNNyA,
       condicionesVulnerabilidadAdultos: apiData.condicionesVulnerabilidadAdultos,
       vinculoPersonas: apiData.vinculoPersonas, // Pass vinculoPersonas here
+      condicionesVulnerabilidad: apiData.condicionesVulnerabilidad,
+      personasWithCondiciones: apiData.personasWithCondiciones,
       
 
     })
@@ -390,6 +399,20 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
             </Box>
           </form>
         </CollapsibleSection>
+        <CollapsibleSection
+              title="Evaluar Caso"
+              isOpen={isEvaluacionSectionOpen}
+              onToggle={() => setIsEvaluacionSectionOpen(!isEvaluacionSectionOpen)}
+            >
+              {isEvaluacionSectionOpen && <EvalaucionModal demanda={demanda} />}
+            </CollapsibleSection>
+            <CollapsibleSection
+              title="Decisión"
+              isOpen={isDecisionModalOpen}
+              onToggle={() => setIsDecisionModalOpen(!isDecisionModalOpen)}
+            >
+              <DecisionModal />
+            </CollapsibleSection>
         </Paper>
       </Box>
     </Modal >
