@@ -16,32 +16,34 @@ interface EnviarRespuestaModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSend: (data: ResponseData) => void;
+  idDemanda: number;
 }
 
 interface ResponseData {
-  institution: string;
-  search: string;
-  email: string;
-  message: string;
+  institucion: number;  // Cambiar a number en lugar de string
+  mail: string;
+  mensaje: string;
   attachments: string[];
   fecha_y_hora: Date | null;
+  demanda: number;
 }
 
-export function EnviarRespuestaModal({ isOpen, onClose, onSend }: EnviarRespuestaModalProps) {
+export function EnviarRespuestaModal({ isOpen, onClose, onSend, idDemanda }: EnviarRespuestaModalProps) {
   const [responseData, setResponseData] = useState<ResponseData>({
-    institution: '',
-    search: '',
-    email: '',
-    message: '',
+    institucion: 0,  // Inicializa como número (0 o algún valor por defecto)
+    mail: '',
+    mensaje: '',
     attachments: [],
     fecha_y_hora: null,
+    demanda: idDemanda, // Asegurar que el demanda se guarde en el estado
   });
+
 
   const [institutionOptions, setInstitutionOptions] = useState<{ value: string; label: string }[]>([]);
   const [isArchivosModalOpen, setIsArchivosModalOpen] = useState(false);
-  
+
   const openArchivosModal = () => {
-    setIsArchivosModalOpen(true); 
+    setIsArchivosModalOpen(true);
   };
 
   const closeArchivosModal = () => {
@@ -62,7 +64,6 @@ export function EnviarRespuestaModal({ isOpen, onClose, onSend }: EnviarRespuest
       const fetchInstitutions = async () => {
         try {
           const data = await getTInstitucionRespuestas();
-          console.log('Instituciones:', data);
           const formattedData = data.map((inst: any) => ({
             value: inst.id.toString(),
             label: inst.nombre,
@@ -75,6 +76,10 @@ export function EnviarRespuestaModal({ isOpen, onClose, onSend }: EnviarRespuest
       fetchInstitutions();
     }
   }, [isOpen]);
+  const selectedInstitution = institutionOptions.find(
+    (option) => option.value === responseData.institucion.toString()
+  )?.label;
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -82,23 +87,14 @@ export function EnviarRespuestaModal({ isOpen, onClose, onSend }: EnviarRespuest
   };
 
   const handleInstitutionChange = (event: SelectChangeEvent<string>) => {
-    setResponseData((prev) => ({ ...prev, institution: event.target.value }));
+    const institutionId = Number(event.target.value); // Convierte el valor a número
+    setResponseData((prev) => ({ ...prev, institucion: institutionId }));
   };
+
+
 
   const handleDateChange = (date: Date | null) => {
     setResponseData((prev) => ({ ...prev, fecha_y_hora: date }));
-  };
-
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files) {
-      const newAttachments = Array.from(files).map((file) => file.name);
-      setResponseData((prev) => ({
-        ...prev,
-        attachments: [...prev.attachments, ...newAttachments],
-      }));
-    }
   };
 
   const handleRemoveAttachment = (fileName: string) => {
@@ -110,7 +106,17 @@ export function EnviarRespuestaModal({ isOpen, onClose, onSend }: EnviarRespuest
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSend(responseData);
+    const { attachments, institucion, ...dataToSend } = responseData;
+
+    const dataToSendWithInstitutionAsNumber = {
+      ...dataToSend,
+      institucion: Number(institucion),  // Mantén 'institution' y convierte a número
+      attachments: attachments,  // Incluir los archivos adjuntos
+      idDemanda,  // Aseguramos que demanda esté incluido
+    };
+
+    // Llamar a onSend con los datos correctos
+    onSend(dataToSendWithInstitutionAsNumber);
     onClose();
   };
 
@@ -126,7 +132,7 @@ export function EnviarRespuestaModal({ isOpen, onClose, onSend }: EnviarRespuest
             <Select
               labelId="institution-label"
               id="institution"
-              value={responseData.institution}
+              value={responseData.institucion.toString()}
               onChange={handleInstitutionChange}
               label="Seleccionar Institución"
             >
@@ -157,14 +163,14 @@ export function EnviarRespuestaModal({ isOpen, onClose, onSend }: EnviarRespuest
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email" className="font-bold text-gray-700">
+          <Label htmlFor="mail" className="font-bold text-gray-700">
             Mail
           </Label>
           <Input
-            id="email"
-            name="email"
-            type="email"
-            value={responseData.email}
+            id="mail"
+            name="mail"
+            type="mail"
+            value={responseData.mail}
             onChange={handleInputChange}
             placeholder="Correo electrónico"
             className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-gray-900 placeholder-gray-500"
@@ -172,13 +178,13 @@ export function EnviarRespuestaModal({ isOpen, onClose, onSend }: EnviarRespuest
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="message" className="font-bold text-gray-700">
+          <Label htmlFor="mensaje" className="font-bold text-gray-700">
             Mensaje
           </Label>
           <Textarea
-            id="message"
-            name="message"
-            value={responseData.message}
+            id="mensaje"
+            name="mensaje"
+            value={responseData.mensaje}
             onChange={handleInputChange}
             placeholder="Escriba su mensaje aquí"
             rows={6}

@@ -32,7 +32,7 @@ export interface TInstitucionRespuesta {
 
 export interface TRespuesta {
     id: number;
-    fecha_y_hora: Date;
+    fecha_y_hora: Date | null;
     mail: string;
     mensaje: string;
     demanda: number;

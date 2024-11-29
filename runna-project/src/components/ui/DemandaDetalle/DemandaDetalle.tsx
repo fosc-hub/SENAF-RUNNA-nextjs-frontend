@@ -27,6 +27,7 @@ import { ArchivosAdjuntosModal } from '../ArchivosAdjuntosModal'
 import { AsignarDemandaModal } from '../AsignarDemandaModal'
 import { RegistrarActividadModal } from '../RegistrarActividadModal'
 import { EnviarRespuestaModal } from '../EnviarRespuestaModal'
+import { createTRespuesta } from '../../../api/TableFunctions/respuestas'
 
 // Assume these are imported from their respective files
 import { useFormData } from './useFormData'
@@ -89,10 +90,27 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
     setIsRegistrarModalOpen(false)
   }
 
-  const handleEnviarRespuestaSubmit = (data: { institution: string; search: string; email: string; message: string; attachments: string[] }) => {
-    console.log('Enviar respuesta:', data)
-    setIsEnviarRespuestaOpen(false)
-  }
+  const handleEnviarRespuestaSubmit = (data: {
+    institucion: number;
+    mail: string;
+    mensaje: string;
+    demanda: number;
+    fecha_y_hora: Date | null
+  }) => {
+    console.log('Enviar respuesta:', data);
+    const dataToSend = {
+      mail: data.mail,
+      mensaje: data.mensaje,
+      fecha_y_hora: data.fecha_y_hora,
+      demanda: data.demanda,
+      institucion: data.institucion,
+    };
+    console.log('Enviar:', dataToSend);
+    createTRespuesta(dataToSend);
+
+    setIsEnviarRespuestaOpen(false);
+  };
+
   const apiData = useApiData(demanda?.id, demanda?.localizacion, demanda?.usuarioExterno);
   const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext,
   } = useFormData(demanda, apiData);
@@ -322,82 +340,83 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
               </Stepper>
 
               <form onSubmit={handleSubmit}>
-              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-  {apiData.barrios && apiData.localidades && apiData.cpcs ? (
-    renderStepContent({
-      activeStep,
-      formData: {
-        ...formData,
-        ninosAdolescentes: apiData.nnyaList,
-      },
-      handleInputChange,
-      motivosIntervencion: apiData.motivosIntervencion,
-      currentMotivoIntervencion: apiData.currentMotivoIntervencion,
-      demandaMotivoIntervencion: apiData.demandaMotivoIntervencion,
-      barrios: apiData.barrios,
-      localidades: apiData.localidades,
-      cpcs: apiData.cpcs,
-      localizacion: apiData.localizacion,
-      usuarioExterno: apiData.usuarioExterno,
-      vinculosUsuarioExterno: apiData.vinculosUsuarioExterno,
-      institucionesUsuarioExterno: apiData.institucionesUsuarioExterno,
-      usuariosExternos,
-      demanda,
-      getMotivoIntervencion: apiData.getMotivoIntervencion,
-      institucionesEducativas: apiData.institucionesEducativas,
-      institucionesSanitarias: apiData.institucionesSanitarias,
-      addNinoAdolescente,
-      addAdultoConviviente,
-      addVulneraciontext,
-      categoriaMotivos: apiData.categoriaMotivos,
-      categoriaSubmotivos: apiData.categoriaSubmotivos,
-      gravedadVulneraciones: apiData.gravedadVulneraciones,
-      urgenciaVulneraciones: apiData.urgenciaVulneraciones,
-    })
-  ) : (
-    <Typography>Loading data...</Typography>
-  )}
-</LocalizationProvider>
+                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+                  {apiData.barrios && apiData.localidades && apiData.cpcs ? (
+                    renderStepContent({
+                      activeStep,
+                      formData: {
+                        ...formData,
+                        ninosAdolescentes: apiData.nnyaList,
+                      },
+                      handleInputChange,
+                      motivosIntervencion: apiData.motivosIntervencion,
+                      currentMotivoIntervencion: apiData.currentMotivoIntervencion,
+                      demandaMotivoIntervencion: apiData.demandaMotivoIntervencion,
+                      barrios: apiData.barrios,
+                      localidades: apiData.localidades,
+                      cpcs: apiData.cpcs,
+                      localizacion: apiData.localizacion,
+                      usuarioExterno: apiData.usuarioExterno,
+                      vinculosUsuarioExterno: apiData.vinculosUsuarioExterno,
+                      institucionesUsuarioExterno: apiData.institucionesUsuarioExterno,
+                      usuariosExternos,
+                      demanda,
+                      getMotivoIntervencion: apiData.getMotivoIntervencion,
+                      institucionesEducativas: apiData.institucionesEducativas,
+                      institucionesSanitarias: apiData.institucionesSanitarias,
+                      addNinoAdolescente,
+                      addAdultoConviviente,
+                      addVulneraciontext,
+                      categoriaMotivos: apiData.categoriaMotivos,
+                      categoriaSubmotivos: apiData.categoriaSubmotivos,
+                      gravedadVulneraciones: apiData.gravedadVulneraciones,
+                      urgenciaVulneraciones: apiData.urgenciaVulneraciones,
+                    })
+                  ) : (
+                    <Typography>Loading data...</Typography>
+                  )}
+                </LocalizationProvider>
 
-            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
-              <Button onClick={handleBack} disabled={activeStep === 0}>
-                Anterior
-              </Button>
-              <Button type="submit" variant="contained" color="primary" disabled={isSubmitting}>
-                {isSubmitting ? <CircularProgress size={24} /> : (activeStep === steps.length - 1 ? 'Guardar' : 'Siguiente')}
-              </Button>
-            </Box>
-          </form>
-        </CollapsibleSection>
-        </Paper>
-      </Box>
-    </Modal >
+                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
+                  <Button onClick={handleBack} disabled={activeStep === 0}>
+                    Anterior
+                  </Button>
+                  <Button type="submit" variant="contained" color="primary" disabled={isSubmitting}>
+                    {isSubmitting ? <CircularProgress size={24} /> : (activeStep === steps.length - 1 ? 'Guardar' : 'Siguiente')}
+                  </Button>
+                </Box>
+              </form>
+            </CollapsibleSection>
+          </Paper>
+        </Box>
+      </Modal >
 
       <ArchivosAdjuntosModal
-          isOpen={isArchivosModalOpen}
-          onClose={() => setIsArchivosModalOpen(false)}
-          onSave={handleArchivosSubmit}
-          initialFiles={formData.archivosAdjuntos || []}
-          initialComments=""
-        />
+        isOpen={isArchivosModalOpen}
+        onClose={() => setIsArchivosModalOpen(false)}
+        onSave={handleArchivosSubmit}
+        initialFiles={formData.archivosAdjuntos || []}
+        initialComments=""
+      />
 
-        <AsignarDemandaModal
-          isOpen={isAsignarModalOpen}
-          onClose={() => setIsAsignarModalOpen(false)}
-          onAssign={handleAsignarSubmit}
-        />
+      <AsignarDemandaModal
+        isOpen={isAsignarModalOpen}
+        onClose={() => setIsAsignarModalOpen(false)}
+        onAssign={handleAsignarSubmit}
+      />
 
-        <RegistrarActividadModal
-          isOpen={isRegistrarModalOpen}
-          onClose={() => setIsRegistrarModalOpen(false)}
-          onSubmit={handleRegistrarSubmit}
-        />
+      <RegistrarActividadModal
+        isOpen={isRegistrarModalOpen}
+        onClose={() => setIsRegistrarModalOpen(false)}
+        onSubmit={handleRegistrarSubmit}
+      />
 
-        <EnviarRespuestaModal
-          isOpen={isEnviarRespuestaOpen}
-          onClose={() => setIsEnviarRespuestaOpen(false)}
-          onSend={handleEnviarRespuestaSubmit}
-        />
+      <EnviarRespuestaModal
+        isOpen={isEnviarRespuestaOpen}
+        onClose={() => setIsEnviarRespuestaOpen(false)}
+        onSend={handleEnviarRespuestaSubmit}
+        idDemanda={demanda.id}
+      />
     </>
   )
 }
