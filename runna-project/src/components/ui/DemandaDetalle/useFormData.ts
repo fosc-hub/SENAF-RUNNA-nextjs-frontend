@@ -98,19 +98,23 @@ export const useFormData = (demanda, apiData) => {
   }, [apiData.adultsList]);
   
   const handleInputChange = (field, value) => {
-    setFormData((prevData) => {
-      const updatedData = { ...prevData };
-      const fieldParts = field.split('.');
-      let current = updatedData;
-
+    setFormData(prevData => {
+      const updatedData = { ...prevData }
+      const fieldParts = field.split('.')
+      let current = updatedData
       for (let i = 0; i < fieldParts.length - 1; i++) {
-        current = current[fieldParts[i]];
+        if (fieldParts[i].includes('[')) {
+          const [arrayName, indexStr] = fieldParts[i].split('[')
+          const index = parseInt(indexStr.replace(']', ''))
+          current = current[arrayName][index]
+        } else {
+          current = current[fieldParts[i]]
+        }
       }
-
-      current[fieldParts[fieldParts.length - 1]] = value;
-      return updatedData;
-    });
-  };
+      current[fieldParts[fieldParts.length - 1]] = value
+      return updatedData
+    })
+  }
 
   const addNinoAdolescente = () => {
     setFormData(prevData => ({
