@@ -97,11 +97,10 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
     demanda: number;
     fecha_y_hora: Date | null
   }) => {
-    console.log('Enviar respuesta:', data);
     const dataToSend = {
       mail: data.mail,
       mensaje: data.mensaje,
-      fecha_y_hora: data.fecha_y_hora,
+      // fecha_y_hora: data.fecha_y_hora,
       demanda: data.demanda,
       institucion: data.institucion,
     };

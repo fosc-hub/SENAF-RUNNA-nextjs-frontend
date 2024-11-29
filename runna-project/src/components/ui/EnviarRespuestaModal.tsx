@@ -11,7 +11,6 @@ import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 import { es } from 'date-fns/locale';
 
-
 interface EnviarRespuestaModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -19,26 +18,32 @@ interface EnviarRespuestaModalProps {
   idDemanda: number;
 }
 
+interface InstitutionOption {
+  value: string;
+  label: string;
+  mail: string;
+}
+
 interface ResponseData {
-  institucion: number;  // Cambiar a number en lugar de string
+  institucion: number;
   mail: string;
   mensaje: string;
   attachments: string[];
-  fecha_y_hora: Date | null;
+  // fecha_y_hora: Date | null;
   demanda: number;
 }
 
 export function EnviarRespuestaModal({ isOpen, onClose, onSend, idDemanda }: EnviarRespuestaModalProps) {
   const [responseData, setResponseData] = useState<ResponseData>({
-    institucion: 0,  // Inicializa como número (0 o algún valor por defecto)
+    institucion: 0,
     mail: '',
     mensaje: '',
     attachments: [],
-    fecha_y_hora: null,
-    demanda: idDemanda, // Asegurar que el demanda se guarde en el estado
+    // fecha_y_hora: null,
+    demanda: idDemanda,
   });
 
-  const [institutionOptions, setInstitutionOptions] = useState<{ value: string; label: string }[]>([]);
+  const [institutionOptions, setInstitutionOptions] = useState<InstitutionOption[]>([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -48,18 +53,17 @@ export function EnviarRespuestaModal({ isOpen, onClose, onSend, idDemanda }: Env
           const formattedData = data.map((inst: any) => ({
             value: inst.id.toString(),
             label: inst.nombre,
+            mail: inst.mail,
           }));
           setInstitutionOptions(formattedData);
         } catch (error) {
           console.error('Error al cargar instituciones:', error);
         }
       };
+
       fetchInstitutions();
     }
   }, [isOpen]);
-  const selectedInstitution = institutionOptions.find(
-    (option) => option.value === responseData.institucion.toString()
-  )?.label;
 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -68,15 +72,28 @@ export function EnviarRespuestaModal({ isOpen, onClose, onSend, idDemanda }: Env
   };
 
   const handleInstitutionChange = (event: SelectChangeEvent<string>) => {
-    const institutionId = Number(event.target.value); // Convierte el valor a número
-    setResponseData((prev) => ({ ...prev, institucion: institutionId }));
+    const institutionId = Number(event.target.value);
+    const selectedInstitution = institutionOptions.find(
+      (option) => option.value === event.target.value
+    );
+    const institutionEmail = selectedInstitution ? selectedInstitution.mail : '';
+
+    setResponseData((prev) => ({
+      ...prev,
+      institucion: institutionId,
+      mail: institutionEmail,
+    }));
   };
-
-
 
   const handleDateChange = (date: Date | null) => {
     setResponseData((prev) => ({ ...prev, fecha_y_hora: date }));
   };
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    return emailRegex.test(email);
+  };
+
 
   const handleRemoveAttachment = (fileName: string) => {
     setResponseData((prev) => ({
@@ -98,19 +115,23 @@ export function EnviarRespuestaModal({ isOpen, onClose, onSend, idDemanda }: Env
     }
   };
 
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateEmail(responseData.mail)) {
+      window.alert('El correo electrónico no tiene un formato válido.');
+      return;
+    }
+
     const { attachments, institucion, ...dataToSend } = responseData;
 
     const dataToSendWithInstitutionAsNumber = {
       ...dataToSend,
-      institucion: Number(institucion),  // Mantén 'institution' y convierte a número
-      attachments: attachments,  // Incluir los archivos adjuntos
-      idDemanda,  // Aseguramos que demanda esté incluido
+      institucion: Number(institucion),
+      attachments: attachments,
+      idDemanda,
     };
 
-    // Llamar a onSend con los datos correctos
     onSend(dataToSendWithInstitutionAsNumber);
     onClose();
   };
@@ -139,7 +160,7 @@ export function EnviarRespuestaModal({ isOpen, onClose, onSend, idDemanda }: Env
             </Select>
           </FormControl>
         </div>
-
+        {/* 
         <div className="space-y-2">
           <Label htmlFor="fecha_y_hora" className="font-bold text-gray-700">
             Fecha y Hora
@@ -155,7 +176,7 @@ export function EnviarRespuestaModal({ isOpen, onClose, onSend, idDemanda }: Env
               />
             </LocalizationProvider>
           </div>
-        </div>
+        </div> */}
 
         <div className="space-y-2">
           <Label htmlFor="mail" className="font-bold text-gray-700">
