@@ -26,9 +26,6 @@ import { es } from 'date-fns/locale'
 
 const formatDate = (date) => date ? date.toISOString().split('T')[0] : null
 
-
-const formatDate = (date) => date ? date.toISOString().split('T')[0] : null
-
 const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, localidades, cpcs) => (
   <>
     {/* Calle */}

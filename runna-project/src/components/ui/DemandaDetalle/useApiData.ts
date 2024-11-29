@@ -50,6 +50,7 @@ export const useApiData = (demandaId: number, localizacionId: number, usuarioExt
     institucionesUsuarioExterno: any[];
     nnyaList: any[]; // List for NNYA personas
     adultsList: any[]; // Optional: List for adult personas
+    vulneraciones: any[]; // Add this
     institucionesEducativas: any[];
     institucionesSanitarias: any[];
   }
