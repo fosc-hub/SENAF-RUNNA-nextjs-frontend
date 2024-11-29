@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { getDemands, createDemand } from '../../api/TableFunctions/demands'
-import { getAll } from '../../api/globals' // Generic fetcher for related data.
+import { getAll } from '../../api/services/apiService' // Generic fetcher for related data.
 import { DatePicker, LocalizationProvider, TimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 import TextField from '@mui/material/TextField';

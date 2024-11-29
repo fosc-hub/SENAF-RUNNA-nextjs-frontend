@@ -1,4 +1,4 @@
-import { getAll, getOne, create, update, remove } from '../globals';
+import { getAll, getOne, create, update, remove } from '../services/apiService';
 import { TLocalidad } from '../interfaces';
 
 const endpoint = 'localidad';

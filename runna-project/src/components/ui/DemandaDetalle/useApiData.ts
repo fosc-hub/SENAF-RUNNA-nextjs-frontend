@@ -98,7 +98,7 @@ const institucionesSanitarias = [];
             dni: personaData.dni || '',
             situacionDni: personaData.situacion_dni || '',
             genero: personaData.genero || '',
-            botonAntipanico: personaData.boton_anti_panico || false,
+            botonAntipanico: personaData.boton_antipanico || false,
             observaciones: personaData.observaciones || '',
             conviviente: personaData.conviviente || false,
             supuesto_autordv: personaData.supuesto_autordv || false, // Specific to adults

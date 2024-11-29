@@ -1,4 +1,4 @@
-import { getAll, getOne, create, update, remove } from '../globals';
+import { getAll, getOne, create, update, remove } from '../services/apiService';
 import { LocalizacionPersona } from '../interfaces';
 
 const endpoint = 'localizacion-persona';

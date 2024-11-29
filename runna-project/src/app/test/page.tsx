@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { getDemands, createDemand } from '../../api/TableFunctions/demands'
-import { getAll } from '../../api/globals' // Generic fetcher for related data.
+import { getAll } from '../../api/services/apiService' // Generic fetcher for related data.
 
 export default function LocalizacionPage() {
   const [localizacions, setLocalizacions] = useState<any[]>([])

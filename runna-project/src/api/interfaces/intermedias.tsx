@@ -3,8 +3,8 @@ interface TBaseModel {
 }
 
 interface TLocalizacionPersonaBase extends TBaseModel {
-    personaId: number;
-    localizacionId: number;
+    persona: number;
+    localizacion: number;
     principal: boolean;
 }
 
@@ -16,8 +16,8 @@ interface TDemandaPersonaBase extends TBaseModel {
     supuestoAutordv: boolean;
     supuestoAutordvPrincipal: boolean;
     nnyaPrincipal: boolean;
-    demandaId: number;
-    personaId: number;
+    demanda: number;
+    persona: number;
 }
 
 export interface TDemandaPersona extends TDemandaPersonaBase {
@@ -27,16 +27,16 @@ interface TDemandaAsignadoBase {
     estaActivo: boolean;
     recibido: boolean;
     comentarios?: string;
-    demandaId: number;
-    userId: number;
+    demanda: number;
+    user: number;
 }
 
 export interface TDemandaAsignado extends TDemandaAsignadoBase {
 }
 
 interface TDemandaVinculadaBase extends TBaseModel {
-    demanda1Id: number;
-    demanda2Id: number;
+    demanda1: number;
+    demanda2: number;
 }
 
 export interface TDemandaVinculada extends TDemandaVinculadaBase {
@@ -46,8 +46,8 @@ export interface TLegajoAsignado {
     estaActivo: boolean;
     recibido: boolean;
     comentarios?: string;
-    legajoId: number;
-    userId: number;
+    legajo: number;
+    user: number;
 }
 
 export interface TVinculoPersona {
@@ -58,9 +58,9 @@ interface TVinculoPersonaPersonaBase extends TBaseModel {
     conviven: boolean;
     autordv: boolean;
     garantizaProteccion: boolean;
-    persona1Id: number;
-    persona2Id: number;
-    vinculoId?: number;
+    persona1: number;
+    persona2: number;
+    vinculo?: number;
 }
 
 export interface TVinculoPersonaPersona extends TVinculoPersonaPersonaBase {
@@ -68,17 +68,17 @@ export interface TVinculoPersonaPersona extends TVinculoPersonaPersonaBase {
 
 interface TPersonaCondicionesVulnerabilidadBase {
     siNo: boolean;
-    personaId: number;
-    condicionVulnerabilidadId: number;
-    demandaId?: number;
+    persona: number;
+    condicionVulnerabilidad: number;
+    demanda?: number;
 }
 
 export interface TPersonaCondicionesVulnerabilidad extends TPersonaCondicionesVulnerabilidadBase {}
 
 interface TDemandaMotivoIntervencionBase {
     siNo: boolean;
-    demandaId: number;
-    motivoIntervencionId: number;
+    demanda: number;
+    motivoIntervencion: number;
 }
 
 export interface TDemandaMotivoIntervencion extends TDemandaMotivoIntervencionBase {}

@@ -1,4 +1,4 @@
-import { getAll, getOne, create, update, remove } from '../globals';
+import { getAll, getOne, create, update, remove } from '../services/apiService';
 import { TDemandaPersona } from '../interfaces';
 
 const endpoint = 'demanda-persona';
