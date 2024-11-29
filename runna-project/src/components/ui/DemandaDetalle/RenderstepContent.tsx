@@ -170,7 +170,7 @@ export const renderStepContent = ({
   categoriaMotivos, // Receive it as a prop
   categoriaSubmotivos, // Receive submotivos as a prop
   gravedadVulneraciones, // Receive gravedadVulneraciones as a prop
-  urgenciaVulneraciones, // Receive urgenciaVulneraciones as a prop
+  urgenciaVulneraciones,
 
 
 
@@ -958,47 +958,37 @@ export const renderStepContent = ({
                     </Select>
                   </FormControl>
         
-                  {/* Observaciones */}
-                  <TextField
-                    fullWidth
-                    label="Observaciones"
-                    multiline
-                    rows={4}
-                    value={vulneracion.observaciones || ''}
-                    onChange={(e) =>
-                      handleInputChange(`vulneraciones[${index}].observaciones`, e.target.value)
-                    }
-                  />
-        
                   {/* NNyA */}
                   <FormControl fullWidth margin="normal">
-                    <InputLabel>NNyA</InputLabel>
-                    <Select
-                      value={vulneracion.nnya || ''}
-                      onChange={(e) => handleInputChange(`vulneraciones[${index}].nnya`, e.target.value)}
-                    >
-                      {formData.ninosAdolescentes.map((nnya, nnyaIndex) => (
-                        <MenuItem key={nnyaIndex} value={nnyaIndex}>
-                          {`${nnya.nombre} ${nnya.apellido}`}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+  <InputLabel>NNyA</InputLabel>
+  <Select
+    value={vulneracion.nnya || ''}
+    onChange={(e) => handleInputChange(`vulneraciones[${index}].nnya`, e.target.value)}
+  >
+    {formData.ninosAdolescentes.map((nino, index) => (
+      <MenuItem key={nino.id} value={nino.id}>
+        {`${nino.nombre} ${nino.apellido}`}
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>
+
         
                   {/* Autor DV */}
                   <FormControl fullWidth margin="normal">
-                    <InputLabel>Autor DV</InputLabel>
-                    <Select
-                      value={vulneracion.autor_dv || ''}
-                      onChange={(e) => handleInputChange(`vulneraciones[${index}].autor_dv`, e.target.value)}
-                    >
-                      {formData.adultosConvivientes.map((adulto, adultoIndex) => (
-                        <MenuItem key={adultoIndex} value={adultoIndex}>
-                          {`${adulto.nombre} ${adulto.apellido}`}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+  <InputLabel>Autor DV</InputLabel>
+  <Select
+    value={vulneracion.autor_dv || ''}
+    onChange={(e) => handleInputChange(`vulneraciones[${index}].autor_dv`, e.target.value)}
+  >
+    {formData.adultosConvivientes.map((adulto, index) => (
+      <MenuItem key={adulto.id} value={adulto.id}>
+        {`${adulto.nombre} ${adulto.apellido}`}
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>
+
         
                   {/* Principal Demanda */}
                   <Box sx={{ mt: 2 }}>

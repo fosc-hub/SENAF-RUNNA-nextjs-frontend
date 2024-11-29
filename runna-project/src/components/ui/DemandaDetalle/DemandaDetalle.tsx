@@ -329,6 +329,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
       formData: {
         ...formData,
         ninosAdolescentes: apiData.nnyaList,
+        adultosConvivientes: apiData.adultsList,
       },
       handleInputChange,
       motivosIntervencion: apiData.motivosIntervencion,
