@@ -5,7 +5,7 @@ import { Input } from './Input'
 import { Textarea } from './Textarea'
 import { Label } from './Label'
 import { Select, MenuItem, SelectChangeEvent } from '@mui/material'
-import { Camera, Paperclip } from 'lucide-react'
+import { Camera, Paperclip, X } from 'lucide-react'
 import { ArchivosAdjuntosModal } from './ArchivosAdjuntosModal'
 import { getTActividadTipos } from '../../api/TableFunctions/actividadTipos'
 import { getTInstitucionActividads } from '../../api/TableFunctions/institucionActividades'
@@ -14,7 +14,7 @@ interface RegistrarActividadModalProps {
   isOpen: boolean
   onClose: () => void
   onSubmit: (activityData: ActivityData) => void
-  idDemanda: number 
+  idDemanda: number
 }
 
 interface ActivityData {
@@ -81,7 +81,7 @@ export function RegistrarActividadModal({ isOpen, onClose, onSubmit, idDemanda }
           console.error('Error al obtener instituciones:', error)
         })
     }
-  }, [isOpen, idDemanda]) 
+  }, [isOpen, idDemanda])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -109,7 +109,6 @@ export function RegistrarActividadModal({ isOpen, onClose, onSubmit, idDemanda }
     onSubmit(activityData)
     onClose()
   }
-
   const handleOpenArchivosModal = () => {
     setIsArchivosModalOpen(true)
   }
@@ -126,6 +125,27 @@ export function RegistrarActividadModal({ isOpen, onClose, onSubmit, idDemanda }
     }))
     setIsArchivosModalOpen(false)
   }
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newFiles = e.target.files;
+    if (newFiles) {
+      setActivityData((prev) => ({
+        ...prev,
+        files: [
+          ...prev.files,
+          ...Array.from(newFiles).map((file) => file.name),
+        ],
+      }));
+    }
+  };
+
+  const handleRemoveAttachment = (fileName: string) => {
+    setActivityData((prev) => ({
+      ...prev,
+      files: prev.files.filter((name) => name !== fileName),
+    }));
+  };
+
   return (
     <>
       <Modal isOpen={isOpen} onClose={onClose} title="Registrar actividad">
@@ -202,15 +222,43 @@ export function RegistrarActividadModal({ isOpen, onClose, onSubmit, idDemanda }
               className="w-full bg-white border-gray-300 text-gray-900 placeholder-gray-500 resize-none"
             />
           </div>
-          <div className="flex justify-between items-center">
-            <div className="space-x-2">
-              <Button type="button" variant="outline" size="icon" className="rounded-full">
-                <Camera className="h-4 w-4" />
-              </Button>
-              <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={handleOpenArchivosModal}>
-                <Paperclip className="h-4 w-4" />
-              </Button>
+          <div className="space-y-2">
+            <Label className="font-bold text-gray-700">Archivos adjuntos</Label>
+            <div className="flex flex-wrap gap-2">
+              {activityData.files.map((file, index) => (
+                <div key={index} className="flex items-center bg-gray-100 rounded-md p-2">
+                  <span className="text-sm text-gray-600">{file}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="ml-2"
+                    onClick={() => handleRemoveAttachment(file)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
             </div>
+          </div>
+          <div className="flex justify-between items-center">
+          <div>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => document.getElementById('file-upload')?.click()}
+            >
+              <Paperclip className="h-4 w-4" />
+            </Button>
+            <Input
+              id="file-upload"
+              type="file"
+              multiple
+              className="hidden"
+              onChange={handleFileUpload}
+            />
+          </div>
             <div className="space-x-2">
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancelar

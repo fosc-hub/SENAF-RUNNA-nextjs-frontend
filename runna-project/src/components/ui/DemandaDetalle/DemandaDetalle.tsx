@@ -98,17 +98,18 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
   const [editedDescripcion, setEditedDescripcion] = useState<string>('');
   const [editedTipo, setEditedTipo] = useState<number | string>('');
   const [editedInstitucion, setEditedInstitucion] = useState<number | string>('');
+  const [editedFechaHora, setEditedFechaHora] = useState<String>('');
   const [tipoNames, setTipoNames] = useState<Record<number, string>>({});
   const [institucionNames, setInstitucionNames] = useState<Record<number, string>>({});
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
-  const [actividadToDelete, setActividadToDelete] = useState<number | null>(null);
+  // const [actividadToDelete, setActividadToDelete] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchActividades = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const data = await getTActividades();
+        const data = await getTActividades({ demanda: demanda.id });
 
         // Map through the data to convert 'fecha_y_hora' from String to string
         const mappedData = data.map((actividad: Actividad) => ({
@@ -166,46 +167,51 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
     setEditedDescripcion(actividad.descripcion);
     setEditedTipo(actividad.tipo ?? '');
     setEditedInstitucion(actividad.institucion ?? '');
+    const localDate = new Date(actividad.fecha_y_hora as string);
+    const offset = localDate.getTimezoneOffset() * 60000;
+    const localISODate = new Date(localDate.getTime() - offset).toISOString().slice(0, 16);
+    setEditedFechaHora(localISODate);
   };
 
-  const handleDeleteClick = (actividadId: number) => {
-    setActividadToDelete(actividadId);
-    setOpenConfirmDialog(true);
-  };
+  // const handleDeleteClick = (actividadId: number) => {
+  //   setActividadToDelete(actividadId);
+  //   setOpenConfirmDialog(true);
+  // };
 
-  const handleConfirmDelete = async () => {
-    if (actividadToDelete === null) return;
+  // const handleConfirmDelete = async () => {
+  //   if (actividadToDelete === null) return;
 
-    try {
-      await deleteTActividad(actividadToDelete);
-      setActividades(actividades.filter((actividad) => actividad.id !== actividadToDelete));
-    } catch (error) {
-      console.error('Error eliminando la actividad:', error);
-    }
-    setOpenConfirmDialog(false);
-    setActividadToDelete(null);
-    setEditingActividad(null);
-  };
+  //   try {
+  //     await deleteTActividad(actividadToDelete);
+  //     setActividades(actividades.filter((actividad) => actividad.id !== actividadToDelete));
+  //   } catch (error) {
+  //     console.error('Error eliminando la actividad:', error);
+  //   }
+  //   setOpenConfirmDialog(false);
+  //   setActividadToDelete(null);
+  //   setEditingActividad(null);
+  // };
 
-  const handleCancelDelete = () => {
-    setOpenConfirmDialog(false);
-    setActividadToDelete(null);
-  };
+  // const handleCancelDelete = () => {
+  //   setOpenConfirmDialog(false);
+  //   setActividadToDelete(null);
+  // };
 
   const handleCancelEdit = () => {
     setEditingActividad(null);
     setEditedDescripcion('');
     setEditedTipo('');
     setEditedInstitucion('');
+    setEditedFechaHora('');
   };
+
   const handleSaveEdit = async () => {
     if (editingActividad) {
       const updatedActividad = {
         descripcion: editedDescripcion,
-        demanda: demanda.id,
-        tipo: editedTipo ? Number(editedTipo) : 0,
-        institucion: editedInstitucion ? Number(editedInstitucion) : 0,
-        fecha_y_hora: editingActividad.fecha_y_hora,
+        tipo: editedTipo ? Number(editedTipo) : null,
+        institucion: editedInstitucion ? Number(editedInstitucion) : null,
+        fecha_y_hora: editedFechaHora,
       };
 
       try {
@@ -594,19 +600,34 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
                                 ))}
                               </TextField>
                             </Grid>
-                          </Grid>
 
+                            {/* Campo para fecha y hora */}
+                            <Grid item xs={12} sm={6} md={6}>
+                              <TextField
+                                label="Fecha y Hora"
+                                type="datetime-local"
+                                value={editedFechaHora}
+                                onChange={(e) => setEditedFechaHora(e.target.value)}
+                                fullWidth
+                                margin="normal"
+                                size="small"
+                                InputLabelProps={{
+                                  shrink: true,
+                                }}
+                              />
+                            </Grid>
+                          </Grid>
                           <Box sx={{ display: 'flex', gap: 2, marginTop: 2 }}>
                             <Button variant="contained" onClick={handleSaveEdit}>
                               Confirmar
                             </Button>
-                            <Button
+                            {/* <Button
                               variant="contained"
                               color="error"
                               onClick={() => handleDeleteClick(actividad.id)}
                             >
                               Eliminar
-                            </Button>
+                            </Button> */}
                             <Button variant="outlined" onClick={handleCancelEdit}>
                               Cancelar
                             </Button>
@@ -625,7 +646,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
               )}
             </CollapsibleSection>
 
-            <Dialog open={openConfirmDialog} onClose={handleCancelDelete}>
+            {/* <Dialog open={openConfirmDialog} onClose={handleCancelDelete}>
               <DialogTitle>¿Estás seguro de que deseas eliminar esta actividad?</DialogTitle>
               <DialogContent>
                 <Typography>Una vez eliminada, no podrás recuperar esta actividad.</Typography>
@@ -638,7 +659,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
                   Eliminar
                 </Button>
               </DialogActions>
-            </Dialog>
+            </Dialog> */}
           </Paper>
         </Box>
       </Modal >
