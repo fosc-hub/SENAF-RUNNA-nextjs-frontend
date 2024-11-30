@@ -13,7 +13,7 @@ export interface TInstitucionActividad {
 
 interface TActividadBase {
     id: number;
-    fecha_y_hora: Date;
+    fecha_y_hora: String;
     descripcion: string;
     demanda: number;
     tipo?: number | null;

@@ -1,12 +1,14 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Modal } from './Modal'
 import { Button } from './Button'
 import { Input } from './Input'
 import { Textarea } from './Textarea'
 import { Label } from './Label'
-import { CustomSelect } from './CustomSelect'
+import { Select, MenuItem, SelectChangeEvent } from '@mui/material'
 import { Camera, Paperclip } from 'lucide-react'
 import { ArchivosAdjuntosModal } from './ArchivosAdjuntosModal'
+import { getTActividadTipos } from '../../api/TableFunctions/actividadTipos'
+import { getTInstitucionActividads } from '../../api/TableFunctions/institucionActividades'
 
 interface RegistrarActividadModalProps {
   isOpen: boolean
@@ -17,43 +19,93 @@ interface RegistrarActividadModalProps {
 interface ActivityData {
   date: string
   time: string
-  activity: string
+  activity: string | null
+  institution: string | null
   observations: string
   files: string[]
   fileComments: string
+  demanda: number | null
 }
 
-const activityOptions = [
-  { value: 'llamada', label: 'Llamada' },
-  { value: 'visita', label: 'Visita' },
-  { value: 'email', label: 'Email' },
-]
+interface TActividadTipo {
+  id: number
+  nombre: string
+}
+
+interface TInstitucionActividad {
+  id: number
+  nombre: string
+}
+
 
 export function RegistrarActividadModal({ isOpen, onClose, onSubmit }: RegistrarActividadModalProps) {
   const [activityData, setActivityData] = useState<ActivityData>({
     date: '',
     time: '',
-    activity: '',
+    activity: null,
+    institution: null,
     observations: '',
     files: [],
-    fileComments: ''
+    fileComments: '',
+    demanda: null,
   })
+
   const [isArchivosModalOpen, setIsArchivosModalOpen] = useState(false)
+  const [activityTypes, setActivityTypes] = useState<TActividadTipo[]>([])
+  const [institutions, setInstitutions] = useState<TInstitucionActividad[]>([])
+
+  useEffect(() => {
+    if (isOpen) {
+      getTActividadTipos()
+        .then((data) => {
+          console.log('Tipos de actividad:', data)
+          setActivityTypes(data)
+        })
+        .catch((error) => {
+          console.error('Error al obtener tipos de actividad:', error)
+        })
+
+      getTInstitucionActividads()
+        .then((data) => {
+          console.log('Instituciones:', data)
+          setInstitutions(data)
+        })
+        .catch((error) => {
+          console.error('Error al obtener instituciones:', error)
+        })
+    }
+  }, [isOpen])
+
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setActivityData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleActivityChange = (value: string) => {
-    setActivityData(prev => ({ ...prev, activity: value }))
+  const handleActivityChange = (e: SelectChangeEvent<string>) => {
+    console.log('Actividad seleccionada:', e.target.value)
+    setActivityData(prev => ({ ...prev, activity: e.target.value || null }))
   }
+
+  const handleInstitutionChange = (e: SelectChangeEvent<string>) => {
+    console.log('Institución seleccionada:', e.target.value)
+    setActivityData(prev => ({ ...prev, institution: e.target.value || null }))
+  }
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!activityData.date || !activityData.time || !activityData.observations) {
+      alert('Por favor, complete todos los campos obligatorios.')
+      return
+    }
+
     onSubmit(activityData)
     onClose()
   }
+
 
   const handleOpenArchivosModal = () => {
     setIsArchivosModalOpen(true)
@@ -71,7 +123,6 @@ export function RegistrarActividadModal({ isOpen, onClose, onSubmit }: Registrar
     }))
     setIsArchivosModalOpen(false)
   }
-
   return (
     <>
       <Modal isOpen={isOpen} onClose={onClose} title="Registrar actividad">
@@ -102,13 +153,40 @@ export function RegistrarActividadModal({ isOpen, onClose, onSubmit }: Registrar
               />
             </div>
           </div>
-          <CustomSelect
-            label="Actividad"
-            options={activityOptions}
-            value={activityData.activity}
-            onChange={handleActivityChange}
-            placeholder="Seleccionar actividad"
-          />
+          <div className="space-y-2">
+            <Label htmlFor="activity" className="font-bold text-gray-700">Actividad</Label>
+            <Select
+              id="activity"
+              value={activityData.activity || ''}
+              onChange={handleActivityChange}
+              displayEmpty
+              fullWidth
+            >
+              <MenuItem value="" disabled>Seleccionar actividad</MenuItem>
+              {activityTypes.map((type) => (
+                <MenuItem key={type.id} value={type.id}>
+                  {type.nombre}
+                </MenuItem>
+              ))}
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="institution" className="font-bold text-gray-700">Institución</Label>
+            <Select
+              id="institution"
+              value={activityData.institution || ''}
+              onChange={handleInstitutionChange}
+              displayEmpty
+              fullWidth
+            >
+              <MenuItem value="" disabled>Seleccionar institución</MenuItem>
+              {institutions.map((institution) => (
+                <MenuItem key={institution.id} value={institution.id}>
+                  {institution.nombre}
+                </MenuItem>
+              ))}
+            </Select>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="observations" className="font-bold text-gray-700">Observaciones</Label>
             <Textarea

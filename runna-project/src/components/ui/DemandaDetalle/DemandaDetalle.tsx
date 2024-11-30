@@ -27,7 +27,7 @@ import { ArchivosAdjuntosModal } from '../ArchivosAdjuntosModal'
 import { AsignarDemandaModal } from '../AsignarDemandaModal'
 import { RegistrarActividadModal } from '../RegistrarActividadModal'
 import { EnviarRespuestaModal } from '../EnviarRespuestaModal'
-
+import { createTActividad } from '../../../api/TableFunctions/actividades';
 // Assume these are imported from their respective files
 import { useFormData } from './useFormData'
 import { useApiData } from './useApiData'
@@ -84,10 +84,27 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
     setIsAsignarModalOpen(false)
   }
 
-  const handleRegistrarSubmit = (data: any) => {
-    console.log('Registrar actividad:', data)
-    setIsRegistrarModalOpen(false)
-  }
+  const handleRegistrarSubmit = async (data: any) => {
+    try {
+      const fechaHoraISO = new Date(`${data.date}T${data.time}`).toISOString();
+  
+      const actividadData = {
+        fecha_y_hora: fechaHoraISO,
+        descripcion: data.observations,
+        demanda: 1,
+        tipo: data.activity ? Number(data.activity) : null,
+        institucion: data.institution ? Number(data.institution) : null,
+      };
+      const newActividad = await createTActividad(actividadData);
+      console.log('Actividad registrada:', newActividad);
+    } catch (error) {
+      console.error('Error al registrar actividad:', error);
+    }
+  
+    setIsRegistrarModalOpen(false);
+  };
+  
+
 
   const handleEnviarRespuestaSubmit = (data: { institution: string; search: string; email: string; message: string; attachments: string[] }) => {
     console.log('Enviar respuesta:', data)
