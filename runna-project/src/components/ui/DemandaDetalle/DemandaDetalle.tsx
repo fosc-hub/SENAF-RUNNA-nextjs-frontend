@@ -10,6 +10,7 @@ import {
   StepLabel,
   Paper,
   IconButton,
+  List, ListItem, ListItemText,
 } from '@mui/material'
 import {
   Close as CloseIcon,
@@ -27,11 +28,23 @@ import { ArchivosAdjuntosModal } from '../ArchivosAdjuntosModal'
 import { AsignarDemandaModal } from '../AsignarDemandaModal'
 import { RegistrarActividadModal } from '../RegistrarActividadModal'
 import { EnviarRespuestaModal } from '../EnviarRespuestaModal'
-import { createTActividad } from '../../../api/TableFunctions/actividades';
+import { createTActividad, getTActividades } from '../../../api/TableFunctions/actividades';
 // Assume these are imported from their respective files
 import { useFormData } from './useFormData'
 import { useApiData } from './useApiData'
 import { renderStepContent } from './RenderstepContent'
+import { getTActividadTipo } from '../../../api/TableFunctions/actividadTipos';
+import { getTInstitucionActividad } from '../../../api/TableFunctions/institucionActividades';
+
+interface Actividad {
+  id: number;
+  fecha_y_hora: String;
+  descripcion: string;
+  demanda: number;
+  tipo?: number | null;
+  institucion?: number | null;
+}
+
 interface CollapsibleSectionProps {
   title: string
   children: React.ReactNode
@@ -73,6 +86,74 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
   const [isEnviarRespuestaOpen, setIsEnviarRespuestaOpen] = useState(false)
   const [usuariosExternos, setUsuariosExternos] = useState([])
   const [isStepContentOpen, setIsStepContentOpen] = useState(true)
+  const [isActividadesOpen, setIsActividadesOpen] = useState(true);
+  const [actividades, setActividades] = useState<Actividad[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [tipoNames, setTipoNames] = useState<Record<number, string>>({});
+  const [institucionNames, setInstitucionNames] = useState<Record<number, string>>({});
+
+  useEffect(() => {
+    const fetchActividades = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await getTActividades();
+
+        // Map through the data to convert 'fecha_y_hora' from String to string
+        const mappedData = data.map((actividad: Actividad) => ({
+          ...actividad,
+          fecha_y_hora: actividad.fecha_y_hora.toString(), // Convert to string
+        }));
+
+        setActividades(mappedData);
+      } catch (err) {
+        setError('Error al cargar las actividades');
+        console.error('Error fetching actividades:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isOpen) {
+      fetchActividades();
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const fetchNames = async () => {
+      const tipoPromises = actividades.map((actividad) =>
+        actividad.tipo ? getTActividadTipo(actividad.tipo) : Promise.resolve(null)
+      );
+      const institucionPromises = actividades.map((actividad) =>
+        actividad.institucion ? getTInstitucionActividad(actividad.institucion) : Promise.resolve(null)
+      );
+
+      const tipos = await Promise.all(tipoPromises);
+      const instituciones = await Promise.all(institucionPromises);
+
+      // Update state with fetched names
+      const newTipoNames = tipos.reduce((acc, tipo, idx) => {
+        if (tipo) acc[actividades[idx].tipo!] = tipo.nombre;  // Assuming 'nombre' is the field
+        return acc;
+      }, {} as Record<number, string>);
+
+      const newInstitucionNames = instituciones.reduce((acc, institucion, idx) => {
+        if (institucion) acc[actividades[idx].institucion!] = institucion.nombre;  // Assuming 'nombre' is the field
+        return acc;
+      }, {} as Record<number, string>);
+
+      setTipoNames(newTipoNames);
+      setInstitucionNames(newInstitucionNames);
+    };
+
+    if (actividades.length > 0) {
+      fetchNames();
+    }
+  }, [actividades]);
+
+
+  const toggleActividades = () => setIsActividadesOpen(!isActividadesOpen);
 
   const handleArchivosSubmit = (data: { files: string[], comments: string }) => {
     console.log('Archivos adjuntos:', data)
@@ -88,7 +169,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
     try {
       console.log('Registrar actividad:', data);
       const fechaHoraISO = new Date(`${data.date}T${data.time}`).toISOString();
-  
+
       const actividadData = {
         fecha_y_hora: fechaHoraISO,
         descripcion: data.observations,
@@ -101,10 +182,10 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
     } catch (error) {
       console.error('Error al registrar actividad:', error);
     }
-  
+
     setIsRegistrarModalOpen(false);
   };
-  
+
 
 
   const handleEnviarRespuestaSubmit = (data: { institution: string; search: string; email: string; message: string; attachments: string[] }) => {
@@ -148,9 +229,6 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
       handleInputChange('vulneraciones', apiData.vulneraciones);
     }
   }, [apiData.vulneraciones]);
-
-
-
 
   useEffect(() => {
     const fetchUsuariosExternos = async () => {
@@ -340,83 +418,105 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
               </Stepper>
 
               <form onSubmit={handleSubmit}>
-              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-  {apiData.barrios && apiData.localidades && apiData.cpcs ? (
-    renderStepContent({
-      activeStep,
-      formData: {
-        ...formData,
-        ninosAdolescentes: apiData.nnyaList,
-      },
-      handleInputChange,
-      motivosIntervencion: apiData.motivosIntervencion,
-      currentMotivoIntervencion: apiData.currentMotivoIntervencion,
-      demandaMotivoIntervencion: apiData.demandaMotivoIntervencion,
-      barrios: apiData.barrios,
-      localidades: apiData.localidades,
-      cpcs: apiData.cpcs,
-      localizacion: apiData.localizacion,
-      usuarioExterno: apiData.usuarioExterno,
-      vinculosUsuarioExterno: apiData.vinculosUsuarioExterno,
-      institucionesUsuarioExterno: apiData.institucionesUsuarioExterno,
-      usuariosExternos,
-      demanda,
-      getMotivoIntervencion: apiData.getMotivoIntervencion,
-      institucionesEducativas: apiData.institucionesEducativas,
-      institucionesSanitarias: apiData.institucionesSanitarias,
-      addNinoAdolescente,
-      addAdultoConviviente,
-      addVulneraciontext,
-      categoriaMotivos: apiData.categoriaMotivos,
-      categoriaSubmotivos: apiData.categoriaSubmotivos,
-      gravedadVulneraciones: apiData.gravedadVulneraciones,
-      urgenciaVulneraciones: apiData.urgenciaVulneraciones,
-    })
-  ) : (
-    <Typography>Loading data...</Typography>
-  )}
-</LocalizationProvider>
+                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+                  {apiData.barrios && apiData.localidades && apiData.cpcs ? (
+                    renderStepContent({
+                      activeStep,
+                      formData: {
+                        ...formData,
+                        ninosAdolescentes: apiData.nnyaList,
+                      },
+                      handleInputChange,
+                      motivosIntervencion: apiData.motivosIntervencion,
+                      currentMotivoIntervencion: apiData.currentMotivoIntervencion,
+                      demandaMotivoIntervencion: apiData.demandaMotivoIntervencion,
+                      barrios: apiData.barrios,
+                      localidades: apiData.localidades,
+                      cpcs: apiData.cpcs,
+                      localizacion: apiData.localizacion,
+                      usuarioExterno: apiData.usuarioExterno,
+                      vinculosUsuarioExterno: apiData.vinculosUsuarioExterno,
+                      institucionesUsuarioExterno: apiData.institucionesUsuarioExterno,
+                      usuariosExternos,
+                      demanda,
+                      getMotivoIntervencion: apiData.getMotivoIntervencion,
+                      institucionesEducativas: apiData.institucionesEducativas,
+                      institucionesSanitarias: apiData.institucionesSanitarias,
+                      addNinoAdolescente,
+                      addAdultoConviviente,
+                      addVulneraciontext,
+                      categoriaMotivos: apiData.categoriaMotivos,
+                      categoriaSubmotivos: apiData.categoriaSubmotivos,
+                      gravedadVulneraciones: apiData.gravedadVulneraciones,
+                      urgenciaVulneraciones: apiData.urgenciaVulneraciones,
+                    })
+                  ) : (
+                    <Typography>Loading data...</Typography>
+                  )}
+                </LocalizationProvider>
 
-            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
-              <Button onClick={handleBack} disabled={activeStep === 0}>
-                Anterior
-              </Button>
-              <Button type="submit" variant="contained" color="primary" disabled={isSubmitting}>
-                {isSubmitting ? <CircularProgress size={24} /> : (activeStep === steps.length - 1 ? 'Guardar' : 'Siguiente')}
-              </Button>
-            </Box>
-          </form>
-        </CollapsibleSection>
-        </Paper>
-      </Box>
-    </Modal >
+                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
+                  <Button onClick={handleBack} disabled={activeStep === 0}>
+                    Anterior
+                  </Button>
+                  <Button type="submit" variant="contained" color="primary" disabled={isSubmitting}>
+                    {isSubmitting ? <CircularProgress size={24} /> : (activeStep === steps.length - 1 ? 'Guardar' : 'Siguiente')}
+                  </Button>
+                </Box>
+              </form>
+            </CollapsibleSection>
+            <CollapsibleSection title="Actividades Registradas" isOpen={true} onToggle={() => {}}>
+      {isLoading ? (
+        <CircularProgress />
+      ) : error ? (
+        <Typography color="error">{error}</Typography>
+      ) : actividades.length === 0 ? (
+        <Typography>No hay actividades registradas.</Typography>
+      ) : (
+        <List>
+          {actividades.map((actividad) => (
+            <ListItem key={actividad.id}>
+              <ListItemText
+                primary={actividad.descripcion}
+                secondary={`${new Date(actividad.fecha_y_hora).toLocaleString()} - ${
+                  tipoNames[actividad.tipo ?? 0] ?? 'Sin tipo'
+                } - ${institucionNames[actividad.institucion ?? 0] ?? 'Sin institución'}`}
+              />
+            </ListItem>
+          ))}
+        </List>
+      )}
+    </CollapsibleSection>
+          </Paper>
+        </Box>
+      </Modal >
 
       <ArchivosAdjuntosModal
-          isOpen={isArchivosModalOpen}
-          onClose={() => setIsArchivosModalOpen(false)}
-          onSave={handleArchivosSubmit}
-          initialFiles={formData.archivosAdjuntos || []}
-          initialComments=""
-        />
+        isOpen={isArchivosModalOpen}
+        onClose={() => setIsArchivosModalOpen(false)}
+        onSave={handleArchivosSubmit}
+        initialFiles={formData.archivosAdjuntos || []}
+        initialComments=""
+      />
 
-        <AsignarDemandaModal
-          isOpen={isAsignarModalOpen}
-          onClose={() => setIsAsignarModalOpen(false)}
-          onAssign={handleAsignarSubmit}
-        />
+      <AsignarDemandaModal
+        isOpen={isAsignarModalOpen}
+        onClose={() => setIsAsignarModalOpen(false)}
+        onAssign={handleAsignarSubmit}
+      />
 
-        <RegistrarActividadModal
-          isOpen={isRegistrarModalOpen}
-          onClose={() => setIsRegistrarModalOpen(false)}
-          onSubmit={handleRegistrarSubmit}
-          idDemanda={demanda.id}
-        />
+      <RegistrarActividadModal
+        isOpen={isRegistrarModalOpen}
+        onClose={() => setIsRegistrarModalOpen(false)}
+        onSubmit={handleRegistrarSubmit}
+        idDemanda={demanda.id}
+      />
 
-        <EnviarRespuestaModal
-          isOpen={isEnviarRespuestaOpen}
-          onClose={() => setIsEnviarRespuestaOpen(false)}
-          onSend={handleEnviarRespuestaSubmit}
-        />
+      <EnviarRespuestaModal
+        isOpen={isEnviarRespuestaOpen}
+        onClose={() => setIsEnviarRespuestaOpen(false)}
+        onSend={handleEnviarRespuestaSubmit}
+      />
     </>
   )
 }
