@@ -8,6 +8,8 @@ import { useRouter } from 'next/navigation';
 import { Slide, toast } from 'react-toastify'; // Importar Toastify
 import { getUsers } from '../../api/TableFunctions/user_me';
 import { errorMessages } from '../../utils/errorMessages';
+import { handleApiError } from '../../api/utils/errorHandler';
+import axiosInstance from '../../api/utils/axiosInstance';
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -26,16 +28,14 @@ export default function LoginPage() {
 
   const login = async (username: string, password: string): Promise<void> => {
     try {
-      const response = await axios.post(
-        'http://localhost:8000/api/login/',
-        { username, password },
+      const response =  await axiosInstance.post('/login/', { username, password },
         { withCredentials: true }
       );
 
       toast.success('¡Inicio de sesión exitoso!', {
         position: 'top-center',
         autoClose: 3000,
-        hideProgressBar: false,
+        hideProgressBar: true,
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
@@ -55,54 +55,9 @@ export default function LoginPage() {
       const errorMessage = error?.response?.data?.message || 'Sin detalles adicionales.';
       const errorDetails = `Código de error: ${errorCode}\nRespuesta del servidor: ${JSON.stringify(error?.response?.data)}`;
       setErrorDetails(errorDetails);
-
+      
       // Mostrar notificación con botón para ver detalles
-      toast.error(
-        <div>
-          {message}
-          <Button
-            onClick={() => {
-              // Expandir para mostrar detalles adicionales
-              toast.info(
-                <Box sx={{ whiteSpace: 'pre-wrap', bgcolor: '#f5f5f5', padding: '10px', borderRadius: '5px' }}>
-                  <Typography variant="body2" fontFamily="monospace" sx={{ color: 'black', marginBottom: '5px' }}>
-                    {errorDetails}
-                  </Typography>
-                  <IconButton
-                    onClick={() => copyToClipboard(errorDetails)}
-                    color="primary"
-                    size="small"
-                    aria-label="Copiar detalles"
-                  >
-                    <ContentCopy />
-                  </IconButton>
-                </Box>,
-                {
-                  position: 'top-center',
-                  autoClose: false,
-                  draggable: true,
-                  closeOnClick: true,
-                  hideProgressBar: true,
-                  theme: 'colored',
-                }
-              );
-            }}
-            sx={{ marginTop: '10px', color: 'white', textDecoration: 'underline' }}
-          >
-            Ver más detalles
-          </Button>
-        </div>,
-        {
-          position: 'top-center',
-          autoClose: false,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          theme: 'colored',
-          transition: Slide,
-        }
-      );
+      
     }
   };
 
