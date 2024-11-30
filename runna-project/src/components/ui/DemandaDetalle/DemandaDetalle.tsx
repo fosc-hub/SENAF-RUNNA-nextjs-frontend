@@ -10,7 +10,9 @@ import {
   StepLabel,
   Paper,
   IconButton,
-  List, ListItem, ListItemText,
+  TextField,
+  MenuItem,
+  List, ListItem, ListItemText, Dialog, DialogActions, DialogContent, DialogTitle, Grid
 } from '@mui/material'
 import {
   Close as CloseIcon,
@@ -20,6 +22,8 @@ import {
   Person as PersonIcon,
   Message as MessageIcon,
 } from '@mui/icons-material'
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { X, MessageSquare, FileIcon as AttachFile, User } from 'lucide-react'
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3'
@@ -28,7 +32,7 @@ import { ArchivosAdjuntosModal } from '../ArchivosAdjuntosModal'
 import { AsignarDemandaModal } from '../AsignarDemandaModal'
 import { RegistrarActividadModal } from '../RegistrarActividadModal'
 import { EnviarRespuestaModal } from '../EnviarRespuestaModal'
-import { createTActividad, getTActividades } from '../../../api/TableFunctions/actividades';
+import { createTActividad, getTActividades, updateTActividad, deleteTActividad } from '../../../api/TableFunctions/actividades';
 // Assume these are imported from their respective files
 import { useFormData } from './useFormData'
 import { useApiData } from './useApiData'
@@ -90,8 +94,14 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
   const [actividades, setActividades] = useState<Actividad[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingActividad, setEditingActividad] = useState<Actividad | null>(null);
+  const [editedDescripcion, setEditedDescripcion] = useState<string>('');
+  const [editedTipo, setEditedTipo] = useState<number | string>('');
+  const [editedInstitucion, setEditedInstitucion] = useState<number | string>('');
   const [tipoNames, setTipoNames] = useState<Record<number, string>>({});
   const [institucionNames, setInstitucionNames] = useState<Record<number, string>>({});
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+  const [actividadToDelete, setActividadToDelete] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchActividades = async () => {
@@ -132,14 +142,13 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
       const tipos = await Promise.all(tipoPromises);
       const instituciones = await Promise.all(institucionPromises);
 
-      // Update state with fetched names
       const newTipoNames = tipos.reduce((acc, tipo, idx) => {
-        if (tipo) acc[actividades[idx].tipo!] = tipo.nombre;  // Assuming 'nombre' is the field
+        if (tipo) acc[actividades[idx].tipo!] = tipo.nombre;
         return acc;
       }, {} as Record<number, string>);
 
       const newInstitucionNames = instituciones.reduce((acc, institucion, idx) => {
-        if (institucion) acc[actividades[idx].institucion!] = institucion.nombre;  // Assuming 'nombre' is the field
+        if (institucion) acc[actividades[idx].institucion!] = institucion.nombre;
         return acc;
       }, {} as Record<number, string>);
 
@@ -152,6 +161,69 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
     }
   }, [actividades]);
 
+  const handleEditClick = (actividad: Actividad) => {
+    setEditingActividad(actividad);
+    setEditedDescripcion(actividad.descripcion);
+    setEditedTipo(actividad.tipo ?? '');
+    setEditedInstitucion(actividad.institucion ?? '');
+  };
+
+  const handleDeleteClick = (actividadId: number) => {
+    setActividadToDelete(actividadId);
+    setOpenConfirmDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (actividadToDelete === null) return;
+
+    try {
+      await deleteTActividad(actividadToDelete);
+      setActividades(actividades.filter((actividad) => actividad.id !== actividadToDelete));
+    } catch (error) {
+      console.error('Error eliminando la actividad:', error);
+    }
+    setOpenConfirmDialog(false);
+    setActividadToDelete(null);
+    setEditingActividad(null);
+  };
+
+  const handleCancelDelete = () => {
+    setOpenConfirmDialog(false);
+    setActividadToDelete(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingActividad(null);
+    setEditedDescripcion('');
+    setEditedTipo('');
+    setEditedInstitucion('');
+  };
+  const handleSaveEdit = async () => {
+    if (editingActividad) {
+      const updatedActividad = {
+        descripcion: editedDescripcion,
+        demanda: demanda.id,
+        tipo: editedTipo ? Number(editedTipo) : 0,
+        institucion: editedInstitucion ? Number(editedInstitucion) : 0,
+        fecha_y_hora: editingActividad.fecha_y_hora,
+      };
+
+      try {
+        console.log('Actualizando actividad:', editingActividad.id, updatedActividad);
+        await updateTActividad(editingActividad.id, updatedActividad);
+        setActividades(
+          actividades.map((actividad) =>
+            actividad.id === editingActividad.id
+              ? { ...actividad, ...updatedActividad }
+              : actividad
+          )
+        );
+        setEditingActividad(null);
+      } catch (error) {
+        console.error('Error actualizando la actividad:', error);
+      }
+    }
+  };
 
   const toggleActividades = () => setIsActividadesOpen(!isActividadesOpen);
 
@@ -186,8 +258,6 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
     setIsRegistrarModalOpen(false);
   };
 
-
-
   const handleEnviarRespuestaSubmit = (data: { institution: string; search: string; email: string; message: string; attachments: string[] }) => {
     console.log('Enviar respuesta:', data)
     setIsEnviarRespuestaOpen(false)
@@ -209,7 +279,6 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
     }
   }, [apiData.nnyaList]);
 
-  // Synchronize currentMotivoIntervencion into formData
   useEffect(() => {
     if (
       apiData.currentMotivoIntervencion &&
@@ -266,7 +335,6 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
     setIsSubmitting(true)
 
     try {
-      // Save or update usuario externo
       if (formData.createNewUsuarioExterno || (formData.usuarioExterno.id && formData.usuarioExterno.nombre)) {
         const usuarioExternoResponse = await fetch(
           formData.usuarioExterno.id
@@ -289,7 +357,6 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
         handleInputChange('usuarioExterno', savedUsuarioExterno);
       }
 
-      // Save localizacion
       const localizacionResponse = await fetch(
         formData.localizacion.id
           ? `http://localhost:8000/api/localizacion/${formData.localizacion.id}/`
@@ -310,12 +377,10 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
       const savedLocalizacion = await localizacionResponse.json();
       handleInputChange('localizacion', savedLocalizacion);
 
-      // Update demanda with new data
       const updatedDemanda = {
         ...demanda,
         usuarioExterno: formData.usuarioExterno.id,
         localizacion: savedLocalizacion.id,
-        // Add other fields that need to be updated
       };
 
       const demandaResponse = await fetch(`http://localhost:8000/api/demanda/${demanda.id}/`, {
@@ -331,10 +396,9 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
       }
 
       console.log('Form submitted successfully');
-      onClose(); // Close the modal after successful submission
+      onClose();
     } catch (error) {
       console.error('Error submitting form:', error);
-      // Show error message to the user
     } finally {
       setIsSubmitting(false);
     }
@@ -465,28 +529,116 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
                 </Box>
               </form>
             </CollapsibleSection>
-            <CollapsibleSection title="Actividades Registradas" isOpen={true} onToggle={() => {}}>
-      {isLoading ? (
-        <CircularProgress />
-      ) : error ? (
-        <Typography color="error">{error}</Typography>
-      ) : actividades.length === 0 ? (
-        <Typography>No hay actividades registradas.</Typography>
-      ) : (
-        <List>
-          {actividades.map((actividad) => (
-            <ListItem key={actividad.id}>
-              <ListItemText
-                primary={actividad.descripcion}
-                secondary={`${new Date(actividad.fecha_y_hora).toLocaleString()} - ${
-                  tipoNames[actividad.tipo ?? 0] ?? 'Sin tipo'
-                } - ${institucionNames[actividad.institucion ?? 0] ?? 'Sin institución'}`}
-              />
-            </ListItem>
-          ))}
-        </List>
-      )}
-    </CollapsibleSection>
+            <CollapsibleSection title="Actividades Registradas" isOpen={isActividadesOpen} onToggle={() => setIsActividadesOpen(!isActividadesOpen)}>
+              {isLoading ? (
+                <CircularProgress />
+              ) : error ? (
+                <Typography color="error">{error}</Typography>
+              ) : actividades.length === 0 ? (
+                <Typography>No hay actividades registradas.</Typography>
+              ) : (
+                <List>
+                  {actividades.map((actividad) => (
+                    <ListItem key={actividad.id}>
+                      {editingActividad?.id !== actividad.id ? (
+                        <ListItemText
+                          primary={actividad.descripcion}
+                          secondary={`${new Date(actividad.fecha_y_hora).toLocaleString()} - ${tipoNames[actividad.tipo ?? 0] ?? 'Sin tipo'} - ${institucionNames[actividad.institucion ?? 0] ?? 'Sin institución'}`}
+                        />
+                      ) : (
+                        <div style={{ width: '100%' }}>
+                          <Grid container spacing={2} sx={{ width: '100%' }}>
+                            <Grid item xs={12} sm={6} md={6}>
+                              <TextField
+                                label="Descripción"
+                                value={editedDescripcion}
+                                onChange={(e) => setEditedDescripcion(e.target.value)}
+                                fullWidth
+                                margin="normal"
+                                size="small"
+                              />
+                            </Grid>
+
+                            <Grid item xs={12} sm={3} md={3}>
+                              <TextField
+                                label="Tipo"
+                                value={editedTipo}
+                                onChange={(e) => setEditedTipo(e.target.value)}
+                                fullWidth
+                                margin="normal"
+                                select
+                                size="small"
+                              >
+                                {Object.entries(tipoNames).map(([key, value]) => (
+                                  <MenuItem key={key} value={key}>
+                                    {value}
+                                  </MenuItem>
+                                ))}
+                              </TextField>
+                            </Grid>
+
+                            <Grid item xs={12} sm={3} md={3}>
+                              <TextField
+                                label="Institución"
+                                value={editedInstitucion}
+                                onChange={(e) => setEditedInstitucion(e.target.value)}
+                                fullWidth
+                                margin="normal"
+                                select
+                                size="small"
+                              >
+                                {Object.entries(institucionNames).map(([key, value]) => (
+                                  <MenuItem key={key} value={key}>
+                                    {value}
+                                  </MenuItem>
+                                ))}
+                              </TextField>
+                            </Grid>
+                          </Grid>
+
+                          <Box sx={{ display: 'flex', gap: 2, marginTop: 2 }}>
+                            <Button variant="contained" onClick={handleSaveEdit}>
+                              Confirmar
+                            </Button>
+                            <Button
+                              variant="contained"
+                              color="error"
+                              onClick={() => handleDeleteClick(actividad.id)}
+                            >
+                              Eliminar
+                            </Button>
+                            <Button variant="outlined" onClick={handleCancelEdit}>
+                              Cancelar
+                            </Button>
+                          </Box>
+                        </div>
+                      )}
+
+                      {editingActividad?.id !== actividad.id && (
+                        <IconButton onClick={() => handleEditClick(actividad)}>
+                          <EditIcon />
+                        </IconButton>
+                      )}
+                    </ListItem>
+                  ))}
+                </List>
+              )}
+            </CollapsibleSection>
+
+            <Dialog open={openConfirmDialog} onClose={handleCancelDelete}>
+              <DialogTitle>¿Estás seguro de que deseas eliminar esta actividad?</DialogTitle>
+              <DialogContent>
+                <Typography>Una vez eliminada, no podrás recuperar esta actividad.</Typography>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleCancelDelete} color="primary">
+                  Cancelar
+                </Button>
+                <Button onClick={handleConfirmDelete} color="error">
+                  Eliminar
+                </Button>
+              </DialogActions>
+            </Dialog>
           </Paper>
         </Box>
       </Modal >
