@@ -29,8 +29,8 @@ import { getTDemandaPersona } from '../../api/TableFunctions/demandaPersonas'
 import { getTPersona } from '../../api/TableFunctions/personas'
 import { getTPrecalificacionDemanda, createTPrecalificacionDemanda, updateTPrecalificacionDemanda } from '../../api/TableFunctions/precalificacionDemanda'
 import { useAuth } from '../../context/AuthContext';
-
-
+import axiosInstance from '../../api/utils/axiosInstance';
+import { Slide, toast } from 'react-toastify';
 const origenOptions = [
   { value: 'todos', label: 'Todos' },
   { value: 'web', label: 'Web' },
@@ -212,13 +212,13 @@ export function MainContent() {
 // Function to update PrecalificacionDemanda without 'demanda' in payload
 const updatePrecalificacionDemanda = async (id: number, payload: Partial<TPrecalificacionDemanda>) => {
   const { demanda, ...filteredPayload } = payload;
-  const url = `http://localhost:8000/api/precalificacion-demanda/${id}/`; // Correct URL
+  const url = `/precalificacion-demanda/${id}/`; // Correct URL
 
   console.log('Sending PATCH request to:', url); // Debug log
   console.log('Payload:', filteredPayload); // Debug log
 
   try {
-    const response = await axios.patch(url, filteredPayload);
+    const response = await axiosInstance.patch(url, filteredPayload);
     console.log('Update successful:', response.data);
     return response.data;
   } catch (error) {
@@ -267,6 +267,16 @@ const handlePrecalificacionChange = useCallback(
         ...prev,
         [demandId]: updatedPrecalificacion,
       }));
+      toast.success('¡Cambio realizado con exito!', {
+        position: 'top-center',
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: 'colored',
+        
+      });
     } catch (error) {
       console.error('Error updating precalificacion:', error);
     }
