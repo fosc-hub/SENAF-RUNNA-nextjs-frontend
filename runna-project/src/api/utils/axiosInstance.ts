@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { handleApiError } from './errorHandler';
 
 // Function to extract CSRF token from cookies
 const getCSRFToken = () => {
@@ -20,5 +21,20 @@ axiosInstance.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// Add a response interceptor to handle errors globally
+axiosInstance.interceptors.response.use(
+  (response) => response, // Pass through successful responses
+  (error) => {
+    const method = error.config?.method?.toUpperCase(); // Determine the HTTP method
+    const endpoint = error.config?.url || 'Unknown endpoint';
+    const errorDetails = `Código de error: ${error.code}\nRespuesta del servidor: ${JSON.stringify(error?.response?.data)}`;
+    // Only handle toasts for non-GET methods
+    if (method && method !== 'GET') {
+      handleApiError(error, endpoint); // Show toast and log error
+    }
+    return Promise.reject(error); // Propagate the error
+  }
+);
 
 export default axiosInstance;

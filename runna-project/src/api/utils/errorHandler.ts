@@ -1,12 +1,27 @@
+import { showErrorToast } from '../../utils/showErrorToast';
+import { getErrorMessage } from '../../utils/errorMessages';
+
+/**
+ * Handles API errors by logging and optionally showing a toast notification.
+ * @param error The error object from the API call.
+ * @param endpoint The endpoint being called.
+ */
 export const handleApiError = (error: any, endpoint: string): void => {
-    if (error.response) {
-      console.error(`API Error - ${endpoint}:`, {
-        status: error.response.status,
-        data: error.response.data,
-        headers: error.response.headers,
-      });
-    } else {
-      console.error(`API Error - ${endpoint}:`, error.message);
-    }
-  };
-  
+  if (error.response) {
+    const { status, data } = error.response;
+    console.log(error.response + "HOLAAA")
+
+    //console.error(`API Error - ${endpoint}:`, { status, data });
+    const errorMessage = getErrorMessage(status || 500);
+    
+    const errorCode = error?.response?.status || 'Desconocido';
+    const detailMessage = error?.response?.data?.message || 'Sin detalles adicionales.';
+    const errorDetails = `Código de error: ${errorCode}\nRespuesta del servidor: ${error.message}`;
+
+    showErrorToast(errorMessage, errorDetails); // Show toast for non-GET errors
+  } else {
+    //console.error(`API Error - ${endpoint}:`, error.message);
+    console.log(error)
+    showErrorToast('Error de Conexion', error.message); // Show generic error for unknown issues
+  }
+};
