@@ -86,12 +86,13 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
 
   const handleRegistrarSubmit = async (data: any) => {
     try {
+      console.log('Registrar actividad:', data);
       const fechaHoraISO = new Date(`${data.date}T${data.time}`).toISOString();
   
       const actividadData = {
         fecha_y_hora: fechaHoraISO,
         descripcion: data.observations,
-        demanda: 1,
+        demanda: data.demanda,
         tipo: data.activity ? Number(data.activity) : null,
         institucion: data.institution ? Number(data.institution) : null,
       };
@@ -408,6 +409,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
           isOpen={isRegistrarModalOpen}
           onClose={() => setIsRegistrarModalOpen(false)}
           onSubmit={handleRegistrarSubmit}
+          idDemanda={demanda.id}
         />
 
         <EnviarRespuestaModal

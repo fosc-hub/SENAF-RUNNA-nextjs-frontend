@@ -14,6 +14,7 @@ interface RegistrarActividadModalProps {
   isOpen: boolean
   onClose: () => void
   onSubmit: (activityData: ActivityData) => void
+  idDemanda: number 
 }
 
 interface ActivityData {
@@ -38,7 +39,7 @@ interface TInstitucionActividad {
 }
 
 
-export function RegistrarActividadModal({ isOpen, onClose, onSubmit }: RegistrarActividadModalProps) {
+export function RegistrarActividadModal({ isOpen, onClose, onSubmit, idDemanda }: RegistrarActividadModalProps) {
   const [activityData, setActivityData] = useState<ActivityData>({
     date: '',
     time: '',
@@ -47,7 +48,7 @@ export function RegistrarActividadModal({ isOpen, onClose, onSubmit }: Registrar
     observations: '',
     files: [],
     fileComments: '',
-    demanda: null,
+    demanda: idDemanda,
   })
 
   const [isArchivosModalOpen, setIsArchivosModalOpen] = useState(false)
@@ -56,6 +57,12 @@ export function RegistrarActividadModal({ isOpen, onClose, onSubmit }: Registrar
 
   useEffect(() => {
     if (isOpen) {
+      // Establecer demanda con el id recibido por props
+      setActivityData(prev => ({
+        ...prev,
+        demanda: idDemanda,
+      }))
+
       getTActividadTipos()
         .then((data) => {
           console.log('Tipos de actividad:', data)
@@ -74,9 +81,7 @@ export function RegistrarActividadModal({ isOpen, onClose, onSubmit }: Registrar
           console.error('Error al obtener instituciones:', error)
         })
     }
-  }, [isOpen])
-
-
+  }, [isOpen, idDemanda]) 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -93,7 +98,6 @@ export function RegistrarActividadModal({ isOpen, onClose, onSubmit }: Registrar
     setActivityData(prev => ({ ...prev, institution: e.target.value || null }))
   }
 
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -105,7 +109,6 @@ export function RegistrarActividadModal({ isOpen, onClose, onSubmit }: Registrar
     onSubmit(activityData)
     onClose()
   }
-
 
   const handleOpenArchivosModal = () => {
     setIsArchivosModalOpen(true)
