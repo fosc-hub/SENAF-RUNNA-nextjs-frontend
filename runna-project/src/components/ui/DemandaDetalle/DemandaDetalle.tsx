@@ -12,6 +12,7 @@ import {
   IconButton,
   TextField,
   MenuItem,
+  Divider,
   List, ListItem, ListItemText, Dialog, DialogActions, DialogContent, DialogTitle, Grid
 } from '@mui/material'
 import {
@@ -257,6 +258,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
       };
       const newActividad = await createTActividad(actividadData);
       console.log('Actividad registrada:', newActividad);
+      setActividades(prev => [...prev, newActividad]);
     } catch (error) {
       console.error('Error al registrar actividad:', error);
     }
@@ -536,115 +538,113 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
               </form>
             </CollapsibleSection>
             <CollapsibleSection title="Actividades Registradas" isOpen={isActividadesOpen} onToggle={() => setIsActividadesOpen(!isActividadesOpen)}>
-              {isLoading ? (
-                <CircularProgress />
-              ) : error ? (
-                <Typography color="error">{error}</Typography>
-              ) : actividades.length === 0 ? (
-                <Typography>No hay actividades registradas.</Typography>
-              ) : (
-                <List>
-                  {actividades.map((actividad) => (
-                    <ListItem key={actividad.id}>
-                      {editingActividad?.id !== actividad.id ? (
-                        <ListItemText
-                          primary={actividad.descripcion}
-                          secondary={`${new Date(actividad.fecha_y_hora).toLocaleString()} - ${tipoNames[actividad.tipo ?? 0] ?? 'Sin tipo'} - ${institucionNames[actividad.institucion ?? 0] ?? 'Sin institución'}`}
-                        />
-                      ) : (
-                        <div style={{ width: '100%' }}>
-                          <Grid container spacing={2} sx={{ width: '100%' }}>
-                            <Grid item xs={12} sm={6} md={6}>
-                              <TextField
-                                label="Descripción"
-                                value={editedDescripcion}
-                                onChange={(e) => setEditedDescripcion(e.target.value)}
-                                fullWidth
-                                margin="normal"
-                                size="small"
-                              />
-                            </Grid>
+  {isLoading ? (
+    <CircularProgress />
+  ) : error ? (
+    <Typography color="error">{error}</Typography>
+  ) : actividades.length === 0 ? (
+    <Typography>No hay actividades registradas.</Typography>
+  ) : (
+    <List>
+      {actividades.map((actividad) => (
+        <div key={actividad.id}>
+          <ListItem>
+            {editingActividad?.id !== actividad.id ? (
+              <ListItemText
+                primary={actividad.descripcion}
+                secondary={`${new Date(actividad.fecha_y_hora).toLocaleString()} - ${tipoNames[actividad.tipo ?? 0] ?? 'Sin tipo'} - ${institucionNames[actividad.institucion ?? 0] ?? 'Sin institución'}`}
+              />
+            ) : (
+              <div style={{ width: '100%' }}>
+                <Grid container spacing={2} sx={{ width: '100%' }}>
+                  <Grid item xs={12} sm={6} md={6}>
+                    <TextField
+                      label="Descripción"
+                      value={editedDescripcion}
+                      onChange={(e) => setEditedDescripcion(e.target.value)}
+                      fullWidth
+                      margin="normal"
+                      size="small"
+                    />
+                  </Grid>
 
-                            <Grid item xs={12} sm={3} md={3}>
-                              <TextField
-                                label="Tipo"
-                                value={editedTipo}
-                                onChange={(e) => setEditedTipo(e.target.value)}
-                                fullWidth
-                                margin="normal"
-                                select
-                                size="small"
-                              >
-                                {Object.entries(tipoNames).map(([key, value]) => (
-                                  <MenuItem key={key} value={key}>
-                                    {value}
-                                  </MenuItem>
-                                ))}
-                              </TextField>
-                            </Grid>
+                  <Grid item xs={12} sm={3} md={3}>
+                    <TextField
+                      label="Tipo"
+                      value={editedTipo}
+                      onChange={(e) => setEditedTipo(e.target.value)}
+                      fullWidth
+                      margin="normal"
+                      select
+                      size="small"
+                    >
+                      {Object.entries(tipoNames).map(([key, value]) => (
+                        <MenuItem key={key} value={key}>
+                          {value}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </Grid>
 
-                            <Grid item xs={12} sm={3} md={3}>
-                              <TextField
-                                label="Institución"
-                                value={editedInstitucion}
-                                onChange={(e) => setEditedInstitucion(e.target.value)}
-                                fullWidth
-                                margin="normal"
-                                select
-                                size="small"
-                              >
-                                {Object.entries(institucionNames).map(([key, value]) => (
-                                  <MenuItem key={key} value={key}>
-                                    {value}
-                                  </MenuItem>
-                                ))}
-                              </TextField>
-                            </Grid>
+                  <Grid item xs={12} sm={3} md={3}>
+                    <TextField
+                      label="Institución"
+                      value={editedInstitucion}
+                      onChange={(e) => setEditedInstitucion(e.target.value)}
+                      fullWidth
+                      margin="normal"
+                      select
+                      size="small"
+                    >
+                      {Object.entries(institucionNames).map(([key, value]) => (
+                        <MenuItem key={key} value={key}>
+                          {value}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </Grid>
 
-                            {/* Campo para fecha y hora */}
-                            <Grid item xs={12} sm={6} md={6}>
-                              <TextField
-                                label="Fecha y Hora"
-                                type="datetime-local"
-                                value={editedFechaHora}
-                                onChange={(e) => setEditedFechaHora(e.target.value)}
-                                fullWidth
-                                margin="normal"
-                                size="small"
-                                InputLabelProps={{
-                                  shrink: true,
-                                }}
-                              />
-                            </Grid>
-                          </Grid>
-                          <Box sx={{ display: 'flex', gap: 2, marginTop: 2 }}>
-                            <Button variant="contained" onClick={handleSaveEdit}>
-                              Confirmar
-                            </Button>
-                            {/* <Button
-                              variant="contained"
-                              color="error"
-                              onClick={() => handleDeleteClick(actividad.id)}
-                            >
-                              Eliminar
-                            </Button> */}
-                            <Button variant="outlined" onClick={handleCancelEdit}>
-                              Cancelar
-                            </Button>
-                          </Box>
-                        </div>
-                      )}
+                  {/* Campo para fecha y hora */}
+                  <Grid item xs={12} sm={6} md={6}>
+                    <TextField
+                      label="Fecha y Hora"
+                      type="datetime-local"
+                      value={editedFechaHora}
+                      onChange={(e) => setEditedFechaHora(e.target.value)}
+                      fullWidth
+                      margin="normal"
+                      size="small"
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                    />
+                  </Grid>
+                </Grid>
+                <Box sx={{ display: 'flex', gap: 2, marginTop: 2 }}>
+                  <Button variant="contained" onClick={handleSaveEdit}>
+                    Confirmar
+                  </Button>
+                  <Button variant="outlined" onClick={handleCancelEdit}>
+                    Cancelar
+                  </Button>
+                </Box>
+              </div>
+            )}
 
-                      {editingActividad?.id !== actividad.id && (
-                        <IconButton onClick={() => handleEditClick(actividad)}>
-                          <EditIcon />
-                        </IconButton>
-                      )}
-                    </ListItem>
-                  ))}
-                </List>
-              )}
-            </CollapsibleSection>
+            {editingActividad?.id !== actividad.id && (
+              <IconButton onClick={() => handleEditClick(actividad)}>
+                <EditIcon />
+              </IconButton>
+            )}
+          </ListItem>
+          
+          {/* Agregar un Divider después de cada ListItem */}
+          <Divider />
+        </div>
+      ))}
+    </List>
+  )}
+</CollapsibleSection>
 
             {/* <Dialog open={openConfirmDialog} onClose={handleCancelDelete}>
               <DialogTitle>¿Estás seguro de que deseas eliminar esta actividad?</DialogTitle>
