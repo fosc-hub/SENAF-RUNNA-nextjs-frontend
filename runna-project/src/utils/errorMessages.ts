@@ -2,7 +2,7 @@ export const errorMessages: Record<number | string, string> = {
   400: 'Solicitud inválida. Por favor, verifica los datos enviados.',
   401: 'No autorizado. Por favor, verifica tus credenciales.',
   403: 'Acceso denegado. No tienes permisos para realizar esta acción.',
-  404: 'Recurso no encontrado. Por favor, verifica la URL.',
+  404: 'Recurso no encontrado.',
   408: 'La solicitud ha tardado demasiado. Por favor, inténtalo nuevamente.',
   429: 'Demasiadas solicitudes. Por favor, espera antes de intentarlo de nuevo.',
   500: 'Error interno del servidor. Por favor, inténtalo más tarde.',
