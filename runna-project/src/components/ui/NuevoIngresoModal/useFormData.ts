@@ -1,5 +1,14 @@
 import { useState } from 'react'
-
+type Vulneracion = {
+  principal_demanda: boolean;
+  transcurre_actualidad: boolean;
+  categoria_motivo: string;
+  categoria_submotivo: string;
+  gravedad_vulneracion: string;
+  urgencia_vulneracion: string;
+  nnya: number;
+  autor_dv: number;
+}
 const initialFormData = {
   fecha_y_hora_ingreso: new Date(),
   origen: '',
@@ -21,6 +30,7 @@ const initialFormData = {
     localidad: '',
     cpc: '',
   },
+  
   usuarioExterno: {
     id: null,
     nombre: '',
@@ -35,7 +45,7 @@ const initialFormData = {
   createNewUsuarioExterno: false,
   ninosAdolescentes: [],
   adultosConvivientes: [],
-  vulneraciones: [],
+  vulneraciones: [] as Vulneracion[], // Add type assertion here
   vinculaciones: [],
   condicionesVulnerabilidad:[],
   presuntaVulneracion: {

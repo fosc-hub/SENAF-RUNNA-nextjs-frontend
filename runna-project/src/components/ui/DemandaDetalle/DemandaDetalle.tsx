@@ -30,7 +30,6 @@ import { LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3'
 import { es } from 'date-fns/locale'
 import { ArchivosAdjuntosModal } from '../ArchivosAdjuntosModal'
-import { AsignarDemandaModal } from '../AsignarDemandaModal'
 import { RegistrarActividadModal } from '../RegistrarActividadModal'
 import { EnviarRespuestaModal } from '../EnviarRespuestaModal'
 import { createTRespuesta } from '../../../api/TableFunctions/respuestas'
@@ -57,7 +56,8 @@ interface CollapsibleSectionProps {
   children: React.ReactNode
   isOpen: boolean
   onToggle: () => void
-}
+}  
+
 
 function CollapsibleSection({ title, children, isOpen, onToggle }: CollapsibleSectionProps) {
   return (
@@ -82,13 +82,13 @@ function CollapsibleSection({ title, children, isOpen, onToggle }: CollapsibleSe
   );
 }
 
-const steps = ['Carátula', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Vínculos']
+const steps = ['Ingreso', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Vinculos', 'Condiciones de Vulnerabilidad']
 
 export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
+  const [demandState, setDemandState] = useState('constatacion');
   const [activeStep, setActiveStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isArchivosModalOpen, setIsArchivosModalOpen] = useState(false)
-  const [isAsignarModalOpen, setIsAsignarModalOpen] = useState(false)
   const [isRegistrarModalOpen, setIsRegistrarModalOpen] = useState(false)
   const [isEnviarRespuestaOpen, setIsEnviarRespuestaOpen] = useState(false)
   const [usuariosExternos, setUsuariosExternos] = useState([])
@@ -289,7 +289,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
   };
 
   const apiData = useApiData(demanda?.id, demanda?.localizacion, demanda?.usuarioExterno);
-  const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext,
+  const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext, addVinculacion, removeVinculacion, addCondicionVulnerabilidad, removeCondicionVulnerabilidad
   } = useFormData(demanda, apiData);
   useEffect(() => {
     if (apiData.localizacion) {
@@ -299,6 +299,19 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
       })
     }
   }, [apiData.localizacion])
+  useEffect(() => {
+    if (apiData.vinculaciones) {
+      handleInputChange('vinculaciones', apiData.vinculaciones);
+    }
+  }, [apiData.vinculaciones]);
+  
+  useEffect(() => {
+    if (apiData.vinculoPersonas) {
+      handleInputChange('vinculoPersonas', apiData.vinculoPersonas);
+    }
+  }, [apiData.vinculoPersonas]);
+  
+  
   useEffect(() => {
     if (apiData.nnyaList) {
       handleInputChange('ninosAdolescentes', apiData.nnyaList);
@@ -355,7 +368,59 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
   };
 
   const handleBack = () => setActiveStep((prevStep) => Math.max(prevStep - 1, 0))
+  const handleEnviarAEvaluacion = async () => {
+    try {
+      const updatedDemanda = {
+        ...demanda,
+        constatacion: false,
+        evaluacion: true,
+      };
 
+      const response = await fetch(`http://localhost:8000/api/demanda/${demanda.id}/`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedDemanda),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update demanda');
+      }
+
+      setDemandState('evaluacion');
+      console.log('Demanda enviada a proceso de evaluación');
+    } catch (error) {
+      console.error('Error al enviar a evaluación:', error);
+    }
+  };
+
+  const handleEnviarADecision = async () => {
+    try {
+      const updatedDemanda = {
+        ...demanda,
+        evaluacion: false,
+        decision: true,
+      };
+
+      const response = await fetch(`http://localhost:8000/api/demanda/${demanda.id}/`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedDemanda),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update demanda');
+      }
+
+      setDemandState('decision');
+      console.log('Demanda enviada a proceso de toma de decisión');
+    } catch (error) {
+      console.error('Error al enviar a toma de decisión:', error);
+    }
+  };
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (activeStep !== steps.length - 1) {
@@ -436,53 +501,52 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
 
   return (
     <>
-      <Modal open={isOpen} onClose={onClose}>
-        <Box sx={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          bgcolor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'flex-start',
-          pt: 5,
-          overflowY: 'auto',
-          zIndex: 1000,
-        }}>
-          <Paper sx={{ width: '100%', maxWidth: '1000px', maxHeight: '90vh', overflow: 'auto', p: 3 }} onClick={handleDemandaClick}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-              <Box>
-                <Typography variant="h4" component="h2">{demanda.nombre}</Typography>
-                <Typography variant="subtitle1" color="text.secondary">DNI {demanda.dni} - {demanda.edad} años</Typography>
-              </Box>
-              <Box display="flex" alignItems="center">
-                {formData.calificacion === 'urgente' && (
-                  <Typography variant="caption" sx={{ bgcolor: 'error.main', color: 'error.contrastText', px: 1, py: 0.5, borderRadius: 1, mr: 2 }}>
-                    URGENTE
-                  </Typography>
-                )}
-                <Typography variant="body2" color="text.secondary" mr={2}>Actualizado: {new Date(formData.fechaActualizacion).toLocaleDateString()}</Typography>
-                <IconButton onClick={onClose} size="small">
-                  <X />
-                </IconButton>
-              </Box>
+        <Modal open={isOpen} onClose={onClose}>
+      <Box sx={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        bgcolor: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        pt: 5,
+        overflowY: 'auto',
+        zIndex: 1000,
+      }}>
+        <Paper sx={{ width: '100%', maxWidth: '1000px', maxHeight: '90vh', overflow: 'auto', p: 3 }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+            <Box>
+              <Typography variant="h4" component="h2">{demanda.nombre}</Typography>
+              <Typography variant="subtitle1" color="text.secondary">DNI {demanda.dni} - {demanda.edad} años</Typography>
             </Box>
-
-            {!demanda.asociadoRegistro && (
-              <Paper sx={{ bgcolor: 'warning.light', p: 2, mb: 3 }} elevation={0}>
-                <Typography color="warning.dark">La presente demanda no está asociada a un registro ni legajo.</Typography>
-              </Paper>
-            )}
-
-
-            <Typography variant="h6" gutterBottom>Archivos adjuntos ({formData.archivosAdjuntos?.length || 0})</Typography>
-            <Box component="ul" sx={{ mb: 3, pl: 2 }}>
-              {formData.archivosAdjuntos?.map((archivo, index) => (
-                <Typography component="li" key={index}>{archivo}</Typography>
-              ))}
+            <Box display="flex" alignItems="center">
+              {formData.calificacion === 'urgente' && (
+                <Typography variant="caption" sx={{ bgcolor: 'error.main', color: 'error.contrastText', px: 1, py: 0.5, borderRadius: 1, mr: 2 }}>
+                  URGENTE
+                </Typography>
+              )}
+              <Typography variant="body2" color="text.secondary" mr={2}>Actualizado: {new Date(formData.fechaActualizacion).toLocaleDateString()}</Typography>
+              <IconButton onClick={onClose} size="small">
+                <X />
+              </IconButton>
             </Box>
+          </Box>
+
+          {!demanda.asociadoRegistro && (
+            <Paper sx={{ bgcolor: 'warning.light', p: 2, mb: 3 }} elevation={0}>
+              <Typography color="warning.dark">La presente demanda no está asociada a un registro ni legajo.</Typography>
+            </Paper>
+          )}
+
+          <Typography variant="h6" gutterBottom>Archivos adjuntos ({formData.archivosAdjuntos?.length || 0})</Typography>
+          <Box component="ul" sx={{ mb: 3, pl: 2 }}>
+            {formData.archivosAdjuntos?.map((archivo, index) => (
+              <Typography component="li" key={index}>{archivo}</Typography>
+            ))}
+          </Box>
 
             <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
               <Button variant="contained" startIcon={<MessageIcon />} onClick={() => setIsEnviarRespuestaOpen(true)}>

@@ -16,7 +16,8 @@ import {
   Button,
   Radio,
   RadioGroup,
-  Paper
+  Paper,
+  FormGroup,
 } from '@mui/material'
 import { ImportIcon as AddIcon } from 'lucide-react'
 
@@ -163,6 +164,10 @@ export const renderStepContent = ({
   localizacion,
   addNinoAdolescente,
   addAdultoConviviente,
+  addVinculacion,
+  removeVinculacion,
+  addCondicionVulnerabilidad,
+  removeCondicionVulnerabilidad,
   institucionesEducativas,
   institucionesSanitarias,
   addVulneraciontext,
@@ -171,11 +176,114 @@ export const renderStepContent = ({
   categoriaSubmotivos, // Receive submotivos as a prop
   gravedadVulneraciones, // Receive gravedadVulneraciones as a prop
   urgenciaVulneraciones,
+  condicionesVulnerabilidadNNyA,
+  condicionesVulnerabilidadAdultos,
+  vinculoPersonas, // Add this here
+  condicionesVulnerabilidad,
+  personasWithCondiciones,
 
 
 
 }) => {
+  const renderVinculacion = (vinculacion, index) => (
+    <Grid container spacing={2} key={index} sx={{ mb: 4, p: 2, border: '1px solid #e0e0e0', borderRadius: 2 }}>
+      <Grid item xs={12}>
+        <Typography variant="h6" gutterBottom>Vinculación {index + 1}</Typography>
+      </Grid>
+      
+      <Grid item xs={12} md={6}>
+        <Typography variant="subtitle1" gutterBottom>
+          Persona 1 (NNyA Principal):
+        </Typography>
+        <Typography>
+          {formData.ninosAdolescentes[0].nombre} {formData.ninosAdolescentes[0].apellido}
+        </Typography>
+      </Grid>
+  
+      <Grid item xs={12} md={6}>
+      <FormControl fullWidth>
+  <InputLabel>Persona 2</InputLabel>
+  <Select
+    value={vinculacion.persona_2}
+    onChange={(e) => handleInputChange(`vinculaciones[${index}].persona_2`, e.target.value)}
+    label="Persona 2"
+  >
+    {formData.ninosAdolescentes.map((nino, i) => (
+      <MenuItem key={`nnya-${nino.id}`} value={nino.id}>
+        {nino.nombre} {nino.apellido} (NNyA)
+      </MenuItem>
+    ))}
+    {formData.adultosConvivientes.map((adulto, i) => (
+      <MenuItem key={`adulto-${adulto.id}`} value={adulto.id}>
+        {adulto.nombre} {adulto.apellido} (Adulto)
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>
 
+      </Grid>
+  
+      <Grid item xs={12} md={6}>
+      <FormControl fullWidth>
+  <InputLabel>Vínculo</InputLabel>
+  <Select
+    value={vinculacion.vinculo}
+    onChange={(e) => handleInputChange(`vinculaciones[${index}].vinculo`, e.target.value)}
+    label="Vínculo"
+  >
+    {vinculoPersonas.map((vinculo) => (
+      <MenuItem key={vinculo.id} value={vinculo.id}>
+        {vinculo.nombre}
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>
+
+      </Grid>
+  
+      <Grid item xs={12} md={6}>
+        <FormGroup>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={vinculacion.conviven}
+                onChange={(e) => handleInputChange(`vinculaciones[${index}].conviven`, e.target.checked)}
+              />
+            }
+            label="Conviven"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={vinculacion.autordv}
+                onChange={(e) => handleInputChange(`vinculaciones[${index}].autordv`, e.target.checked)}
+              />
+            }
+            label="Autor DV"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={vinculacion.garantiza_proteccion}
+                onChange={(e) => handleInputChange(`vinculaciones[${index}].garantiza_proteccion`, e.target.checked)}
+              />
+            }
+            label="Garantiza Protección"
+          />
+        </FormGroup>
+      </Grid>
+  
+      <Grid item xs={12}>
+        <Button 
+          variant="outlined" 
+          color="secondary" 
+          onClick={() => removeVinculacion(index)}
+        >
+          Eliminar Vinculación
+        </Button>
+      </Grid>
+    </Grid>
+  )
   switch (activeStep) {
     case 0:
       return (
@@ -1041,8 +1149,109 @@ export const renderStepContent = ({
               </Typography>
             </Box>
           );
-        
-  
+          case 4:
+            return (
+              <Box>
+                <Typography variant="h6" gutterBottom>
+                  Vínculos
+                </Typography>
+                {formData.vinculaciones.map((vinculacion, index) => renderVinculacion(vinculacion, index))}
+                <Button variant="contained" color="primary" onClick={addVinculacion} sx={{ mt: 2 }}>
+                  Agregar Vinculación
+                </Button>
+              </Box>
+            )
+            case 5:
+              return (
+                <Box>
+                  <Typography color="primary" sx={{ mb: 2 }}>
+                    Condiciones de Vulnerabilidad
+                  </Typography>
+                  {formData.condicionesVulnerabilidad.map((condicion, index) => {
+                    const isAdulto = condicion.persona.startsWith('adulto-');
+                    const filteredCondiciones = isAdulto
+                      ? condicionesVulnerabilidadAdultos
+                      : condicionesVulnerabilidadNNyA;
+            
+                    return (
+                      <Box key={index} sx={{ mb: 4, p: 2, border: '1px solid #ccc', borderRadius: '4px' }}>
+                        <Typography variant="h6" gutterBottom>
+                          Condición de Vulnerabilidad {index + 1}
+                        </Typography>
+            
+                        <FormControl fullWidth margin="normal">
+                          <InputLabel>Persona</InputLabel>
+                          <Select
+                            value={condicion.persona}
+                            onChange={(e) => handleInputChange(`condicionesVulnerabilidad[${index}].persona`, e.target.value)}
+                            label="Persona"
+                          >
+                            {formData.ninosAdolescentes.map((nino, ninoIndex) => (
+                              <MenuItem key={`nino-${ninoIndex}`} value={`nino-${ninoIndex}`}>
+                                {nino.nombre} {nino.apellido} (NNyA)
+                              </MenuItem>
+                            ))}
+                            {formData.adultosConvivientes.map((adulto, adultoIndex) => (
+                              <MenuItem key={`adulto-${adultoIndex}`} value={`adulto-${adultoIndex}`}>
+                                {adulto.nombre} {adulto.apellido} (Adulto)
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+            
+                        <FormControl fullWidth margin="normal">
+                          <InputLabel>Condición de Vulnerabilidad</InputLabel>
+                          <Select
+                            value={condicion.condicion_vulnerabilidad}
+                            onChange={(e) =>
+                              handleInputChange(`condicionesVulnerabilidad[${index}].condicion_vulnerabilidad`, e.target.value)
+                            }
+                            label="Condición de Vulnerabilidad"
+                          >
+                            {filteredCondiciones.map((cv) => (
+                              <MenuItem key={cv.id} value={cv.id}>
+                                {cv.nombre} - {cv.descripcion}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+            
+                        <FormControl component="fieldset" margin="normal">
+                          <Typography component="legend">¿Aplica esta condición?</Typography>
+                          <RadioGroup
+                            row
+                            value={condicion.si_no ? 'si' : 'no'}
+                            onChange={(e) =>
+                              handleInputChange(`condicionesVulnerabilidad[${index}].si_no`, e.target.value === 'si')
+                            }
+                          >
+                            <FormControlLabel value="si" control={<Radio />} label="Sí" />
+                            <FormControlLabel value="no" control={<Radio />} label="No" />
+                          </RadioGroup>
+                        </FormControl>
+            
+                        <Box sx={{ mt: 2 }}>
+                          <Button
+                            variant="outlined"
+                            color="secondary"
+                            onClick={() => removeCondicionVulnerabilidad(index)}
+                          >
+                            Eliminar Condición de Vulnerabilidad
+                          </Button>
+                        </Box>
+                      </Box>
+                    );
+                  })}
+                  <Button
+                    startIcon={<AddIcon />}
+                    onClick={addCondicionVulnerabilidad}
+                    sx={{ color: 'primary.main', mt: 2 }}
+                  >
+                    Añadir otra Condición de Vulnerabilidad
+                  </Button>
+                </Box>
+              );
+            
     default:
       return null
   }
