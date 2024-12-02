@@ -1,7 +1,7 @@
 import { getAll, getOne, create, update, remove } from '../services/apiService';
 import { TInstitucionActividad } from '../interfaces';
 
-const endpoint = 'tinstitucionactividad';
+const endpoint = 'institucion-actividad';
 
 export const getTInstitucionActividads = () => getAll<TInstitucionActividad>(endpoint);
 export const getTInstitucionActividad = (id: number) => getOne<TInstitucionActividad>(endpoint, id);
