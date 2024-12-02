@@ -1,7 +1,8 @@
-
-'use client'
+'use client';
 import axios from 'axios';
+import EvaluarButton from './EvaluarButton'; 
 import { AsignarDemandaModal } from './AsignarDemandaModal'
+import CreateIcon from '@mui/icons-material/Create';
 import {
   Person as PersonIcon,
 } from '@mui/icons-material'
@@ -59,6 +60,7 @@ export function MainContent() {
   const { user, loading } = useAuth();
   const [assignDemandId, setAssignDemandId] = useState<number | null>(null); // State for Assign Demand
 
+ 
 
   const fetchAllData = useCallback(async () => {
     try {
@@ -239,7 +241,7 @@ const updatePrecalificacionDemanda = async (id: number, payload: Partial<TPrecal
     setIsAsignarModalOpen(false);
   }; 
 
-
+  
 const handlePrecalificacionChange = useCallback(
   async (demandId: number, newValue: string) => {
     try {
@@ -338,7 +340,7 @@ const columns: GridColDef[] = useMemo(() => {
     baseColumns.push({
       field: 'Asignar',
       headerName: 'Asignar',
-      width: 180,
+      width: 160,
       renderCell: (params: GridRenderCellParams<TDemanda>) => (
         <Button
           variant="outlined"
@@ -354,7 +356,22 @@ const columns: GridColDef[] = useMemo(() => {
       ),
     });
   }  
-
+  if (user) {
+    baseColumns.push({
+      field: 'Evaluar',
+      headerName: 'Evaluar',
+      width: 160,
+      renderCell: (params: GridRenderCellParams<TDemanda>) => (
+        <EvaluarButton
+          onClick={() => {
+            setAssignDemandId(params.row.id);
+            handleEvaluarRedirect(params.row.id); // Si quieres seguir con la lógica adicional
+          }}
+        />
+      ),
+    });
+  }
+  
   return baseColumns;
 }, [user, handlePrecalificacionChange]);
 
