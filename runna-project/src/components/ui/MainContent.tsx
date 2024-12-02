@@ -20,6 +20,7 @@ import {
 import { DataGrid, GridRowParams, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { Search } from '@mui/icons-material'
 import DemandaDetalle from '../ui/DemandaDetalle/DemandaDetalle'
+import ActividadesRegistradas from '../ui/ActividadesRegistradas/ActividadesRegistradas'
 import PostConstatacionModal from './PostConstatacionModal'
 import NuevoIngresoModal from './NuevoIngresoModal/NuevoIngresoModal'
 import EvaluacionModal from './EvaluacionModal'
@@ -53,6 +54,7 @@ export function MainContent() {
   const [showPostConstatacion, setShowPostConstatacion] = useState(false)
   const [showEvaluacionModal, setShowEvaluacionModal] = useState(false)
   const [showDemandaDetalle, setShowDemandaDetalle] = useState(false)
+  const [showActividadesRegistradas, setShowActividadesRegistradas] = useState(false)
   const [origen, setOrigen] = useState('todos')
   const { user, loading } = useAuth();
   const [assignDemandId, setAssignDemandId] = useState<number | null>(null); // State for Assign Demand
@@ -176,11 +178,13 @@ export function MainContent() {
   const handleDemandClick = useCallback((params: GridRowParams<TDemanda>) => {
     setSelectedDemand(params.row)
     setShowDemandaDetalle(true)
+    setShowActividadesRegistradas(true)
   }, [])
 
   const handleCloseDetail = useCallback(() => {
     setSelectedDemand(null)
     setShowDemandaDetalle(false)
+    setShowActividadesRegistradas(false)
     setShowPostConstatacion(false)
     setShowEvaluacionModal(false)
   }, [])
@@ -191,6 +195,7 @@ export function MainContent() {
         const updatedDemand = await updateDemand(selectedDemand.id!, { ...selectedDemand, estado: 'Verificada' })
         await fetchAllData() // Refresh all data
         setShowDemandaDetalle(false)
+        setShowActividadesRegistradas(false)
         setShowPostConstatacion(true)
       } catch (error) {
         // console.error('Error updating demand:', error)
@@ -434,11 +439,31 @@ const columns: GridColDef[] = useMemo(() => {
         )}
       </Box>
 
-      <Modal open={showDemandaDetalle && !!selectedDemand} onClose={handleCloseDetail} BackdropProps={{ invisible: true }}
+      <Modal 
+        open={(showDemandaDetalle || showActividadesRegistradas) && !!selectedDemand} 
+        onClose={handleCloseDetail} 
+        BackdropProps={{ invisible: true }}
       >
-        <Box >
+        <Box>
           {selectedDemand && (
-            <DemandaDetalle demanda={selectedDemand} isOpen={showDemandaDetalle} onClose={handleCloseDetail} onConstatar={handleConstatar} />
+            <>
+              {showDemandaDetalle && (
+                <DemandaDetalle 
+                  demanda={selectedDemand} 
+                  isOpen={showDemandaDetalle} 
+                  onClose={handleCloseDetail} 
+                  onConstatar={handleConstatar} 
+                />
+              )}
+              {/* {showActividadesRegistradas && (
+                <ActividadesRegistradas 
+                  demanda={selectedDemand} 
+                  isOpen={showActividadesRegistradas} 
+                  onClose={handleCloseDetail} 
+                  onConstatar={handleConstatar} 
+                />
+              )} */}
+            </>
           )}
         </Box>
       </Modal>
