@@ -46,7 +46,7 @@ const precalificacionOptions = [
   { value: 'COMPLETAR', label: 'Completar' },
 ]
 
-export function MainContent() {
+export function EvaluacionesContent() {
   const [demands, setDemands] = useState<TDemanda[]>([])
   const [personaData, setPersonaData] = useState<Record<number, TPersona>>({})
   const [precalificacionData, setPrecalificacionData] = useState<Record<number, TPrecalificacionDemanda>>({})
@@ -377,35 +377,6 @@ const columns: GridColDef[] = useMemo(() => {
 
   return (
     <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 3, overflow: 'auto' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-        {
-            (user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tdemanda')) && (
-              <Button
-                variant="contained"
-                onClick={handleNuevoRegistro}
-                sx={{ bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' } }}
-              >
-                + Nuevo Registro
-              </Button>
-            )
-          }
-          <FormControl sx={{ minWidth: 120 }} size="small">
-            <InputLabel>Origen</InputLabel>
-            <Select
-              value={origen}
-              onChange={(e) => setOrigen(e.target.value)}
-              label="Origen"
-            >
-              {origenOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Box>
-      </Box>
 
       <Box sx={{ height: 400, width: '100%' }}>
         {filteredDemands.length > 0 ? (
