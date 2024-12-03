@@ -20,8 +20,8 @@ const adminMenuItems: MenuItem[] = [
 const userMenuItems: MenuItem[] = [
   { name: 'Recepción de Demandas', isHeader: true },
   { name: 'Todos', href: '/todos' },
-  { name: 'Leidos', href: '/leidos' },
   { name: 'Sin Leer', href: '/sin-leer' },
+  { name: 'Leidos', href: '/leidos' },
 ];
 
 export default function Sidebar() {

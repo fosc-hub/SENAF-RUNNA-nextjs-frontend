@@ -24,10 +24,11 @@ import ActividadesRegistradas from '../ui/ActividadesRegistradas/ActividadesRegi
 import PostConstatacionModal from './PostConstatacionModal'
 import NuevoIngresoModal from './NuevoIngresoModal/NuevoIngresoModal'
 import EvaluacionModal from './EvaluacionModal'
-import { getDemands, createDemand, updateDemand } from '../../api/TableFunctions/demands'
-import { TDemanda, TDemandaPersona, TPersona, TPrecalificacionDemanda } from '../../api/interfaces'
+import { getDemands, createDemand, updateDemand, getDemand } from '../../api/TableFunctions/demands'
+import { TDemanda, TDemandaPersona, TPersona, TPrecalificacionDemanda, TDemandaAsignado } from '../../api/interfaces'
 import { getTDemandaPersona } from '../../api/TableFunctions/demandaPersonas'
 import { getTPersona } from '../../api/TableFunctions/personas'
+import { getTDemandaAsignados } from '../../api/TableFunctions/DemandaAsignados'
 import { getTPrecalificacionDemanda, createTPrecalificacionDemanda, updateTPrecalificacionDemanda } from '../../api/TableFunctions/precalificacionDemanda'
 import { useAuth } from '../../context/AuthContext';
 
@@ -62,11 +63,24 @@ export function MainContent() {
 
   const fetchAllData = useCallback(async () => {
     try {
-      const demandsData = await getDemands()
-      console.log('Fetched demands:', demandsData)
-      setDemands(demandsData)
-      console.log('User:', user, 'Loading:', loading);
+      let demandsData = [];
 
+      if (user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tdemandaasignado')) {
+        demandsData = await getDemands();
+      } else {
+        const assignedDemands = await getTDemandaAsignados({ user: user.id });
+        const demandPromises = assignedDemands.map(async (assigned) => {
+          try {
+        const demand = await getDemand(assigned.demanda);
+        return demand;
+          } catch (error) {
+        console.error(`Error fetching demand ${assigned.demanda}:`, error);
+        return null;
+          }
+        });
+        demandsData = (await Promise.all(demandPromises)).filter((demand) => demand !== null);
+      }
+      setDemands(demandsData);
       const personaPromises = demandsData.map(async (demand) => {
         try {
           const demandaPersona = await getTDemandaPersona(demand.id!)
@@ -118,7 +132,7 @@ export function MainContent() {
     } catch (error) {
       console.error('Error fetching data:', error)
     }
-  }, [])
+  }, [user])
 
   useEffect(() => {
     fetchAllData()
