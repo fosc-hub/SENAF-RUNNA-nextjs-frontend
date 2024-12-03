@@ -127,6 +127,11 @@ export const useFormData = () => {
             institucion_sanitaria: '',
             observaciones: '',
           },
+          vinculacion: {
+            vinculo: '',
+            conviven: false,
+            garantiza_proteccion: false
+          }
         },
       ],
     }))
@@ -168,6 +173,11 @@ export const useFormData = () => {
           conviviente: true,
           useDefaultLocalizacion: true,
           localizacion: { ...initialFormData.localizacion },
+          vinculacion: {
+            vinculo: '',
+            conviven: false,
+            garantiza_proteccion: false
+          }
         },
       ],
     }))

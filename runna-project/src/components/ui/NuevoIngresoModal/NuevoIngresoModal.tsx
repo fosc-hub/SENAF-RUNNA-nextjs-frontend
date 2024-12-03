@@ -27,7 +27,7 @@ import { createTDemandaPersona } from '../../../api/TableFunctions/demandaPerson
 import { createLocalizacionPersona } from '../../../api/TableFunctions/localizacionPersona'
 import { createTPersonaCondicionesVulnerabilidad } from '../../../api/TableFunctions/personaCondicionesVulnerabilidad'
 
-const steps = ['Ingreso', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Vinculos', 'Condiciones de Vulnerabilidad']
+const steps = ['Ingreso', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Condiciones de Vulnerabilidad']
 
 export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
   const [activeStep, setActiveStep] = useState(0)
