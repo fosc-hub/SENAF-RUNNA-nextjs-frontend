@@ -8,7 +8,7 @@ import {
   FormControlLabel,
   Radio,
   RadioGroup,
-  IconButton, Select, MenuItem, InputLabel, SelectChangeEvent
+  IconButton, Select, MenuItem, InputLabel, SelectChangeEvent, TextField,
 } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import { PDFDocument } from 'pdf-lib';
@@ -24,6 +24,7 @@ import { getTPersona } from '../../api/TableFunctions/personas';
 import { getTSuggestDecisions } from '../../api/TableFunctions/suggestDecision';
 import { TsuggestDecision } from '../../api/interfaces';
 import { getTLegajos } from '../../api/TableFunctions/legajos';
+import { createTDecision } from '../../api/TableFunctions/decisiones';
 
 export function EvaluacionesContent() {
   const [indicadores, setIndicadores] = useState<TIndicadoresValoracion[]>([]);
@@ -34,6 +35,7 @@ export function EvaluacionesContent() {
   const [tieneLegajo, setTieneLegajo] = useState(false);
   const params = useParams();
   const id = params.id;
+  const [justification, setJustification] = useState('');
 
   const handleDownloadReport = async () => {
     const pdfDoc = await PDFDocument.create();
@@ -110,6 +112,25 @@ export function EvaluacionesContent() {
       console.error('Error al obtener sugerencias de decisión o legajos:', error);
     }
   };
+
+  const handleDecision = (decision: 'APERTURA DE LEGAJO' | 'RECHAZAR CASO' | 'MPI-MPE') => async () => {
+    try {
+      const data = {
+        justificacion: justification,
+        decision: decision,
+        demanda: Number(id),      // Assuming `id` is the demanda ID from params
+        nnya: Number(selectedNNYA), // Assuming `selectedNNYA` is the selected NNYA ID
+      };
+      console.log('Decision data:', data);
+      // Call cr  eateTDecision to send the POST request
+      await createTDecision(data);
+  
+      console.log('Decision successfully created!');
+    } catch (error) {
+      alert('Error al enviar la decisión. Ya existe una decision tomada.');
+    }
+  };
+  
 
 
   useEffect(() => {
@@ -389,49 +410,105 @@ export function EvaluacionesContent() {
                   </tbody>
                 </table>
               </Box>
+
+              {/* Justificación Textarea */}
+              <TextField
+                fullWidth
+                label="Justificación"
+                multiline
+                rows={4} // Number of rows for the height of the textarea
+                sx={{
+                  mb: 3,
+                  '& .MuiInputBase-root': {
+                    borderRadius: '8px',
+                    backgroundColor: '#f5f5f5',
+                  },
+                }}
+                onChange={(e) => setJustification(e.target.value)} // Assuming setJustification is used to store input value
+              />
+
+              {/* Buttons */}
+              {!tieneLegajo ? (
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    sx={{
+                      fontSize: '1rem',
+                      padding: '8px 24px',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                      '&:hover': {
+                        backgroundColor: '#f8d7da',
+                        borderColor: '#d32f2f',
+                      },
+                    }}
+                    onClick={handleDecision('RECHAZAR CASO')}
+                  >
+                    Archivar caso
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    sx={{
+                      fontSize: '1rem',
+                      padding: '8px 24px',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                      '&:hover': {
+                        backgroundColor: '#e3f2fd',
+                        borderColor: '#1976d2',
+                      },
+                    }}
+                    onClick={handleDecision('MPI-MPE')}
+                  >
+                    Abrir MPI-MPE
+                  </Button>
+                </Box>
+              ) : (
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    sx={{
+                      fontSize: '1rem',
+                      padding: '8px 24px',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                      '&:hover': {
+                        backgroundColor: '#f8d7da',
+                        borderColor: '#d32f2f',
+                      },
+                    }}
+                    onClick={handleDecision('RECHAZAR CASO')}
+                  >
+                    Archivar caso
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    sx={{
+                      fontSize: '1rem',
+                      padding: '8px 24px',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                      '&:hover': {
+                        backgroundColor: '#e3f2fd',
+                        borderColor: '#1976d2',
+                      },
+                    }}
+                    onClick={handleDecision('APERTURA DE LEGAJO')}
+                  >
+                    Abrir Legajo
+                  </Button>
+                </Box>
+              )}
             </Box>
           ))}
         </Box>
       )}
-      {!tieneLegajo ? (
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-          <Button
-            variant="outlined"
-            color="secondary"
-            sx={{ fontSize: '1rem', padding: '6px 20px' }}
-           onClick={handleDecision('RECHAZAR CASO')}
-          >
-            Archivar caso
-          </Button>
-          <Button
-            variant="outlined"
-            color="primary"
-            sx={{ fontSize: '1rem', padding: '6px 20px' }}
-           onClick={handleDecision('MPI-MPE')}
-          >
-            Abrir MPI-MPE
-          </Button>
-        </Box>
-      ) : (
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-          <Button
-            variant="outlined"
-            color="secondary"
-            sx={{ fontSize: '1rem', padding: '6px 20px' }}
-           onClick={handleDecision('RECHAZAR CASO')}
-          >
-            Archivar caso
-          </Button>
-          <Button
-            variant="outlined"
-            color="primary"
-            sx={{ fontSize: '1rem', padding: '6px 20px' }}
-           onClick={handleDecision('APERTURA DE LEGAJO')}
-          >
-            Abrir Legajo
-          </Button>
-        </Box>
-      )}
+
+
     </Box>
   );
 }
