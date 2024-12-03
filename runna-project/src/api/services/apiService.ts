@@ -1,4 +1,5 @@
 import axiosInstance from '../utils/axiosInstance';
+import { Slide, toast } from 'react-toastify'; // Importar Toastify
 
 /**
  * Generic function to fetch all resources from an API endpoint.
@@ -34,8 +35,20 @@ export const getOne = async <T>(endpoint: string, id: number): Promise<T> => {
  * @param data Data to create a new resource.
  * @returns Newly created resource of type T.
  */
-export const create = async <T>(endpoint: string, data: Partial<T>): Promise<T> => {
+export const create = async <T>(endpoint: string, data: Partial<T>, showToast: boolean = false, toastMessage: string = '¡Registro asignado con exito!'): Promise<T> => {
   const response = await axiosInstance.post<T>(`${endpoint}/`, data);
+  if (response.status === 201 && showToast) {
+    // success toast
+    toast.success(toastMessage, {
+      position: 'top-center',
+      autoClose: 3000,
+      hideProgressBar: true,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      theme: 'colored',
+    });
+  }
   return response.data;
 };
 
@@ -46,8 +59,20 @@ export const create = async <T>(endpoint: string, data: Partial<T>): Promise<T> 
  * @param data Data to update the resource.
  * @returns Updated resource of type T.
  */
-export const update = async <T>(endpoint: string, id: number, data: Partial<T>): Promise<T> => {
-  const response = await axiosInstance.put<T>(`${endpoint}/${id}/`, data);
+export const update = async <T>(endpoint: string, id: number, data: Partial<T>, showToast: boolean = false, toastMessage: string = '¡Registro modificado con exito!'): Promise<T> => {
+  const response = await axiosInstance.patch<T>(`${endpoint}/${id}/`, data);
+  if (response.status === 200 && showToast) {
+    // success toast
+    toast.success(toastMessage, {
+      position: 'top-center',
+      autoClose: 3000,
+      hideProgressBar: true,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      theme: 'colored',
+    });
+  }
   return response.data;
 };
 
