@@ -1,6 +1,7 @@
 
 'use client'
 import axios from 'axios';
+import WarningIcon from '@mui/icons-material/Warning';
 import { AsignarDemandaModal } from './AsignarDemandaModal'
 import {
   Person as PersonIcon,
@@ -332,7 +333,18 @@ const columns: GridColDef[] = useMemo(() => {
     {
       field: 'id',
       headerName: 'ID',
-      width: 70,
+      width: 100,
+      renderCell: (params: GridRenderCellParams<TDemanda>) => {
+        const isUrgent = params.row.precalificacion === 'URGENTE';
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+            <Typography>{params.value}</Typography>
+            {isUrgent && (
+              <WarningIcon sx={{ color: 'warning.main', ml: 1 }} fontSize="small" />
+            )}
+          </Box>
+        );
+      },
     },
     {
       field: 'origen',
