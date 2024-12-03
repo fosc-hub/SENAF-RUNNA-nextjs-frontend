@@ -1,7 +1,5 @@
 import axiosInstance from '../utils/axiosInstance';
-import { handleApiError } from '../utils/errorHandler';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+import { Slide, toast } from 'react-toastify'; // Importar Toastify
 
 /**
  * Generic function to fetch all resources from an API endpoint.
@@ -11,23 +9,13 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8
  */
 export const getAll = async <T>(
   endpoint: string,
-  filters?: Record<string, any> // Optional filters parameter
+  filters?: Record<string, any>
 ): Promise<T[]> => {
-  try {
-    // Construct query string from filters, if provided
-    const queryString = filters
-      ? `?${new URLSearchParams(filters as Record<string, string>).toString()}`
-      : '';
-
-    // Make the request with optional query parameters
-    const response = await axiosInstance.get<T[]>(`${endpoint}/${queryString}`);
-
-    return response.data;
-
-  } catch (error) {
-    handleApiError(error, endpoint);
-    throw new Error(`Failed to fetch data from ${endpoint}.`);
-  }
+  const queryString = filters
+    ? `?${new URLSearchParams(filters as Record<string, string>).toString()}`
+    : '';
+  const response = await axiosInstance.get<T[]>(`${endpoint}/${queryString}`);
+  return response.data;
 };
 
 /**
@@ -37,13 +25,8 @@ export const getAll = async <T>(
  * @returns Resource of type T.
  */
 export const getOne = async <T>(endpoint: string, id: number): Promise<T> => {
-  try {
-    const response = await axiosInstance.get<T>(`${API_BASE_URL}/${endpoint}/${id}/`);
-    return response.data;
-  } catch (error) {
-    handleApiError(error, `${endpoint}/${id}`);
-    throw new Error(`Failed to fetch data from ${endpoint}/${id}.`);
-  }
+  const response = await axiosInstance.get<T>(`${endpoint}/${id}/`);
+  return response.data;
 };
 
 /**
@@ -52,14 +35,21 @@ export const getOne = async <T>(endpoint: string, id: number): Promise<T> => {
  * @param data Data to create a new resource.
  * @returns Newly created resource of type T.
  */
-export const create = async <T>(endpoint: string, data: Partial<T>): Promise<T> => {
-  try {
-    const response = await axiosInstance.post<T>(`${API_BASE_URL}/${endpoint}/`, data);
-    return response.data;
-  } catch (error) {
-    handleApiError(error, endpoint);
-    throw new Error(`Failed to create data in ${endpoint}.`);
+export const create = async <T>(endpoint: string, data: Partial<T>, showToast: boolean = false, toastMessage: string = '¡Registro asignado con exito!'): Promise<T> => {
+  const response = await axiosInstance.post<T>(`${endpoint}/`, data);
+  if (response.status === 201 && showToast) {
+    // success toast
+    toast.success(toastMessage, {
+      position: 'top-center',
+      autoClose: 3000,
+      hideProgressBar: true,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      theme: 'colored',
+    });
   }
+  return response.data;
 };
 
 /**
@@ -69,14 +59,33 @@ export const create = async <T>(endpoint: string, data: Partial<T>): Promise<T> 
  * @param data Data to update the resource.
  * @returns Updated resource of type T.
  */
-export const update = async <T>(endpoint: string, id: number, data: Partial<T>): Promise<T> => {
-  try {
-    const response = await axiosInstance.patch<T>(`${API_BASE_URL}/${endpoint}/${id}/`, data); // Use PATCH instead of PUT
-    return response.data;
-  } catch (error) {
-    handleApiError(error, `${endpoint}/${id}`);
-    throw new Error(`Failed to update data in ${endpoint}/${id}.`);
+export const update = async <T>(endpoint: string, id: number, data: Partial<T>, showToast: boolean = false, toastMessage: string = '¡Registro modificado con exito!'): Promise<T> => {
+  const response = await axiosInstance.patch<T>(`${endpoint}/${id}/`, data);
+  if (response.status === 200 && showToast) {
+    // success toast
+    toast.success(toastMessage, {
+      position: 'top-center',
+      autoClose: 3000,
+      hideProgressBar: true,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      theme: 'colored',
+    });
   }
+  return response.data;
+};
+
+/**
+ * Generic function to partially update a resource.
+ * @param endpoint API endpoint to send data to.
+ * @param id Resource ID.
+ * @param data Partial data to update the resource.
+ * @returns Updated resource of type T.
+ */
+export const patch = async <T>(endpoint: string, id: number, data: Partial<T>): Promise<T> => {
+  const response = await axiosInstance.patch<T>(`${endpoint}/${id}/`, data);
+  return response.data;
 };
 
 /**
@@ -86,10 +95,5 @@ export const update = async <T>(endpoint: string, id: number, data: Partial<T>):
  * @returns void.
  */
 export const remove = async (endpoint: string, id: number): Promise<void> => {
-  try {
-    await axiosInstance.delete(`${API_BASE_URL}/${endpoint}/${id}/`);
-  } catch (error) {
-    handleApiError(error, `${endpoint}/${id}`);
-    throw new Error(`Failed to delete data in ${endpoint}/${id}.`);
-  }
+  await axiosInstance.delete(`${endpoint}/${id}/`);
 };

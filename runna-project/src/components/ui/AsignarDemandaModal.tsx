@@ -7,6 +7,7 @@ import { Paperclip } from 'lucide-react';
 import { getUsers } from '../../api/TableFunctions/users';
 import { createTDemandaAsignado } from '../../api/TableFunctions/DemandaAsignados';
 import { TUser } from '../../api/interfaces';
+import { toast } from 'react-toastify';
 
 interface AsignarDemandaModalProps {
   demanda: number;
@@ -40,7 +41,7 @@ export function AsignarDemandaModal({ demandaId, isOpen, onClose, onAssign }: As
           setAssignmentData((prev) => ({ ...prev, collaborator: userList[0].id })); // Set the default collaborator
         } catch (error) {
           // console.error('Error fetching users:', error);
-          setError('Error fetching collaborators. Please try again later.');
+          setError('Hubo un error en el servidor, intente mas tarde.');
         } finally {
           setLoading(false);
         }
@@ -66,7 +67,7 @@ export function AsignarDemandaModal({ demandaId, isOpen, onClose, onAssign }: As
       console.log('Creating TDemandaAsignado:', newTDemandaAsignado);
 
       // Call the method to create the TDemandaAsignado object
-      const response = await createTDemandaAsignado(newTDemandaAsignado);
+      const response = await createTDemandaAsignado(newTDemandaAsignado, true, '¡Demanda asignada con éxito!');
       console.log('TDemandaAsignado created:', response);
 
       // Trigger the onAssign callback with the assignment data
@@ -74,9 +75,10 @@ export function AsignarDemandaModal({ demandaId, isOpen, onClose, onAssign }: As
 
       // Close the modal
       onClose();
+
     } catch (err) {
       // console.error('Error creating TDemandaAsignado:', err);
-      setError('Failed to assign demand. Please try again.');
+      setError('Hubo un problema al asignar la demanda.');
     }
   };
 

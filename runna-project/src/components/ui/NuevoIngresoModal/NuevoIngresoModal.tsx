@@ -26,6 +26,7 @@ import { createTNNyASalud } from '../../../api/TableFunctions/nnyaSalud'
 import { createTDemandaPersona } from '../../../api/TableFunctions/demandaPersonas'
 import { createLocalizacionPersona } from '../../../api/TableFunctions/localizacionPersona'
 import { createTPersonaCondicionesVulnerabilidad } from '../../../api/TableFunctions/personaCondicionesVulnerabilidad'
+import { toast } from 'react-toastify'
 
 const steps = ['Ingreso', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Condiciones de Vulnerabilidad']
 
@@ -355,6 +356,18 @@ addDebugInfo(`Created ${condicionesVulnerabilidadResponses.length} persona-condi
       addDebugInfo(`Created ${vinculacionesResponses.length} vinculaciones`)
 
       onSubmit(demandaResponse)
+      // toast success
+
+      toast.success('¡Se agrego el registro con exito!', {
+        position: 'top-center',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: 'colored',
+      })
+
       onClose()
     } catch (error) {
       console.error('Error submitting form:', error)

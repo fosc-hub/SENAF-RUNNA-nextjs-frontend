@@ -219,7 +219,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
 
       try {
         console.log('Actualizando actividad:', editingActividad.id, updatedActividad);
-        await updateTActividad(editingActividad.id, updatedActividad);
+        await updateTActividad(editingActividad.id, updatedActividad, true, '¡Actividad actualizada con éxito!');
         setActividades(
           actividades.map((actividad) =>
             actividad.id === editingActividad.id
@@ -253,7 +253,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
         tipo: data.activity ? Number(data.activity) : null,
         institucion: data.institution ? Number(data.institution) : null,
       };
-      const newActividad = await createTActividad(actividadData);
+      const newActividad = await createTActividad(actividadData, true, '¡Actividad registrada con éxito!');
       console.log('Actividad registrada:', newActividad);
       setActividades(prev => [...prev, newActividad]);
     } catch (error) {
@@ -278,7 +278,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
       institucion: data.institucion,
     };
     console.log('Enviar:', dataToSend);
-    createTRespuesta(dataToSend);
+    createTRespuesta(dataToSend, true, '¡Respuesta enviada con éxito!');
 
     setIsEnviarRespuestaOpen(false);
   };
