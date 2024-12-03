@@ -74,7 +74,14 @@ function MesaDeEntradas() {
       </div>
       <div className="flex-1 flex">
         <Sidebar />
-        <MainContent demands={demands} onUpdateDemands={handleUpdateDemands} />
+      <MainContent
+        asignadoProp={null}
+        constatacionProp={null}
+        evaluacionProp={null}
+        archivadoProp={null}
+        completadoProp={null}
+        recibidoProp={null}
+      />
       </div>
     </div>
   );
