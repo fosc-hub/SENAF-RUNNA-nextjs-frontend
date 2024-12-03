@@ -23,6 +23,7 @@ import { TDemandaPersona } from '../../api/interfaces';
 import { getTPersona } from '../../api/TableFunctions/personas';
 import { getTSuggestDecisions } from '../../api/TableFunctions/suggestDecision';
 import { TsuggestDecision } from '../../api/interfaces';
+import { getTLegajos } from '../../api/TableFunctions/legajos';
 
 export function EvaluacionesContent() {
   const [indicadores, setIndicadores] = useState<TIndicadoresValoracion[]>([]);
@@ -30,7 +31,7 @@ export function EvaluacionesContent() {
   const [selectedOptions, setSelectedOptions] = useState<{ [key: string]: string }>({});
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-
+  const [tieneLegajo, setTieneLegajo] = useState(false);
   const params = useParams();
   const id = params.id;
 
@@ -92,13 +93,24 @@ export function EvaluacionesContent() {
       const nnyaId = parseInt(selectedId);
 
       if (demandaId && nnyaId) {
+        // Llama a getTSuggestDecisions
         const data = await getTSuggestDecisions(demandaId, nnyaId);
-        console.log('Sugerencias de decisión:', data);
+
+        // Llama a getTLegajos y actualiza tieneLegajo
+        const legajosData = await getTLegajos({ nnya: selectedId });
+
+        if (legajosData && legajosData.length > 0) {
+          setTieneLegajo(true);
+        } else {
+          setTieneLegajo(false);
+        }
+        console.log('Legajos:', tieneLegajo);
       }
     } catch (error) {
-      console.error('Error al obtener sugerencias de decisión:', error);
+      console.error('Error al obtener sugerencias de decisión o legajos:', error);
     }
   };
+
 
   useEffect(() => {
     const fetchDecisionSuggestions = async () => {
@@ -276,16 +288,21 @@ export function EvaluacionesContent() {
       </Box>
 
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-        <Button variant="contained" color="primary" onClick={handleEvaluate}>
+        <Button
+          variant="contained"
+          color="primary"
+          sx={{
+            fontSize: '1.1rem',
+            padding: '6px 50px',
+          }}
+          onClick={handleEvaluate}
+        >
           Valorar
         </Button>
       </Box>
 
-      <Box sx={{ display: 'flex', alignItems: 'center', mt: 3 }}>
-        <Typography
-          variant="body1"
-          sx={{ mr: 2, fontWeight: '500', color: 'text.primary' }}
-        >
+      <Box sx={{ display: 'flex', alignItems: 'center', mt: 3, mb: 3, p: 3, backgroundColor: '#f0f0f0', borderRadius: 2, boxShadow: 1 }}>
+        <Typography variant="body1" sx={{ mr: 2, fontWeight: '500', color: 'text.primary' }}>
           Tomar decisión sobre NNYA:
         </Typography>
         <FormControl fullWidth sx={{ maxWidth: 300 }}>
@@ -295,7 +312,7 @@ export function EvaluacionesContent() {
           <Select
             labelId="nnya-select-label"
             value={selectedNNYA}
-            onChange={handleNNYAChange} // Aquí está la función corregida
+            onChange={handleNNYAChange}
             displayEmpty
             label="Seleccionar NNYA"
           >
@@ -307,110 +324,114 @@ export function EvaluacionesContent() {
           </Select>
         </FormControl>
       </Box>
+
       {decisionSuggestions.length > 0 && (
-  <Box
-    sx={{
-      mt: 3,
-      p: 3,
-      border: '1px solid #ddd',
-      borderRadius: 2,
-      backgroundColor: 'background.paper',
-      boxShadow: 3,
-    }}
-  >
-    <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'text.primary' }}>
-      Sugerencias de decisión
-    </Typography>
-    {decisionSuggestions.map((suggestion, index) => (
-      <Box
-        key={index}
-        sx={{
-          mb: 3,
-          p: 3,
-          border: '1px solid #ddd',
-          borderRadius: 1,
-          backgroundColor: 'background.default',
-          boxShadow: 1,
-        }}
-      >
-        <Typography variant="body1" sx={{ fontWeight: '500', color: 'primary.main', mb: 1 }}>
-          Decisión sugerida:
-        </Typography>
-        <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
-          {suggestion.decision}
-        </Typography>
+        <Box sx={{ mt: 3, p: 3 }}>
+          <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'text.primary' }}>
+            Sugerencias de decisión
+          </Typography>
+          {decisionSuggestions.map((suggestion, index) => (
+            <Box key={index} sx={{ mb: 3, p: 3, border: '1px solid #ddd', borderRadius: 1, backgroundColor: 'background.default' }}>
+              <Typography variant="body1" sx={{ fontWeight: '500', color: 'primary.main', mb: 1 }}>
+                Decisión sugerida:
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 2, color: 'black' }}>
+                {suggestion.decision}
+              </Typography>
 
-        <Typography variant="body1" sx={{ fontWeight: '500', color: 'primary.main', mb: 1 }}>
-          Razón:
-        </Typography>
-        <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
-          {suggestion.reason}
-        </Typography>
+              <Typography variant="body1" sx={{ fontWeight: '500', color: 'primary.main', mb: 1 }}>
+                Razón:
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 2, color: 'black' }}>
+                {suggestion.reason}
+              </Typography>
 
-        <Typography variant="body1" sx={{ fontWeight: '500', color: 'primary.main', mb: 1 }}>
-          Scores de Demanda:
-        </Typography>
-        {/* Mejor presentación para Scores de Demanda */}
-        <Box sx={{
-          mb: 2,
-          p: 2,
-          backgroundColor: '#f5f5f5',
-          borderRadius: 1,
-          boxShadow: 1,
-          overflowX: 'auto',
-        }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                <th style={{ borderBottom: '2px solid #ddd', padding: '8px', textAlign: 'left', color: 'black' }}>Score</th>
-                <th style={{ borderBottom: '2px solid #ddd', padding: '8px', textAlign: 'left', color: 'black' }}>Valor</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(suggestion['Demanda Scores']).map(([key, value]) => (
-                <tr key={key}>
-                  <td style={{ padding: '8px', borderBottom: '1px solid #ddd', color: 'black' }}>{key}</td>
-                  <td style={{ padding: '8px', borderBottom: '1px solid #ddd', color: 'black' }}>{value}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              <Typography variant="body1" sx={{ fontWeight: '500', color: 'primary.main', mb: 1 }}>
+                Scores de Demanda:
+              </Typography>
+              <Box sx={{ mb: 2, p: 2, backgroundColor: '#f5f5f5', borderRadius: 1, overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ borderBottom: '2px solid #ddd', padding: '8px', textAlign: 'left', color: 'black' }}>Score</th>
+                      <th style={{ borderBottom: '2px solid #ddd', padding: '8px', textAlign: 'left', color: 'black' }}>Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(suggestion['Demanda Scores']).map(([key, value]) => (
+                      <tr key={key}>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #ddd', color: 'black' }}>{key}</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #ddd', color: 'black' }}>{value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </Box>
+
+              <Typography variant="body1" sx={{ fontWeight: '500', color: 'primary.main', mb: 1 }}>
+                Scores de NNyA:
+              </Typography>
+              <Box sx={{ mb: 2, p: 2, backgroundColor: '#f5f5f5', borderRadius: 1, overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ borderBottom: '2px solid #ddd', padding: '8px', textAlign: 'left', color: 'black' }}>Score</th>
+                      <th style={{ borderBottom: '2px solid #ddd', padding: '8px', textAlign: 'left', color: 'black' }}>Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(suggestion['NNyA Scores']).map(([key, value]) => (
+                      <tr key={key}>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #ddd', color: 'black' }}>{key}</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #ddd', color: 'black' }}>{value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </Box>
+            </Box>
+          ))}
         </Box>
-
-        <Typography variant="body1" sx={{ fontWeight: '500', color: 'primary.main', mb: 1 }}>
-          Scores de NNyA:
-        </Typography>
-        {/* Mejor presentación para Scores de NNyA */}
-        <Box sx={{
-          mb: 2,
-          p: 2,
-          backgroundColor: '#f5f5f5',
-          borderRadius: 1,
-          boxShadow: 1,
-          overflowX: 'auto',
-        }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                <th style={{ borderBottom: '2px solid #ddd', padding: '8px', textAlign: 'left', color: 'black' }}>Score</th>
-                <th style={{ borderBottom: '2px solid #ddd', padding: '8px', textAlign: 'left', color: 'black' }}>Valor</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(suggestion['NNyA Scores']).map(([key, value]) => (
-                <tr key={key}>
-                  <td style={{ padding: '8px', borderBottom: '1px solid #ddd', color: 'black' }}>{key}</td>
-                  <td style={{ padding: '8px', borderBottom: '1px solid #ddd', color: 'black' }}>{value}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      )}
+      {!tieneLegajo ? (
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+          <Button
+            variant="outlined"
+            color="secondary"
+            sx={{ fontSize: '1rem', padding: '6px 20px' }}
+           onClick={handleDecision('RECHAZAR CASO')}
+          >
+            Archivar caso
+          </Button>
+          <Button
+            variant="outlined"
+            color="primary"
+            sx={{ fontSize: '1rem', padding: '6px 20px' }}
+           onClick={handleDecision('MPI-MPE')}
+          >
+            Abrir MPI-MPE
+          </Button>
         </Box>
-      </Box>
-    ))}
-  </Box>
-)}
-
+      ) : (
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+          <Button
+            variant="outlined"
+            color="secondary"
+            sx={{ fontSize: '1rem', padding: '6px 20px' }}
+           onClick={handleDecision('RECHAZAR CASO')}
+          >
+            Archivar caso
+          </Button>
+          <Button
+            variant="outlined"
+            color="primary"
+            sx={{ fontSize: '1rem', padding: '6px 20px' }}
+           onClick={handleDecision('APERTURA DE LEGAJO')}
+          >
+            Abrir Legajo
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 }

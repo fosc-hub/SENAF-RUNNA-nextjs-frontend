@@ -1,7 +1,7 @@
 import { getAll, getOne, create, update, remove } from '../services/apiService';
 import { TDecision } from '../interfaces';
 
-const endpoint = 'tdecision';
+const endpoint = 'decision';
 
 export const getTDecisiones = () => getAll<TDecision>(endpoint);
 export const getTDecision = (id: number) => getOne<TDecision>(endpoint, id);
