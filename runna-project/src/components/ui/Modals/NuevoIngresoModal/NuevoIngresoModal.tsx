@@ -33,9 +33,10 @@ const NuevoIngresoModal: React.FC<NuevoIngresoModalProps> = ({ isOpen, onClose, 
           addVulneraciontext={addVulneraciontext}
           addCondicionVulnerabilidad={addCondicionVulnerabilidad}
           removeCondicionVulnerabilidad={removeCondicionVulnerabilidad}
-          {...apiData}        />
-      )}
-    />
+          {...apiData} />
+      )} apiMethods={undefined} onSuccess={function (): void {
+        throw new Error('Function not implemented.');
+      } }    />
   );
 };
 

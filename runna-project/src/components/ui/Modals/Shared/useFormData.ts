@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 // Define the structure for Vulneracion
 type Vulneracion = {
@@ -82,7 +82,7 @@ const initialFormData = {
   },
 };
 
-export const useFormData = () => {
+export const useFormData = ( apiData) => {
   const [formData, setFormData] = useState(initialFormData);
 
   // Handle input change with deep updates for nested fields
@@ -105,6 +105,49 @@ export const useFormData = () => {
       return updatedData;
     });
   };
+  useEffect(() => {
+    if (apiData?.nnyaList) {
+      setFormData((prevData) => ({
+        ...prevData,
+        ninosAdolescentes: apiData.nnyaList.map((nnya) => ({
+          id: nnya.id,
+          nombre: nnya.nombre || '',
+          apellido: nnya.apellido || '',
+          fechaNacimiento: nnya.fechaNacimiento || null,
+          genero: nnya.genero || '',
+          localizacion: nnya.localizacion || {},
+          educacion: nnya.educacion || {},
+          salud: nnya.salud || {},
+          observaciones: nnya.observaciones || '',
+          demandaPersonaId: nnya.demandaPersonaId,
+        })),
+      }));
+    }
+  }, [apiData?.nnyaList]);
+
+  useEffect(() => {
+    if (apiData?.adultsList) {
+      setFormData((prevData) => ({
+        ...prevData,
+        adultosConvivientes: apiData.adultsList.map((adult) => ({
+          id: adult.id || null,
+          nombre: adult.nombre || '',
+          apellido: adult.apellido || '',
+          fechaNacimiento: adult.fechaNacimiento || null,
+          genero: adult.genero || 'MASCULINO',
+          edadAproximada: adult.edadAproximada || null,
+          dni: adult.dni || '',
+          situacionDni: adult.situacionDni || '',
+          botonAntipanico: adult.botonAntipanico || false,
+          supuesto_autordv: adult.supuesto_autordv || false,
+          conviviente: adult.conviviente || false,
+          observaciones: adult.observaciones || '',
+          useDefaultLocalizacion: true,
+          localizacion: adult.localizacion || {},
+        })),
+      }));
+    }
+  }, [apiData?.adultsList]);
 
   // Methods to dynamically manage arrays
   const addNinoAdolescente = () => {
