@@ -33,7 +33,9 @@ import { ArchivosAdjuntosModal } from '../ArchivosAdjuntosModal'
 import { RegistrarActividadModal } from '../RegistrarActividadModal'
 import { EnviarRespuestaModal } from '../EnviarRespuestaModal'
 import { createTRespuesta } from '../../../api/TableFunctions/respuestas'
-
+import { createTDemandaVinculada } from '../../../api/TableFunctions/demandasVinculadas';
+import { getTDemandaPersonas } from '../../../api/TableFunctions/demandaPersonas';
+import { getTPersonas } from '../../../api/TableFunctions/personas';
 import { createTActividad, getTActividades, updateTActividad, deleteTActividad } from '../../../api/TableFunctions/actividades';
 // Assume these are imported from their respective files
 import { useFormData } from './useFormData'
@@ -57,7 +59,13 @@ interface CollapsibleSectionProps {
   isOpen: boolean
   onToggle: () => void
 }  
-
+interface NnyaPrincipalData {
+  id: number;
+  nombre: string;
+  apellido: string;
+  dni: string;
+  demandaId: number;
+}
 
 function CollapsibleSection({ title, children, isOpen, onToggle }: CollapsibleSectionProps) {
   return (
@@ -106,6 +114,59 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
   const [institucionNames, setInstitucionNames] = useState<Record<number, string>>({});
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   // const [actividadToDelete, setActividadToDelete] = useState<number | null>(null);
+  const [nnyaPrincipales, setNnyaPrincipales] = useState<NnyaPrincipalData[]>([]);
+  const [selectedNnya, setSelectedNnya] = useState<string>('');
+  const [vinculacionError, setVinculacionError] = useState('');
+
+
+  
+  useEffect(() => {
+    const fetchNnyaPrincipales = async () => {
+      try {
+        // Step 1: Fetch demanda-persona data
+        const demandaPersonaData = await getTDemandaPersonas({ nnya_principal: true });
+        console.log('Demanda Personas Response:', demandaPersonaData);
+  
+        // Step 2: Extract persona IDs and demanda IDs for NNYA principales
+        const nnyaPrincipalesInfo = demandaPersonaData
+          .filter(dp => dp.nnya_principal === true)
+          .map(dp => ({ personaId: dp.persona, demandaId: dp.demanda }));
+        console.log('Filtered NNYA Principales Info:', nnyaPrincipalesInfo);
+  
+        if (nnyaPrincipalesInfo.length === 0) {
+          console.warn('No NNYA principales found.');
+          setNnyaPrincipales([]);
+          return;
+        }
+  
+        // Step 3: Fetch all personas (if filtering server-side fails)
+        const allPersonaData = await getTPersonas();
+        console.log('All Persona Data:', allPersonaData);
+  
+        // Step 4: Filter personas to match principal IDs and add demanda IDs
+        const nnyaPrincipalesData = nnyaPrincipalesInfo.map(info => {
+          const persona = allPersonaData.find(p => p.id === info.personaId);
+          return persona ? {
+            id: persona.id,
+            nombre: persona.nombre,
+            apellido: persona.apellido,
+            dni: persona.dni,
+            demandaId: info.demandaId
+          } : null;
+        }).filter((p): p is NnyaPrincipalData => p !== null);
+  
+        console.log('Filtered Persona Data with Demanda IDs:', nnyaPrincipalesData);
+  
+        setNnyaPrincipales(nnyaPrincipalesData);
+      } catch (error) {
+        console.error('Error fetching NNYA principales:', error);
+        setVinculacionError('Error al cargar los datos de NNYA principales');
+      }
+    };
+  
+    fetchNnyaPrincipales();
+  }, []);
+  
 
   useEffect(() => {
     const fetchActividades = async () => {
@@ -199,6 +260,42 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
   //   setOpenConfirmDialog(false);
   //   setActividadToDelete(null);
   // };
+  const handleVincular = async () => {
+    if (!selectedNnya) {
+      setVinculacionError('Por favor, seleccione un NNYA principal');
+      return;
+    }
+
+    try {
+      const selectedPersona = nnyaPrincipales.find(p => p.id.toString() === selectedNnya);
+      if (!selectedPersona) {
+        setVinculacionError('NNYA principal no encontrado');
+        return;
+      }
+
+      const demandaPersonaData = await getTDemandaPersonas({ persona: selectedPersona.id });
+
+      if (demandaPersonaData.length === 0) {
+        setVinculacionError('No se encontró ninguna demanda asociada a este NNYA principal');
+        return;
+      }
+
+      const demandaToLink = demandaPersonaData[0].demanda;
+
+      await createTDemandaVinculada({
+        demanda_1: demanda.id,
+        demanda_2: demandaToLink,
+        deleted: false
+      });
+
+      setSelectedNnya('');
+      setVinculacionError('');
+      // You might want to refresh the list of linked demands here
+    } catch (error) {
+      console.error('Error al vincular demandas:', error);
+      setVinculacionError('Error al vincular demandas');
+    }
+  };
 
   const handleCancelEdit = () => {
     setEditingActividad(null);
@@ -240,6 +337,15 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
     console.log('Archivos adjuntos:', data)
     setIsArchivosModalOpen(false)
   }
+  const [sections, setSections] = useState({
+    datosRequeridos: true,
+    conexiones: false,
+    derivar: false,
+  });
+  
+  const toggleSection = (section: 'datosRequeridos' | 'conexiones' | 'derivar') => {
+    setSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
 
   const handleRegistrarSubmit = async (data: any) => {
     try {
@@ -340,7 +446,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
   useEffect(() => {
     const fetchUsuariosExternos = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/usuario-externo/');
+        const response = await fetch('http://localhost:8000/api/informante/');
         const data = await response.json();
         setUsuariosExternos(data);
       } catch (error) {
@@ -428,8 +534,8 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
       if (formData.createNewUsuarioExterno || (formData.usuarioExterno.id && formData.usuarioExterno.nombre)) {
         const usuarioExternoResponse = await fetch(
           formData.usuarioExterno.id
-            ? `http://localhost:8000/api/usuario-externo/${formData.usuarioExterno.id}/`
-            : 'http://localhost:8000/api/usuario-externo/',
+            ? `http://localhost:8000/api/informante/${formData.usuarioExterno.id}/`
+            : 'http://localhost:8000/api/informante/',
           {
             method: formData.usuarioExterno.id ? 'PUT' : 'POST',
             headers: {
@@ -718,12 +824,41 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
           
           {/* Agregar un Divider después de cada ListItem */}
           <Divider />
+          
         </div>
       ))}
     </List>
   )}
 </CollapsibleSection>
-
+<CollapsibleSection
+      title="Conexiones de la Demanda"
+      isOpen={sections.conexiones}
+      onToggle={() => toggleSection('conexiones')}
+    >
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="subtitle1" color="primary" gutterBottom>Vincular con otro caso</Typography>
+        <Box display="flex" alignItems="center">
+          <TextField
+            select
+            label="NNYA Principal"
+            value={selectedNnya}
+            onChange={(e) => setSelectedNnya(e.target.value)}
+            sx={{ mr: 2, minWidth: 200 }}
+            error={!!vinculacionError}
+            helperText={vinculacionError}
+          >
+            {nnyaPrincipales.map((nnya) => (
+              <MenuItem key={nnya.id} value={nnya.id.toString()}>
+                {`${nnya.nombre} ${nnya.apellido} - DNI: ${nnya.dni} - Demanda ID: ${nnya.demandaId}`}
+              </MenuItem>
+            ))}
+          </TextField>
+          <Button variant="contained" color="primary" onClick={handleVincular}>
+            Vincular
+          </Button>
+        </Box>
+      </Box>
+    </CollapsibleSection>
             {/* <Dialog open={openConfirmDialog} onClose={handleCancelDelete}>
               <DialogTitle>¿Estás seguro de que deseas eliminar esta actividad?</DialogTitle>
               <DialogContent>

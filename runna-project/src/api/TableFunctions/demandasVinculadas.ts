@@ -1,7 +1,7 @@
 import { getAll, getOne, create, update, remove } from '../services/apiService';
 import { TDemandaVinculada } from '../interfaces';
 
-const endpoint = 'tdemandavinculada';
+const endpoint = 'demanda-vinculada';
 
 export const getTDemandaVinculadas = () => getAll<TDemandaVinculada>(endpoint);
 export const getTDemandaVinculada = (id: number) => getOne<TDemandaVinculada>(endpoint, id);
