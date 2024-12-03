@@ -1,53 +1,36 @@
 'use client';
-import axios from 'axios';
-import EvaluarButton from './EvaluarButton';
-import {
-  Person as PersonIcon,
-} from '@mui/icons-material'
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Button,
   Box,
   Typography,
-  Modal,
   FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  SelectChangeEvent
-} from '@mui/material'
-import { PDFDocument } from 'pdf-lib';
+  FormControlLabel,
+  Radio,
+  RadioGroup,
+  IconButton, Select, MenuItem, InputLabel,
+} from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
-import { DataGrid, GridRowParams, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
-import { Search } from '@mui/icons-material'
-import { getDemands, createDemand, updateDemand } from '../../api/TableFunctions/demands'
-import { TDemanda, TDemandaPersona, TPersona, TPrecalificacionDemanda } from '../../api/interfaces'
-import { getTDemandaPersona } from '../../api/TableFunctions/demandaPersonas'
-import { getTPersona } from '../../api/TableFunctions/personas'
-import { getTPrecalificacionDemanda, createTPrecalificacionDemanda, updateTPrecalificacionDemanda } from '../../api/TableFunctions/precalificacionDemanda'
-import { useAuth } from '../../context/AuthContext';
-
-
-const origenOptions = [
-  { value: 'todos', label: 'Todos' },
-  { value: 'web', label: 'Web' },
-  { value: 'telefono', label: 'Teléfono' },
-  { value: 'presencial', label: 'Presencial' },
-]
-
-const precalificacionOptions = [
-  { value: 'URGENTE', label: 'Urgente' },
-  { value: 'NO_URGENTE', label: 'No Urgente' },
-  { value: 'COMPLETAR', label: 'Completar' },
-]
+import { PDFDocument } from 'pdf-lib';
+import { getTIndicadoresValoracions } from '../../api/TableFunctions/indicadoresValoracion';
+import { TIndicadoresValoracion } from '../../api/interfaces';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { useParams } from 'next/navigation';
+import { createTEvaluacion } from '../../api/TableFunctions/evaluaciones'; // Ya importado en tu código
+import { getTDemandaPersonas } from '../../api/TableFunctions/demandaPersonas'; // Importa la función
+import { TDemandaPersona } from '../../api/interfaces';
+import { getTPersona } from '../../api/TableFunctions/personas'; // Importa la función
 
 export function EvaluacionesContent() {
-  const [demands, setDemands] = useState<TDemanda[]>([])
-  const [personaData, setPersonaData] = useState<Record<number, TPersona>>({})
-  const [precalificacionData, setPrecalificacionData] = useState<Record<number, TPrecalificacionDemanda>>({})
-  const [origen, setOrigen] = useState('todos')
-  const { user, loading } = useAuth();
-  const [assignDemandId, setAssignDemandId] = useState<number | null>(null); // State for Assign Demand
+  const [indicadores, setIndicadores] = useState<TIndicadoresValoracion[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
+  const [selectedOptions, setSelectedOptions] = useState<{ [key: string]: string }>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  const params = useParams();
+  const id = params.id;
 
   const handleDownloadReport = async () => {
     const pdfDoc = await PDFDocument.create();
@@ -60,307 +43,232 @@ export function EvaluacionesContent() {
     link.click();
   };
 
-
-  const fetchAllData = useCallback(async () => {
+  const fetchTIndicadoresValoracions = useCallback(async () => {
     try {
-      const demandsData = await getDemands()
-      console.log('Fetched demands:', demandsData)
-      setDemands(demandsData)
-      console.log('User:', user, 'Loading:', loading);
-
-      const personaPromises = demandsData.map(async (demand) => {
-        try {
-          const demandaPersona = await getTDemandaPersona(demand.id!)
-          // console.log(`Fetched demandaPersona for demand ${demand.id}:`, demandaPersona)
-          if (demandaPersona && demandaPersona.persona) {
-            const persona = await getTPersona(demandaPersona.persona)
-            // console.log(`Fetched persona for demand ${demand.id}:`, persona)
-            return { id: demand.id!, persona }
-          }
-        } catch (error) {
-          console.error(`Error fetching data for demand ${demand.id}:`, error)
-        }
-        return null
-      })
-
-      const precalificacionPromises = demandsData.map(async (demand) => {
-        try {
-          const precalificacion = await getTPrecalificacionDemanda(demand.id!)
-          // console.log(`Fetched precalificacion for demand ${demand.id}:`, precalificacion)
-          return { id: demand.id!, precalificacion }
-        } catch (error) {
-          console.error(`Error fetching precalificacion for demand ${demand.id}:`, error)
-        }
-        return null
-      })
-
-      const [personaResults, precalificacionResults] = await Promise.all([
-        Promise.all(personaPromises),
-        Promise.all(precalificacionPromises)
-      ])
-
-      const newPersonaData: Record<number, TPersona> = {}
-      personaResults.forEach((result) => {
-        if (result) {
-          newPersonaData[result.id] = result.persona
-        }
-      })
-      // console.log('New persona data:', newPersonaData)
-      setPersonaData(newPersonaData)
-
-      const newPrecalificacionData: Record<number, TPrecalificacionDemanda> = {}
-      precalificacionResults.forEach((result) => {
-        if (result) {
-          newPrecalificacionData[result.id] = result.precalificacion
-        }
-      })
-      // console.log('New precalificacion data:', newPrecalificacionData)
-      setPrecalificacionData(newPrecalificacionData)
+      const data = await getTIndicadoresValoracions();
+      setIndicadores(data);
+      setLoadingData(false);
     } catch (error) {
-      console.error('Error fetching data:', error)
+      console.error('Error fetching TIndicadoresValoracions:', error);
+      setLoadingData(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    fetchAllData()
-  }, [fetchAllData])
+    fetchTIndicadoresValoracions();
+  }, [fetchTIndicadoresValoracions]);
 
+  const handleOptionChange = (id: string, value: string) => {
+    setSelectedOptions((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
 
-
-  const enrichedDemands = useMemo(() => {
-    // console.log('Enriching demands with persona and precalificacion data:', demands, personaData, precalificacionData)
-    return demands.map(demand => {
-      const persona = personaData[demand.id!];
-      const precalificacion = precalificacionData[demand.id!];
-      const enrichedDemand = {
-        ...demand,
-        nombre: persona?.nombre || '',
-        dni: persona?.dni?.toString() || '',
-        precalificacion: precalificacion?.estado_demanda || '',
-      }
-      // console.log(`Enriched demand ${demand.id}:`, enrichedDemand)
-      return enrichedDemand
-    })
-  }, [demands, personaData, precalificacionData])
-
-  const filteredDemands = useMemo(() => {
-    return enrichedDemands.filter(demand => {
-      const origenMatch = origen === 'todos' || demand.origen === origen
-      return origenMatch
-    })
-  }, [enrichedDemands, origen])
-
-
-
-  const handleDemandClick = useCallback((params: GridRowParams<TDemanda>) => {
-    setSelectedDemand(params.row)
-    setShowDemandaDetalle(true)
-    setShowActividadesRegistradas(true)
-  }, [])
-
-
-  // Function to update PrecalificacionDemanda without 'demanda' in payload
-  const updatePrecalificacionDemanda = async (id: number, payload: Partial<TPrecalificacionDemanda>) => {
-    const { demanda, ...filteredPayload } = payload;
-    const url = `http://localhost:8000/api/precalificacion-demanda/${id}/`; // Correct URL
-
-    console.log('Sending PATCH request to:', url); // Debug log
-    console.log('Payload:', filteredPayload); // Debug log
-
-    try {
-      const response = await axios.patch(url, filteredPayload);
-      console.log('Update successful:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('Error updating precalificacion-demanda:', error);
-      throw error;
+  const handleNextPage = () => {
+    if (currentPage * itemsPerPage < indicadores.length) {
+      setCurrentPage((prevPage) => prevPage + 1);
     }
   };
 
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prevPage) => prevPage - 1);
+    }
+  };
+  const [selectedNNYA, setSelectedNNYA] = useState('');
+
+  // Función para manejar cambios en el combobox
+  const handleNNYAChange = (event) => {
+    setSelectedNNYA(event.target.value);
+  };
+
+  const [nnyaOptions, setNnyaOptions] = useState<TDemandaPersona[]>([]);
+
+  const fetchNNYAData = useCallback(async () => {
+    try {
+      // Obtener todas las opciones relacionadas con la demanda
+      const allData = await getTDemandaPersonas({ demanda: id });
+
+      // Identificar la opción principal
+      const principalData = allData.find(item => item.nnya_principal === true);
+
+      // Evitar duplicar la opción principal
+      const filteredData = allData.filter(item => item.id !== principalData?.id);
+
+      // Combinar la opción principal con las demás
+      const combinedData = principalData ? [principalData, ...filteredData] : allData;
+
+      // Obtener detalles de las personas para cada NNYA
+      const detailedData = await Promise.all(
+        combinedData.map(async (nnya) => {
+          const persona = await getTPersona(nnya.persona);  // Asumiendo que nnya.persona es el ID de la persona
+          return { ...nnya, nombrePersona: persona.nombre }; // Agrega el nombre de la persona al objeto NNYA
+        })
+      );
+
+      console.log('NNYA data with personas:', detailedData);
+      setNnyaOptions(detailedData);
+
+      // Establece la opción por defecto si existe
+      if (principalData) setSelectedNNYA(String(principalData.id));
+    } catch (error) {
+      console.error('Error fetching NNYA data:', error);
+    }
+  }, [id]);
 
 
-  const handlePrecalificacionChange = useCallback(
-    async (demandId: number, newValue: string) => {
+  useEffect(() => {
+    if (id) fetchNNYAData();
+  }, [fetchNNYAData, id]);
+
+
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentIndicadores = indicadores.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(indicadores.length / itemsPerPage);
+
+  const handleEvaluate = async () => {
+    const allSelected = indicadores.every((indicador) => selectedOptions[indicador.id]);
+
+    if (!allSelected) {
+      alert('Por favor, completa todos los indicadores antes de valorar.');
+      return;
+    }
+
+    if (!id) {
+      alert('No se ha encontrado el ID de la demanda.');
+      return;
+    }
+
+    for (const indicador of indicadores) {
+      const siNo = selectedOptions[indicador.id] === 'yes';
+      const demanda = parseInt(id as string, 10);
+
+      const evaluationData = {
+        si_no: siNo,
+        demanda: demanda,
+        indicador: indicador.id,
+      };
+
       try {
-        const currentDate = new Date().toISOString();
-        let updatedPrecalificacion;
-
-        if (precalificacionData[demandId]) {
-          // Update existing precalificacion
-          updatedPrecalificacion = {
-            ...precalificacionData[demandId],
-            estado_demanda: newValue,
-            descripcion: `Cambio de precalificación de ${precalificacionData[demandId].estado_demanda} a ${newValue}`,
-            ultima_actualizacion: currentDate,
-          };
-
-          await updatePrecalificacionDemanda(precalificacionData[demandId].id!, updatedPrecalificacion);
-        } else {
-          // Create a new precalificacion
-          updatedPrecalificacion = await createTPrecalificacionDemanda({
-            demanda: demandId,
-            estado_demanda: newValue,
-            descripcion: `Nueva precalificación: ${newValue}`,
-            fecha_y_hora: currentDate,
-            ultima_actualizacion: currentDate,
-          });
-        }
-
-        // Update the state locally
-        setPrecalificacionData((prev) => ({
-          ...prev,
-          [demandId]: updatedPrecalificacion,
-        }));
+        await createTEvaluacion(evaluationData);
+        console.log(`Evaluación para el indicador ${indicador.id} enviada correctamente.`);
       } catch (error) {
-        console.error('Error updating precalificacion:', error);
+        const errorMessage = error.message || error.toString(); // Captura el mensaje del error
+        if (errorMessage.includes('Failed to create data')) {
+          alert(`El indicador ${indicador.nombre} ya ha sido valorado.`);
+        } else {
+          alert(`Error inesperado en el indicador ${indicador.nombre}.`);
+          console.error(`Error al enviar evaluación para el indicador ${indicador.id}:`, error);
+        }
       }
-    },
-    [precalificacionData]
-  );
-
-
-
-  const columns: GridColDef[] = useMemo(() => {
-    const baseColumns: GridColDef[] = [
-      {
-        field: 'id',
-        headerName: 'ID',
-        width: 70,
-      },
-      {
-        field: 'origen',
-        headerName: 'Origen',
-        width: 130,
-      },
-      {
-        field: 'nombre',
-        headerName: 'Nombre',
-        width: 200,
-      },
-      {
-        field: 'dni',
-        headerName: 'DNI',
-        width: 130,
-      },
-      {
-        field: 'precalificacion',
-        headerName: 'Precalificación',
-        width: 180,
-        renderCell: (params: GridRenderCellParams<TDemanda>) => {
-          const isEditable = (user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tprecalificaciondemanda'));
-          return (
-            <FormControl fullWidth size="small">
-              <Select
-                value={params.value || ''}
-                onChange={(e: SelectChangeEvent) => handlePrecalificacionChange(params.row.id!, e.target.value as string)}
-                disabled={!isEditable} // Disable dropdown if permission is missing
-              >
-                {precalificacionOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          );
-        },
-      },
-      {
-        field: 'ultima_actualizacion',
-        headerName: 'Última Actualización',
-        width: 180,
-      },
-    ];
-
-    // Add "Asignar" column only if the user has the permission
-    if (user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tdemandaasignado')) {
-      baseColumns.push({
-        field: 'Asignar',
-        headerName: 'Asignar',
-        width: 160,
-        renderCell: (params: GridRenderCellParams<TDemanda>) => (
-          <Button
-            variant="outlined"
-            startIcon={<PersonIcon />}
-            onClick={(event) => {
-              event.stopPropagation(); // Prevent row click event
-              setAssignDemandId(params.row.id); // Set the demand ID for assignment
-              setIsAsignarModalOpen(true); // Open Assign Demand modal
-            }}
-          >
-            Asignar
-          </Button>
-        ),
-      });
     }
-    if (user) {
-      baseColumns.push({
-        field: 'Evaluar',
-        headerName: 'Evaluar',
-        width: 160,
-        renderCell: (params: GridRenderCellParams<TDemanda>) => (
-          <EvaluarButton
-            onClick={() => {
-              setAssignDemandId(params.row.id);
-              handleEvaluarRedirect(params.row.id); // Si quieres seguir con la lógica adicional
-            }}
-          />
-        ),
-      });
-    }
-
-    return baseColumns;
-  }, [user, handlePrecalificacionChange]);
-
+  };
   return (
     <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 3, overflow: 'auto' }}>
       <Box sx={{ mb: 2 }}>
-        <Button
-          variant="contained"
-          startIcon={<DownloadIcon />}
-          onClick={handleDownloadReport}
-        >
+        <Button variant="contained" startIcon={<DownloadIcon />} onClick={handleDownloadReport}>
           Descargar Informe
         </Button>
       </Box>
-      <Box sx={{ height: 400, width: '100%' }}>
-        {filteredDemands.length > 0 ? (
-          <DataGrid
-            rows={filteredDemands}
-            columns={columns}
-            onRowClick={handleDemandClick}
-            disableRowSelectionOnClick
-            initialState={{
-              pagination: {
-                paginationModel: { pageSize: 5, page: 0 },
-              },
-            }}
-            pageSizeOptions={[5, 10, 20]}
-          />
+
+      <Box
+        sx={{
+          mt: 3,
+          maxHeight: 400,
+          overflowY: 'auto',
+          borderRadius: 2,
+          border: '1px solid #ddd',
+          padding: 3,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Typography variant="h5" sx={{ mb: 2, color: 'text.primary' }}>
+          Sobre los datos del caso
+        </Typography>
+
+        {loadingData ? (
+          <Typography>Cargando datos...</Typography>
         ) : (
-          <Box sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '100%'
-          }}>
-            <Box sx={{
-              width: 128,
-              height: 128,
-              bgcolor: 'grey.100',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              mb: 2
-            }}>
-              <Search sx={{ fontSize: 64, color: 'text.secondary' }} />
-            </Box>
-            <Typography color="text.secondary">Nada por aquí...</Typography>
-          </Box>
+          <>
+            {currentIndicadores.map((indicador, index) => (
+              <Box key={indicador.id} sx={{ mb: 3 }}>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    fontWeight: '500',
+                    color: 'text.primary',
+                    fontSize: '1.1rem',
+                    mb: 0.5,
+                  }}
+                >
+                  {startIndex + index + 1}. {indicador.nombre}
+                </Typography>
+                <FormControl component="fieldset">
+                  <RadioGroup
+                    row
+                    value={selectedOptions[indicador.id] || ''}
+                    onChange={(e) => handleOptionChange(indicador.id, e.target.value)}
+                  >
+                    <FormControlLabel value="yes" control={<Radio />} label="SI" />
+                    <FormControlLabel value="no" control={<Radio />} label="NO" />
+                  </RadioGroup>
+                </FormControl>
+              </Box>
+            ))}
+          </>
         )}
+
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mt: 2 }}>
+          <Typography variant="body2" sx={{ mr: 2, color: 'text.primary' }}>
+            Página {currentPage} de {totalPages}
+          </Typography>
+          <IconButton onClick={handlePreviousPage} disabled={currentPage === 1}>
+            <ArrowBackIcon />
+          </IconButton>
+          <IconButton onClick={handleNextPage} disabled={currentPage === totalPages}>
+            <ArrowForwardIcon />
+          </IconButton>
+        </Box>
+      </Box>
+
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+        <Button variant="contained" color="primary" onClick={handleEvaluate}>
+          Valorar
+        </Button>
+      </Box>
+
+      <Box sx={{ display: 'flex', alignItems: 'center', mt: 3 }}>
+        <Typography
+          variant="body1"
+          sx={{ mr: 2, fontWeight: '500', color: 'text.primary' }} // Color explícito
+        >
+          Tomar decisión sobre NNYA:
+        </Typography>
+        <FormControl fullWidth sx={{ maxWidth: 300 }}>
+          <InputLabel id="nnya-select-label" shrink> {/* Evita superposición */}
+            Seleccionar NNYA
+          </InputLabel>
+          <Select
+            labelId="nnya-select-label"
+            value={selectedNNYA}
+            onChange={handleNNYAChange}
+            displayEmpty
+            label="Seleccionar NNYA"
+          >
+            {nnyaOptions.map((nnya) => (
+              <MenuItem key={nnya.id} value={String(nnya.id)}>
+                {nnya.nombrePersona}
+              </MenuItem>
+            ))}
+          </Select>
+
+        </FormControl>
       </Box>
     </Box>
-  )
+  );
 }
