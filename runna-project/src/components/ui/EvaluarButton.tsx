@@ -2,8 +2,8 @@ import { Button } from '@mui/material';
 import CreateIcon from '@mui/icons-material/Create';
 
 interface EvaluarButtonProps {
-  id: number; // El id es pasado como prop
-  onClick: (id: number) => void; // Recibe la función onClick desde el componente padre
+  id: number;
+  onClick: (id: number) => void;
 }
 
 const EvaluarButton: React.FC<EvaluarButtonProps> = ({ id, onClick }) => {
@@ -21,7 +21,10 @@ const EvaluarButton: React.FC<EvaluarButtonProps> = ({ id, onClick }) => {
         textTransform: 'none',
         boxShadow: '0 3px 5px rgba(0, 0, 0, 0.2)',
       }}
-      onClick={() => onClick(id)} // Llama a la función onClick pasando el id
+      onClick={(event) => {
+        event.stopPropagation(); // Detén la propagación aquí
+        onClick(id); // Pasa el id al padre
+      }}
     >
       Evaluar
     </Button>
@@ -29,3 +32,5 @@ const EvaluarButton: React.FC<EvaluarButtonProps> = ({ id, onClick }) => {
 };
 
 export default EvaluarButton;
+
+
