@@ -33,9 +33,9 @@ import { ArchivosAdjuntosModal } from '../ArchivosAdjuntosModal'
 import { RegistrarActividadModal } from '../RegistrarActividadModal'
 import { EnviarRespuestaModal } from '../EnviarRespuestaModal'
 import { createTRespuesta } from '../../../api/TableFunctions/respuestas'
-import { createTDemandaVinculada } from '../../../api/TableFunctions/demandasVinculadas';
+import { createTDemandaVinculada, getTDemandaVinculadas } from '../../../api/TableFunctions/demandasVinculadas';
 import { getTDemandaPersonas } from '../../../api/TableFunctions/demandaPersonas';
-import { getTPersonas } from '../../../api/TableFunctions/personas';
+import { getTPersona, getTPersonas } from '../../../api/TableFunctions/personas';
 import { createTActividad, getTActividades, updateTActividad, deleteTActividad } from '../../../api/TableFunctions/actividades';
 // Assume these are imported from their respective files
 import { useFormData } from './useFormData'
@@ -43,6 +43,7 @@ import { useApiData } from './useApiData'
 import { renderStepContent } from './RenderstepContent'
 import { getTActividadTipo } from '../../../api/TableFunctions/actividadTipos';
 import { getTInstitucionActividad } from '../../../api/TableFunctions/institucionActividades';
+import { getDemand } from '../../../api/TableFunctions/demands';
 
 interface Actividad {
   id: number;
@@ -66,6 +67,19 @@ interface NnyaPrincipalData {
   dni: string;
   demandaId: number;
 }
+
+interface ConexionData {
+  id: number;
+  demanda_1: number;
+  demanda_2: number;
+  deleted: boolean;
+  nnyaInfo?: {
+    nombre: string;
+    apellido: string;
+    dni: string;
+  };
+}
+
 
 function CollapsibleSection({ title, children, isOpen, onToggle }: CollapsibleSectionProps) {
   return (
@@ -117,56 +131,76 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
   const [nnyaPrincipales, setNnyaPrincipales] = useState<NnyaPrincipalData[]>([]);
   const [selectedNnya, setSelectedNnya] = useState<string>('');
   const [vinculacionError, setVinculacionError] = useState('');
+  const [conexiones, setConexiones] = useState<ConexionData[]>([]);
+  const [loadingConexiones, setLoadingConexiones] = useState(false);
 
+  const fetchNnyaPrincipales = async () => {
+    try {
+      const demandaPersonaData = await getTDemandaPersonas({ nnya_principal: true });
+      const nnyaPrincipalesInfo = demandaPersonaData
+        .filter(dp => dp.nnya_principal === true)
+        .map(dp => ({ personaId: dp.persona, demandaId: dp.demanda }));
 
-  
-  useEffect(() => {
-    const fetchNnyaPrincipales = async () => {
-      try {
-        // Step 1: Fetch demanda-persona data
-        const demandaPersonaData = await getTDemandaPersonas({ nnya_principal: true });
-        console.log('Demanda Personas Response:', demandaPersonaData);
-  
-        // Step 2: Extract persona IDs and demanda IDs for NNYA principales
-        const nnyaPrincipalesInfo = demandaPersonaData
-          .filter(dp => dp.nnya_principal === true)
-          .map(dp => ({ personaId: dp.persona, demandaId: dp.demanda }));
-        console.log('Filtered NNYA Principales Info:', nnyaPrincipalesInfo);
-  
-        if (nnyaPrincipalesInfo.length === 0) {
-          console.warn('No NNYA principales found.');
-          setNnyaPrincipales([]);
-          return;
-        }
-  
-        // Step 3: Fetch all personas (if filtering server-side fails)
-        const allPersonaData = await getTPersonas();
-        console.log('All Persona Data:', allPersonaData);
-  
-        // Step 4: Filter personas to match principal IDs and add demanda IDs
-        const nnyaPrincipalesData = nnyaPrincipalesInfo.map(info => {
-          const persona = allPersonaData.find(p => p.id === info.personaId);
-          return persona ? {
-            id: persona.id,
-            nombre: persona.nombre,
-            apellido: persona.apellido,
-            dni: persona.dni,
-            demandaId: info.demandaId
-          } : null;
-        }).filter((p): p is NnyaPrincipalData => p !== null);
-  
-        console.log('Filtered Persona Data with Demanda IDs:', nnyaPrincipalesData);
-  
-        setNnyaPrincipales(nnyaPrincipalesData);
-      } catch (error) {
-        console.error('Error fetching NNYA principales:', error);
-        setVinculacionError('Error al cargar los datos de NNYA principales');
+      if (nnyaPrincipalesInfo.length === 0) {
+        console.warn('No NNYA principales found.');
+        setNnyaPrincipales([]);
+        return;
       }
-    };
-  
+
+      const allPersonaData = await getTPersonas();
+      const nnyaPrincipalesData = nnyaPrincipalesInfo.map(info => {
+        const persona = allPersonaData.find(p => p.id === info.personaId);
+        return persona ? {
+          id: persona.id,
+          nombre: persona.nombre,
+          apellido: persona.apellido,
+          dni: persona.dni,
+          demandaId: info.demandaId
+        } : null;
+      }).filter((p): p is NnyaPrincipalData => p !== null);
+
+      setNnyaPrincipales(nnyaPrincipalesData);
+    } catch (error) {
+      console.error('Error fetching NNYA principales:', error);
+      setVinculacionError('Error al cargar los datos de NNYA principales');
+    }
+  };
+  const fetchConexiones = async () => {
+    setLoadingConexiones(true);
+    try {
+      const conexionesData = await getTDemandaVinculadas({ demanda_1: demanda.id });
+      const conexionesWithInfo = await Promise.all(conexionesData.map(async (conexion) => {
+        const demandaVinculada = await getDemand(conexion.demanda_2);
+        const demandaPersona = await getTDemandaPersonas({ demanda: conexion.demanda_2, nnya_principal: true });
+        if (demandaPersona.length > 0) {
+          const persona = await getTPersona(demandaPersona[0].persona);
+          return {
+            ...conexion,
+            nnyaInfo: {
+              nombre: persona.nombre,
+              apellido: persona.apellido,
+              dni: persona.dni
+            }
+          };
+        }
+        return conexion;
+      }));
+      setConexiones(conexionesWithInfo);
+    } catch (error) {
+      console.error('Error fetching conexiones:', error);
+    } finally {
+      setLoadingConexiones(false);
+    }
+  };
+
+  useEffect(() => {
+
+
+    
     fetchNnyaPrincipales();
-  }, []);
-  
+    fetchConexiones();
+  }, [demanda.id]);
+
 
   useEffect(() => {
     const fetchActividades = async () => {
@@ -290,6 +324,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
 
       setSelectedNnya('');
       setVinculacionError('');
+      fetchConexiones();
       // You might want to refresh the list of linked demands here
     } catch (error) {
       console.error('Error al vincular demandas:', error);
@@ -858,6 +893,26 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
           </Button>
         </Box>
       </Box>
+      <Divider sx={{ my: 2 }} />
+      <Typography variant="subtitle1" color="primary" gutterBottom>Conexiones existentes</Typography>
+      {loadingConexiones ? (
+        <CircularProgress />
+      ) : (
+        <List>
+          {conexiones.map((conexion) => (
+            <ListItem key={conexion.id}>
+              <ListItemText 
+                primary={`Demanda ID: ${conexion.demanda_2}`}
+                secondary={
+                  conexion.nnyaInfo
+                    ? `${conexion.nnyaInfo.nombre} ${conexion.nnyaInfo.apellido} - DNI: ${conexion.nnyaInfo.dni}`
+                    : 'Información no disponible'
+                }
+              />
+            </ListItem>
+          ))}
+        </List>
+      )}
     </CollapsibleSection>
             {/* <Dialog open={openConfirmDialog} onClose={handleCancelDelete}>
               <DialogTitle>¿Estás seguro de que deseas eliminar esta actividad?</DialogTitle>
