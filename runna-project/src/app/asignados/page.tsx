@@ -72,17 +72,17 @@ function MesaDeEntradas() {
           {new Date().toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })} | {new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>
-      <div className="flex-1 flex">
-        <Sidebar />
+    <div className="flex-1 flex">
+      <Sidebar />
       <MainContent
-        asignadoProp={null}
+        asignadoProp={true}
         constatacionProp={null}
         evaluacionProp={null}
-        archivadoProp={null}
-        completadoProp={null}
+        archivadoProp={false}
+        completadoProp={false}
         recibidoProp={null}
       />
-      </div>
+    </div>
     </div>
   );
 }

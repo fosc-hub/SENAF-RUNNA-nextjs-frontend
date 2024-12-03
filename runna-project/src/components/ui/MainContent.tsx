@@ -24,10 +24,11 @@ import ActividadesRegistradas from '../ui/ActividadesRegistradas/ActividadesRegi
 import PostConstatacionModal from './PostConstatacionModal'
 import NuevoIngresoModal from './NuevoIngresoModal/NuevoIngresoModal'
 import EvaluacionModal from './EvaluacionModal'
-import { getDemands, createDemand, updateDemand } from '../../api/TableFunctions/demands'
-import { TDemanda, TDemandaPersona, TPersona, TPrecalificacionDemanda } from '../../api/interfaces'
+import { getDemands, createDemand, updateDemand, getDemand } from '../../api/TableFunctions/demands'
+import { TDemanda, TDemandaPersona, TPersona, TPrecalificacionDemanda, TDemandaAsignado } from '../../api/interfaces'
 import { getTDemandaPersona } from '../../api/TableFunctions/demandaPersonas'
 import { getTPersona } from '../../api/TableFunctions/personas'
+import { getTDemandaAsignados } from '../../api/TableFunctions/DemandaAsignados'
 import { getTPrecalificacionDemanda, createTPrecalificacionDemanda, updateTPrecalificacionDemanda } from '../../api/TableFunctions/precalificacionDemanda'
 import { useAuth } from '../../context/AuthContext';
 
@@ -44,8 +45,23 @@ const precalificacionOptions = [
   { value: 'NO_URGENTE', label: 'No Urgente' },
   { value: 'COMPLETAR', label: 'Completar' },
 ]
+interface MainContentProps {
+  asignadoProp?: boolean;
+  constatacionProp?: boolean;
+  evaluacionProp?: boolean;
+  archivadoProp?: boolean;
+  completadoProp?: boolean;
+  recibidoProp?: boolean;
+}
 
-export function MainContent() {
+export function MainContent({
+  asignadoProp = false,
+  constatacionProp = false,
+  evaluacionProp = false,
+  archivadoProp = false,
+  completadoProp = false,
+  recibidoProp = false,
+  }: MainContentProps) {
   const [demands, setDemands] = useState<TDemanda[]>([])
   const [personaData, setPersonaData] = useState<Record<number, TPersona>>({})
   const [precalificacionData, setPrecalificacionData] = useState<Record<number, TPrecalificacionDemanda>>({})
@@ -62,11 +78,31 @@ export function MainContent() {
 
   const fetchAllData = useCallback(async () => {
     try {
-      const demandsData = await getDemands()
-      console.log('Fetched demands:', demandsData)
-      setDemands(demandsData)
-      console.log('User:', user, 'Loading:', loading);
+      let demandsData = [];
 
+      if (user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tdemandaasignado')) {
+        demandsData = await getDemands({
+          asignado: asignadoProp,
+          constatacion: constatacionProp,
+          evaluacion: evaluacionProp,
+          archivado: archivadoProp,
+          completado: completadoProp,
+        });
+      } else {
+        const assignedDemands = await getTDemandaAsignados({ 
+          user: user.id,
+          recibido: recibidoProp,
+        });
+        demandsData = await getDemands({
+          asignado: asignadoProp,
+          constatacion: constatacionProp,
+          evaluacion: evaluacionProp,
+          archivado: archivadoProp,
+          completado: completadoProp,
+        })
+        demandsData = demandsData.filter((demand) => assignedDemands.some((a) => a.demanda === demand.id));
+      }
+      setDemands(demandsData);
       const personaPromises = demandsData.map(async (demand) => {
         try {
           const demandaPersona = await getTDemandaPersona(demand.id!)
@@ -118,7 +154,7 @@ export function MainContent() {
     } catch (error) {
       console.error('Error fetching data:', error)
     }
-  }, [])
+  }, [user])
 
   useEffect(() => {
     fetchAllData()

@@ -5,23 +5,36 @@ import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
-interface MenuItem {
+class MenuItem {
   name: string;
-  href: string;
+  href?: string;
+  isHeader?: boolean;
+  hasSeparator?: boolean;
+
+  constructor(name: string, href?: string, isHeader?: boolean, hasSeparator?: boolean) {
+    this.name = name;
+    this.href = href;
+    this.isHeader = isHeader;
+    this.hasSeparator = hasSeparator;
+  }
 }
 
 const adminMenuItems: MenuItem[] = [
-  { name: 'Recepción de Demandas', isHeader: true },
-  { name: 'Todos', href: '/todos' },
-  { name: 'Sin Asignar', href: '/sin-asignar' },
-  { name: 'Asignados', href: '/asignados' },
+  new MenuItem('Recepción de Demandas', undefined, true),
+  new MenuItem('Todos', '/mesadeentrada'),
+  new MenuItem('Sin Asignar', '/sin-asignar'),
+  new MenuItem('Asignados', '/asignados'),
+  new MenuItem('Archivados', '/archivados', undefined, true),
+  new MenuItem('Completados', '/completados'),
 ];
 
 const userMenuItems: MenuItem[] = [
-  { name: 'Recepción de Demandas', isHeader: true },
-  { name: 'Todos', href: '/todos' },
-  { name: 'Leidos', href: '/leidos' },
-  { name: 'Sin Leer', href: '/sin-leer' },
+  new MenuItem('Recepción de Demandas', undefined, true),
+  new MenuItem('Todos', '/mesadeentrada'),
+  new MenuItem('Sin Leer', '/sin-leer'),
+  new MenuItem('Leidos', '/leidos'),
+  new MenuItem('Archivados', '/archivados', undefined, true),
+  new MenuItem('Completados', '/completados'),
 ];
 
 export default function Sidebar() {
@@ -45,6 +58,7 @@ export default function Sidebar() {
         <div className="py-4">
         {menuItems.map((item, index) => (
             <React.Fragment key={index}>
+              {item.hasSeparator && <hr className="my-2 border-gray-200" />}
               {item.isHeader ? (
                 <h2 className={`px-4 py-2 text-sm font-semibold text-gray-600 ${isCollapsed ? 'sr-only' : ''}`}>
                   {item.name}
@@ -72,7 +86,6 @@ export default function Sidebar() {
                   </Link>
                 </>
               )}
-              {item.hasSeparator && <hr className="my-2 border-gray-200" />}
             </React.Fragment>
           ))}
         </div>
