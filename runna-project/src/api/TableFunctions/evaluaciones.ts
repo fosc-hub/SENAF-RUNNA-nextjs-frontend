@@ -1,7 +1,7 @@
 import { getAll, getOne, create, update, remove } from '../services/apiService';
 import { TEvaluaciones } from '../interfaces';
 
-const endpoint = 'tevaluaciones';
+const endpoint = 'evaluaciones';
 
 export const getTEvaluaciones = () => getAll<TEvaluaciones>(endpoint);
 export const getTEvaluacion = (id: number) => getOne<TEvaluaciones>(endpoint, id);
