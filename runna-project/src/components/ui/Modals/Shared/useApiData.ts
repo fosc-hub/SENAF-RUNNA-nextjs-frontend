@@ -49,8 +49,19 @@ export const useApiData = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [origenes, setOrigenes] = useState([]);
 
   useEffect(() => {
+      const fetchOrigenes = async () => {
+        try {
+          const data = await getOrigens();
+          setOrigenes(data);
+        } catch (error) {
+          console.error('Error fetching origenes:', error);
+        }
+      };
+   
+  
     const fetchData = async () => {
       setIsLoading(true);
       try {
