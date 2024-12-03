@@ -184,6 +184,9 @@ export const renderStepContent = ({
   vinculoPersonas,
   addCondicionVulnerabilidad,
   removeCondicionVulnerabilidad,
+  origenes,
+  subOrigenes,
+  institucionesDemanda,
 }) => {
 
   
@@ -220,9 +223,43 @@ export const renderStepContent = ({
                 onChange={(e) => handleInputChange('origen', e.target.value)}
                 label="Origen"
               >
-                <MenuItem value="WEB">WEB</MenuItem>
-                <MenuItem value="TELEFONO">TELEFONO</MenuItem>
-                <MenuItem value="PRESENCIAL">PRESENCIAL</MenuItem>
+                {origenes.map((origen) => (
+                  <MenuItem key={origen.id} value={origen.id}>
+                    {origen.nombre}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Sub Origen</InputLabel>
+              <Select
+                value={formData.sub_origen}
+                onChange={(e) => handleInputChange('sub_origen', e.target.value)}
+                label="Sub Origen"
+              >
+                {subOrigenes.map((subOrigen) => (
+                  <MenuItem key={subOrigen.id} value={subOrigen.id}>
+                    {subOrigen.nombre}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Institución</InputLabel>
+              <Select
+                value={formData.institucion}
+                onChange={(e) => handleInputChange('institucion', e.target.value)}
+                label="Institución"
+              >
+                {institucionesDemanda.map((institucion) => (
+                  <MenuItem key={institucion.id} value={institucion.id}>
+                    {institucion.nombre}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Grid>
@@ -288,6 +325,9 @@ export const renderStepContent = ({
             />
           </Grid>
 
+
+          <Grid item xs={12}>
+
           <FormControl fullWidth>
             <InputLabel>Motivos de Intervención</InputLabel>
             <Select
@@ -304,6 +344,7 @@ export const renderStepContent = ({
               ))}
             </Select>
           </FormControl>
+          </Grid>
 
 
           <Grid item xs={12}>
@@ -312,7 +353,7 @@ export const renderStepContent = ({
           {renderLocalizacionFields('localizacion', formData.localizacion, handleInputChange, barrios, localidades, cpcs)}
 
           <Grid item xs={12}>
-            <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Usuario Externo</Typography>
+            <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Informante</Typography>
           </Grid>
           <Grid item xs={12}>
             <FormControlLabel
@@ -322,7 +363,7 @@ export const renderStepContent = ({
                   onChange={(e) => handleInputChange('createNewUsuarioExterno', e.target.checked)}
                 />
               }
-              label="Crear nuevo usuario externo"
+              label="Crear nuevo Informante"
             />
           </Grid>
           {formData.createNewUsuarioExterno ? (
@@ -346,30 +387,9 @@ export const renderStepContent = ({
                 />
               </Grid>
               <Grid item xs={6}>
-              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-                  <DatePicker
-                    label="Fecha de Nacimiento"
-                    value={formData.usuarioExterno.fecha_nacimiento ? new Date(formData.usuarioExterno.fecha_nacimiento) : null}
-                    onChange={(newValue) => handleInputChange('usuarioExterno.fecha_nacimiento', formatDate(newValue))}
-                    renderInput={(params) => <TextField {...params} fullWidth size="small" />}
-                    inputFormat="yyyy-MM-dd"
-                  />
-                </LocalizationProvider>
                 
               </Grid>
               <Grid item xs={6}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Género</InputLabel>
-                  <Select
-                    value={formData.usuarioExterno.genero}
-                    onChange={(e) => handleInputChange('usuarioExterno.genero', e.target.value)}
-                    label="Género"
-                  >
-                    <MenuItem value="MASCULINO">Masculino</MenuItem>
-                    <MenuItem value="FEMENINO">Femenino</MenuItem>
-                    <MenuItem value="OTRO">Otro</MenuItem>
-                  </Select>
-                </FormControl>
               </Grid>
               <Grid item xs={6}>
                 <TextField
@@ -392,42 +412,14 @@ export const renderStepContent = ({
                 />
               </Grid>
               <Grid item xs={6}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Vínculo</InputLabel>
-                  <Select
-                    value={formData.usuarioExterno.vinculo}
-                    onChange={(e) => handleInputChange('usuarioExterno.vinculo', e.target.value)}
-                    label="Vínculo"
-                  >
-                    {vinculosUsuarioExterno && vinculosUsuarioExterno.map((vinculo) => (
-                      <MenuItem key={vinculo.id} value={vinculo.id}>
-                        {vinculo.nombre}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
               </Grid>
               <Grid item xs={6}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Institución</InputLabel>
-                  <Select
-                    value={formData.usuarioExterno.institucion}
-                    onChange={(e) => handleInputChange('usuarioExterno.institucion', e.target.value)}
-                    label="Institución"
-                  >
-                    {institucionesUsuarioExterno && institucionesUsuarioExterno.map((institucion) => (
-                      <MenuItem key={institucion.id} value={institucion.id}>
-                        {institucion.nombre}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
               </Grid>
             </>
           ) : (
             <Grid item xs={12}>
               <FormControl fullWidth size="small">
-                <InputLabel>Usuario Externo</InputLabel>
+                <InputLabel>Informante</InputLabel>
                 <Select
                   value={formData.usuarioExterno.id}
                   onChange={(e) => handleInputChange('usuarioExterno.id', e.target.value)}
@@ -510,9 +502,12 @@ export const renderStepContent = ({
                     onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].situacionDni`, e.target.value)}
                     label="Situación DNI"
                   >
+                    <MenuItem value="VALIDO">Válido</MenuItem>
                     <MenuItem value="EN_TRAMITE">En Trámite</MenuItem>
                     <MenuItem value="VENCIDO">Vencido</MenuItem>
                     <MenuItem value="EXTRAVIADO">Extraviado</MenuItem>
+                    <MenuItem value="INEXISTENTE">Inexistente</MenuItem>
+                    <MenuItem value="OTRO">Otro</MenuItem>
                   </Select>
                 </FormControl>
     
@@ -745,9 +740,12 @@ export const renderStepContent = ({
                       onChange={(e) => handleInputChange(`adultosConvivientes[${index}].situacionDni`, e.target.value)}
                       label="Situación DNI"
                     >
-                      <MenuItem value="EN_TRAMITE">En Trámite</MenuItem>
-                      <MenuItem value="TIENE">Tiene</MenuItem>
-                      <MenuItem value="NO_TIENE">No Tiene</MenuItem>
+                    <MenuItem value="VALIDO">Válido</MenuItem>
+                    <MenuItem value="EN_TRAMITE">En Trámite</MenuItem>
+                    <MenuItem value="VENCIDO">Vencido</MenuItem>
+                    <MenuItem value="EXTRAVIADO">Extraviado</MenuItem>
+                    <MenuItem value="INEXISTENTE">Inexistente</MenuItem>
+                    <MenuItem value="OTRO">Otro</MenuItem>
                     </Select>
                   </FormControl>
       
@@ -763,18 +761,7 @@ export const renderStepContent = ({
                       <MenuItem value="NO_BINARIO">No Binario</MenuItem>
                     </Select>
                   </FormControl>
-      
-                  <Box sx={{ mt: 2 }}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={adulto.supuesto_autordv}
-                          onChange={(e) => handleInputChange(`adultosConvivientes[${index}].supuesto_autordv`, e.target.checked)}
-                        />
-                      }
-                      label="Supuesto autor DV"
-                    />
-                  </Box>
+    
       
                   <Box sx={{ mt: 1 }}>
                     <FormControlLabel
@@ -787,7 +774,36 @@ export const renderStepContent = ({
                       label="Conviviente"
                     />
                   </Box>
-      
+                  <FormGroup row>
+  <FormControlLabel
+    control={
+      <Checkbox
+        checked={adulto.supuesto_autordv || false}
+        onChange={(e) => {
+          handleInputChange(`adultosConvivientes[${index}].supuesto_autordv`, e.target.checked);
+          if (e.target.checked) {
+            handleInputChange(`adultosConvivientes[${index}].garantiza_proteccion`, false);
+          }
+        }}
+      />
+    }
+    label="Supuesto Autor DV"
+  />
+  <FormControlLabel
+    control={
+      <Checkbox
+        checked={adulto.garantiza_proteccion || false}
+        onChange={(e) => {
+          handleInputChange(`adultosConvivientes[${index}].garantiza_proteccion`, e.target.checked);
+          if (e.target.checked) {
+            handleInputChange(`adultosConvivientes[${index}].supuesto_autordv`, false);
+          }
+        }}
+      />
+    }
+    label="Garantiza Protección"
+  />
+</FormGroup>
                   <Box sx={{ mt: 1 }}>
                     <FormControlLabel
                       control={
@@ -851,26 +867,6 @@ export const renderStepContent = ({
               ))}
             </Select>
           </FormControl>
-          <FormGroup row>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={adulto.vinculacion?.conviven || false}
-                  onChange={(e) => handleInputChange(`adultosConvivientes[${index}].vinculacion.conviven`, e.target.checked)}
-                />
-              }
-              label="Conviven"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={adulto.vinculacion?.garantiza_proteccion || false}
-                  onChange={(e) => handleInputChange(`adultosConvivientes[${index}].vinculacion.garantiza_proteccion`, e.target.checked)}
-                />
-              }
-              label="Garantiza Protección"
-            />
-          </FormGroup>
         </Box>
 
                 </Box>

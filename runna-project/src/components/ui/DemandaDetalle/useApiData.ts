@@ -20,12 +20,9 @@ import { getTVulneracions, getTVulneracion} from '../../../api/TableFunctions/vu
 import { createTVulneracion} from '../../../api/TableFunctions/vulneraciones'
 import { getTInstitucionEducativas} from '../../../api/TableFunctions/institucionesEducativas'
 import { getTInstitucionSanitarias} from '../../../api/TableFunctions/institucionesSanitarias'
-import { getInstitucionesUsuarioExterno } from '../../../api/TableFunctions/institucionUsuarioExterno' 
-import { getVinculosUsuarioExterno } from '../../../api/TableFunctions/vinculoUsuarioExterno'
 import { getTUsuariosExternos, getTUsuarioExterno } from '../../../api/TableFunctions/usuarioExterno'
 import { getTVinculos} from '../../../api/TableFunctions/vinculos'
 import { createTVinculoPersonaPersona, getTVinculoPersonaPersona, getTVinculoPersonaPersonas } from '../../../api/TableFunctions/vinculospersonaspersonas'
-import { getTVinculoUsuarioLinea, getTVinculoUsuarioLineas } from '../../../api/TableFunctions/vinculoUsuarioLinea'
 import { getTDemandaPersonas, getTDemandaPersona } from '../../../api/TableFunctions/demandaPersonas';
 import { getTNNyASalud, getTNNyASaluds } from '../../../api/TableFunctions/nnyaSalud';
 import { getTNNyAEducacion, getTNNyAEducacions } from '../../../api/TableFunctions/nnyaeducacion';
@@ -119,10 +116,8 @@ const institucionesSanitarias = [];
         }
 
         // Fetch vinculos usuario externo
-        const vinculosData = await getTVinculoUsuarioLineas();
 
         // Fetch instituciones usuario externo
-        const institucionesData = await getInstitucionesUsuarioExterno();
 
         // Fetch demanda-persona data
         const demandaPersonaData = await getTDemandaPersonas({ demanda: demandaId });
@@ -305,8 +300,6 @@ const personasWithCondiciones = personas.map((persona) => {
           demandaMotivoIntervencion: demandaMotivoData,
           currentMotivoIntervencion,
           usuarioExterno: usuarioExternoData,
-          vinculosUsuarioExterno: vinculosData,
-          institucionesUsuarioExterno: institucionesData,
           localizacion: {
             ...localizacionData,
             barrio: selectedBarrio?.id || localizacionData?.barrio || '',

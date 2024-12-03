@@ -1,3 +1,4 @@
+import { sub } from 'date-fns';
 import { useState } from 'react'
 type Vulneracion = {
   principal_demanda: boolean;
@@ -12,6 +13,8 @@ type Vulneracion = {
 const initialFormData = {
   fecha_y_hora_ingreso: new Date(),
   origen: '',
+  sub_origen: '',
+  institucion: '',
   nro_notificacion_102: '',
   nro_sac: '',
   nro_suac: '',

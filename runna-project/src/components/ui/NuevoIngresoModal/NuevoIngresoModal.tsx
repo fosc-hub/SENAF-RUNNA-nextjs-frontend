@@ -27,7 +27,7 @@ import { createTDemandaPersona } from '../../../api/TableFunctions/demandaPerson
 import { createLocalizacionPersona } from '../../../api/TableFunctions/localizacionPersona'
 import { createTPersonaCondicionesVulnerabilidad } from '../../../api/TableFunctions/personaCondicionesVulnerabilidad'
 import { toast } from 'react-toastify'
-
+import {createTVinculoPersonaPersona} from '../../../api/TableFunctions/vinculospersonaspersonas'
 const steps = ['Ingreso', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Condiciones de Vulnerabilidad']
 
 export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
@@ -151,7 +151,7 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
         formData.ninosAdolescentes.map(async (nino) => {
           const personaResponse = await createTPersona({
             ...nino,
-            situacion_dni: nino.situacionDni || 'EN_TRAMITE',
+            situacion_dni: nino.situacionDni,
             fecha_nacimiento: formatDate(nino.fechaNacimiento ? new Date(nino.fechaNacimiento) : null),
             edad_aproximada: nino.edadAproximada ? parseInt(nino.edadAproximada) : null,
             dni: nino.dni ? parseInt(nino.dni) : null,
@@ -193,7 +193,7 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
         formData.adultosConvivientes.map(async (adulto) => {
           const personaResponse = await createTPersona({
             ...adulto,
-            situacion_dni: adulto.situacionDni || 'EN_TRAMITE',
+            situacion_dni: adulto.situacionDni,
             fecha_nacimiento: formatDate(adulto.fechaNacimiento ? new Date(adulto.fechaNacimiento) : null),
             edad_aproximada: adulto.edadAproximada ? parseInt(adulto.edadAproximada) : null,
             dni: adulto.dni ? parseInt(adulto.dni) : null,
@@ -218,7 +218,9 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
       addDebugInfo('Preparing demanda data')
       const demandaData = {
         fecha_y_hora_ingreso: formData.fecha_y_hora_ingreso.toISOString(),
-        origen: formData.origen,
+        origen: formData.origen, // Pass the ID of the origen
+        sub_origen: formData.sub_origen, // Pass the ID of the sub_origen
+        institucion: formData.institucion, // Pass the ID of the institucion
         nro_notificacion_102: Number(formData.nro_notificacion_102) || null,
         nro_sac: Number(formData.nro_sac) || null,
         nro_suac: Number(formData.nro_suac) || null,
@@ -261,33 +263,80 @@ const condicionesVulnerabilidadPromises = formData.condicionesVulnerabilidad.map
 const condicionesVulnerabilidadResponses = await Promise.all(condicionesVulnerabilidadPromises)
 addDebugInfo(`Created ${condicionesVulnerabilidadResponses.length} persona-condiciones-vulnerabilidad entries`)
 
-      // Create demanda-persona entries
-      addDebugInfo('Creating demanda-persona entries')
-      const demandaPersonaPromises = [
-        ...ninosAdolescentesPersonas.map((persona, index) =>
-          createTDemandaPersona({
-            conviviente: true,
-            supuesto_autordv: false,
-            supuesto_autordv_principal: false,
-            nnya_principal: index === 0,
-            demanda: demandaResponse.id,
-            persona: persona.id,
-          })
-        ),
-        ...adultosConvivientesPersonas.map((persona, index) =>
-          createTDemandaPersona({
-            conviviente: true,
-            supuesto_autordv: formData.adultosConvivientes[index].supuesto_autordv || false,
-            supuesto_autordv_principal: index === 0 && formData.adultosConvivientes[index].supuesto_autordv,
-            nnya_principal: false,
-            demanda: demandaResponse.id,
-            persona: persona.id,
-          })
-        ),
-      ]
+// Create vinculaciones and demanda-persona entries
+addDebugInfo('Creating vinculaciones and demanda-persona entries');
+const vinculacionesPromises = [];
+const demandaPersonaPromises = [];
 
-      const demandaPersonaResponses = await Promise.all(demandaPersonaPromises)
-      addDebugInfo(`Created ${demandaPersonaResponses.length} demanda-persona entries`)
+// For niños y adolescentes
+formData.ninosAdolescentes.forEach((nino, index) => {
+  const personaId = ninosAdolescentesPersonas[index].id;
+
+  // Create demanda-persona entry
+  demandaPersonaPromises.push(
+    createTDemandaPersona({
+      conviviente: nino.conviviente || false,
+      supuesto_autordv: false,
+      supuesto_autordv_principal: false,
+      nnya_principal: index === 0,
+      demanda: demandaResponse.id,
+      persona: personaId,
+    })
+  );
+
+  // Create vinculacion if not the principal NNyA
+  if (index !== 0) {
+    vinculacionesPromises.push(
+      createTVinculoPersonaPersona({
+        conviven: nino.conviviente || false,
+        autordv: false,
+        garantiza_proteccion: nino.garantiza_proteccion || false,
+        persona_1: ninosAdolescentesPersonas[0].id, // Principal NNyA
+        persona_2: personaId,
+        vinculo: nino.vinculo,
+      })
+    );
+  }
+});
+
+// For adultos convivientes
+formData.adultosConvivientes.forEach((adulto, index) => {
+  const personaId = adultosConvivientesPersonas[index].id;
+
+  // Create demanda-persona entry
+  demandaPersonaPromises.push(
+    createTDemandaPersona({
+      conviviente: adulto.conviviente || false,
+      supuesto_autordv: adulto.supuesto_autordv || false,
+      supuesto_autordv_principal: index === 0 && adulto.supuesto_autordv,
+      nnya_principal: false,
+      demanda: demandaResponse.id,
+      persona: personaId,
+    })
+  );
+
+  // Create vinculacion
+  vinculacionesPromises.push(
+    createTVinculoPersonaPersona({
+      conviven: adulto.conviviente || false,
+      autordv: adulto.supuesto_autordv || false,
+      garantiza_proteccion: adulto.garantiza_proteccion || false,
+      persona_1: ninosAdolescentesPersonas[0].id, // Principal NNyA
+      persona_2: personaId,
+      vinculo: adulto.vinculacion?.vinculo || null,
+    })
+  );
+});
+
+const [vinculacionesResponses, demandaPersonaResponses] = await Promise.all([
+  Promise.all(vinculacionesPromises),
+  Promise.all(demandaPersonaPromises),
+]);
+
+addDebugInfo(`Created ${vinculacionesResponses.length} vinculaciones`);
+addDebugInfo(`Created ${demandaPersonaResponses.length} demanda-persona entries`);
+
+
 
       // Create vulneraciones
       addDebugInfo('Creating vulneraciones')
@@ -332,30 +381,8 @@ addDebugInfo(`Created ${condicionesVulnerabilidadResponses.length} persona-condi
         addDebugInfo('No motivo selected, skipping demanda-motivo-intervencion creation')
       }
 
-      // Create vinculaciones
-      addDebugInfo('Creating vinculaciones')
-      const vinculacionesPromises = formData.vinculaciones.map(vinculacion => {
-        // Always use the first NNyA as persona_1
-        const persona1 = ninosAdolescentesPersonas[0].id
 
-        const persona2 = vinculacion.persona_2 < formData.ninosAdolescentes.length
-          ? ninosAdolescentesPersonas[vinculacion.persona_2].id
-          : adultosConvivientesPersonas[vinculacion.persona_2 - formData.ninosAdolescentes.length].id
 
-        return apiData.addVinculoPersonaPersona({
-          conviven: vinculacion.conviven,
-          autordv: vinculacion.autordv,
-          garantiza_proteccion: vinculacion.garantiza_proteccion,
-          persona_1: persona1,
-          persona_2: persona2,
-          vinculo: vinculacion.vinculo
-        })
-      })
-
-      const vinculacionesResponses = await Promise.all(vinculacionesPromises)
-      addDebugInfo(`Created ${vinculacionesResponses.length} vinculaciones`)
-
-      onSubmit(demandaResponse)
       // toast success
 
       toast.success('¡Se agrego el registro con exito!', {

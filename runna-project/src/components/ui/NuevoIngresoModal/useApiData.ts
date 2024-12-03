@@ -20,6 +20,9 @@ import {getTInstitucionSanitarias} from '../../../api/TableFunctions/institucion
 import { getTUsuariosExternos } from '../../../api/TableFunctions/usuarioExterno'
 import {getTVinculos} from '../../../api/TableFunctions/vinculos'
 import { createTVinculoPersonaPersona } from '../../../api/TableFunctions/vinculospersonaspersonas'
+import {getTInstitucionDemands} from '../../../api/TableFunctions/institucionDemanda'
+import { getOrigens } from '../../../api/TableFunctions/origenDemanda'
+import { getSubOrigens } from '../../../api/TableFunctions/subOrigen'
 import { get } from 'http'
 
 export const useApiData = () => {
@@ -40,6 +43,9 @@ export const useApiData = () => {
       institucionesEducativas: [],
       institucionesSanitarias: [],
       vinculoPersonas: [],
+      origenes: [],
+      subOrigenes: [],
+      institucionesDemanda: [],
     })
   
     useEffect(() => {
@@ -62,6 +68,9 @@ export const useApiData = () => {
             fetchedInstitucionesEducativas,
             fetchedInstitucionesSanitarias,
             fetchedVinculosPersonas,
+            fetchedOrigens,
+            fetchedSubOrigens,
+            fetchedInstitucionesDemands
           ] = await Promise.all([
             getTUsuariosExternos(),
             getTBarrios(),
@@ -79,6 +88,9 @@ export const useApiData = () => {
             getTInstitucionEducativas(),
             getTInstitucionSanitarias(),
             getTVinculos(),
+            getOrigens(),
+            getSubOrigens(),
+            getTInstitucionDemands()
 
           ])
   
@@ -98,6 +110,9 @@ export const useApiData = () => {
             institucionesEducativas: fetchedInstitucionesEducativas,
             institucionesSanitarias: fetchedInstitucionesSanitarias,
             vinculoPersonas: fetchedVinculosPersonas,
+            origenes: fetchedOrigens,
+            subOrigenes: fetchedSubOrigens,
+            institucionesDemanda: fetchedInstitucionesDemands
           })
         } catch (error) {
           console.error('Error fetching data:', error)
