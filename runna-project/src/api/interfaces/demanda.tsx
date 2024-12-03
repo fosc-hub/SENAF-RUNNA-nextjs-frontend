@@ -1,4 +1,4 @@
-export interface TInstitucionUsuarioExterno {
+export interface TInstitucionDemanda {
     id: number;
     nombre: string;
     mail?: string | null;
@@ -6,12 +6,15 @@ export interface TInstitucionUsuarioExterno {
     localizacion?: number | null;
 }
 
-export interface TVinculoUsuarioExterno {
+export interface TOrigen {
     id: number;
     nombre: string;
-    descripcion?: string | null;
 }
-
+export interface TSubOrigen {
+    id: number;
+    nombre: string;
+    origen: number;
+}
 export interface TUsuarioExterno {
     id: number;
     nombre: string;

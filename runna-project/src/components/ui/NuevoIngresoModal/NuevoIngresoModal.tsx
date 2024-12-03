@@ -150,7 +150,7 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
         formData.ninosAdolescentes.map(async (nino) => {
           const personaResponse = await createTPersona({
             ...nino,
-            situacion_dni: nino.situacionDni || 'EN_TRAMITE',
+            situacion_dni: nino.situacionDni,
             fecha_nacimiento: formatDate(nino.fechaNacimiento ? new Date(nino.fechaNacimiento) : null),
             edad_aproximada: nino.edadAproximada ? parseInt(nino.edadAproximada) : null,
             dni: nino.dni ? parseInt(nino.dni) : null,
@@ -192,7 +192,7 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
         formData.adultosConvivientes.map(async (adulto) => {
           const personaResponse = await createTPersona({
             ...adulto,
-            situacion_dni: adulto.situacionDni || 'EN_TRAMITE',
+            situacion_dni: adulto.situacionDni,
             fecha_nacimiento: formatDate(adulto.fechaNacimiento ? new Date(adulto.fechaNacimiento) : null),
             edad_aproximada: adulto.edadAproximada ? parseInt(adulto.edadAproximada) : null,
             dni: adulto.dni ? parseInt(adulto.dni) : null,
@@ -217,7 +217,9 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
       addDebugInfo('Preparing demanda data')
       const demandaData = {
         fecha_y_hora_ingreso: formData.fecha_y_hora_ingreso.toISOString(),
-        origen: formData.origen,
+        origen: formData.origen, // Pass the ID of the origen
+        sub_origen: formData.sub_origen, // Pass the ID of the sub_origen
+        institucion: formData.institucion, // Pass the ID of the institucion
         nro_notificacion_102: Number(formData.nro_notificacion_102) || null,
         nro_sac: Number(formData.nro_sac) || null,
         nro_suac: Number(formData.nro_suac) || null,

@@ -184,6 +184,9 @@ export const renderStepContent = ({
   vinculoPersonas,
   addCondicionVulnerabilidad,
   removeCondicionVulnerabilidad,
+  origenes,
+  subOrigenes,
+  institucionesDemanda,
 }) => {
 
   
@@ -220,9 +223,43 @@ export const renderStepContent = ({
                 onChange={(e) => handleInputChange('origen', e.target.value)}
                 label="Origen"
               >
-                <MenuItem value="WEB">WEB</MenuItem>
-                <MenuItem value="TELEFONO">TELEFONO</MenuItem>
-                <MenuItem value="PRESENCIAL">PRESENCIAL</MenuItem>
+                {origenes.map((origen) => (
+                  <MenuItem key={origen.id} value={origen.id}>
+                    {origen.nombre}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Sub Origen</InputLabel>
+              <Select
+                value={formData.sub_origen}
+                onChange={(e) => handleInputChange('sub_origen', e.target.value)}
+                label="Sub Origen"
+              >
+                {subOrigenes.map((subOrigen) => (
+                  <MenuItem key={subOrigen.id} value={subOrigen.id}>
+                    {subOrigen.nombre}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Institución</InputLabel>
+              <Select
+                value={formData.institucion}
+                onChange={(e) => handleInputChange('institucion', e.target.value)}
+                label="Institución"
+              >
+                {institucionesDemanda.map((institucion) => (
+                  <MenuItem key={institucion.id} value={institucion.id}>
+                    {institucion.nombre}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Grid>
@@ -288,6 +325,9 @@ export const renderStepContent = ({
             />
           </Grid>
 
+
+          <Grid item xs={12}>
+
           <FormControl fullWidth>
             <InputLabel>Motivos de Intervención</InputLabel>
             <Select
@@ -304,6 +344,7 @@ export const renderStepContent = ({
               ))}
             </Select>
           </FormControl>
+          </Grid>
 
 
           <Grid item xs={12}>
@@ -510,9 +551,12 @@ export const renderStepContent = ({
                     onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].situacionDni`, e.target.value)}
                     label="Situación DNI"
                   >
+                    <MenuItem value="VALIDO">Válido</MenuItem>
                     <MenuItem value="EN_TRAMITE">En Trámite</MenuItem>
                     <MenuItem value="VENCIDO">Vencido</MenuItem>
                     <MenuItem value="EXTRAVIADO">Extraviado</MenuItem>
+                    <MenuItem value="INEXISTENTE">Inexistente</MenuItem>
+                    <MenuItem value="OTRO">Otro</MenuItem>
                   </Select>
                 </FormControl>
     
@@ -745,9 +789,12 @@ export const renderStepContent = ({
                       onChange={(e) => handleInputChange(`adultosConvivientes[${index}].situacionDni`, e.target.value)}
                       label="Situación DNI"
                     >
-                      <MenuItem value="EN_TRAMITE">En Trámite</MenuItem>
-                      <MenuItem value="TIENE">Tiene</MenuItem>
-                      <MenuItem value="NO_TIENE">No Tiene</MenuItem>
+                    <MenuItem value="VALIDO">Válido</MenuItem>
+                    <MenuItem value="EN_TRAMITE">En Trámite</MenuItem>
+                    <MenuItem value="VENCIDO">Vencido</MenuItem>
+                    <MenuItem value="EXTRAVIADO">Extraviado</MenuItem>
+                    <MenuItem value="INEXISTENTE">Inexistente</MenuItem>
+                    <MenuItem value="OTRO">Otro</MenuItem>
                     </Select>
                   </FormControl>
       
