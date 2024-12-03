@@ -9,7 +9,7 @@ import {
   TextField,
   Paper,
 } from '@mui/material'
-import { TDemanda } from '../../../api/interfaces'
+import { TDemanda } from '../../../../api/interfaces'
 
 interface EvaluacionModalProps {
   demanda: TDemanda

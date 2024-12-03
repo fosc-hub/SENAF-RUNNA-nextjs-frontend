@@ -1,14 +1,6 @@
+import { Grid, TextField, FormControl, Select, MenuItem, Typography, InputLabel, Switch, FormControlLabel } from '@mui/material';
 import React, { useEffect, useState } from 'react'
 import {
-  Typography,
-  TextField,
-  Grid,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  FormControlLabel,
-  Switch,
   Checkbox,
   ListItemText,
   Chip,
@@ -23,142 +15,142 @@ import { ImportIcon as AddIcon } from 'lucide-react'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3'
 import { LocalizationProvider, DateTimePicker, DatePicker } from '@mui/x-date-pickers'
 import { es } from 'date-fns/locale'
-import { getTCategoriaMotivo } from '../../../api/TableFunctions/categoriasMotivos'
+import { getTCategoriaMotivo } from '../../../../api/TableFunctions/categoriasMotivos'
 const formatDate = (date) => date ? date.toISOString().split('T')[0] : null
-const getCategoriaMotivosNombre = (motivoId: number, categoriaMotivos: any[]) => {
-  const categoria = categoriaMotivos.find(cat => cat.id === motivoId)
-  return categoria ? categoria.nombre : 'Desconocido'
-}
+
+
 const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, localidades, cpcs) => (
-  <>
-    <Grid item xs={6}>
-      <TextField
-        fullWidth
-        label="Calle"
-        value={data.calle}
-        onChange={(e) => handleInputChange(`${prefix}.calle`, e.target.value)}
-        size="small"
-      />
-    </Grid>
-    <Grid item xs={6}>
-      <FormControl fullWidth size="small">
-        <InputLabel>Tipo de Calle</InputLabel>
-        <Select
-          value={data.tipo_calle}
-          onChange={(e) => handleInputChange(`${prefix}.tipo_calle`, e.target.value)}
-          label="Tipo de Calle"
-        >
-          <MenuItem value="CALLE">CALLE</MenuItem>
-          <MenuItem value="AVENIDA">AVENIDA</MenuItem>
-          <MenuItem value="PASAJE">PASAJE</MenuItem>
-        </Select>
-      </FormControl>
-    </Grid>
-    <Grid item xs={6}>
-      <TextField
-        fullWidth
-        label="Piso/Depto"
-        type="number"
-        value={data.piso_depto}
-        onChange={(e) => handleInputChange(`${prefix}.piso_depto`, e.target.value)}
-        size="small"
-      />
-    </Grid>
-    <Grid item xs={6}>
-      <TextField
-        fullWidth
-        label="Lote"
-        type="number"
-        value={data.lote}
-        onChange={(e) => handleInputChange(`${prefix}.lote`, e.target.value)}
-        size="small"
-      />
-    </Grid>
-    <Grid item xs={6}>
-      <TextField
-        fullWidth
-        label="Manzana"
-        type="number"
-        value={data.mza}
-        onChange={(e) => handleInputChange(`${prefix}.mza`, e.target.value)}
-        size="small"
-      />
-    </Grid>
-    <Grid item xs={6}>
-      <TextField
-        fullWidth
-        label="Número de Casa"
-        type="number"
-        value={data.casa_nro}
-        onChange={(e) => handleInputChange(`${prefix}.casa_nro`, e.target.value)}
-        size="small"
-      />
-    </Grid>
-    <Grid item xs={12}>
-      <TextField
-        fullWidth
-        label="Referencia Geográfica"
-        multiline
-        rows={2}
-        value={data.referencia_geo}
-        onChange={(e) => handleInputChange(`${prefix}.referencia_geo`, e.target.value)}
-        size="small"
-      />
-    </Grid>
-    <Grid item xs={6}>
-      <FormControl fullWidth size="small">
-        <InputLabel>Barrio</InputLabel>
-        <Select
-          value={data.barrio}
-          onChange={(e) => handleInputChange(`${prefix}.barrio`, e.target.value)}
-          label="Barrio"
-        >
-          {barrios.map((barrio) => (
-            <MenuItem key={barrio.id} value={barrio.id}>
-              {barrio.nombre}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-    </Grid>
-    <Grid item xs={6}>
-      <FormControl fullWidth size="small">
-        <InputLabel>Localidad</InputLabel>
-        <Select
-          value={data.localidad}
-          onChange={(e) => handleInputChange(`${prefix}.localidad`, e.target.value)}
-          label="Localidad"
-        >
-          {localidades.map((localidad) => (
-            <MenuItem key={localidad.id} value={localidad.id}>
-              {localidad.nombre}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-    </Grid>
-    <Grid item xs={6}>
-      <FormControl fullWidth size="small">
-        <InputLabel>CPC</InputLabel>
-        <Select
-          value={data.cpc}
-          onChange={(e) => handleInputChange(`${prefix}.cpc`, e.target.value)}
-          label="CPC"
-        >
-          {cpcs.map((cpc) => (
-            <MenuItem key={cpc.id} value={cpc.id}>
-              {cpc.nombre}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-    </Grid>
-  </>
-)
-export const renderStepContent = ({
+    <>
+      <Grid item xs={6}>
+        <TextField
+          fullWidth
+          label="Calle"
+          value={data.calle}
+          onChange={(e) => handleInputChange(`${prefix}.calle`, e.target.value)}
+          size="small"
+        />
+      </Grid>
+      <Grid item xs={6}>
+        <FormControl fullWidth size="small">
+          <InputLabel>Tipo de Calle</InputLabel>
+          <Select
+            value={data.tipo_calle}
+            onChange={(e) => handleInputChange(`${prefix}.tipo_calle`, e.target.value)}
+            label="Tipo de Calle"
+          >
+            <MenuItem value="CALLE">CALLE</MenuItem>
+            <MenuItem value="AVENIDA">AVENIDA</MenuItem>
+            <MenuItem value="PASAJE">PASAJE</MenuItem>
+          </Select>
+        </FormControl>
+      </Grid>
+      <Grid item xs={6}>
+        <TextField
+          fullWidth
+          label="Piso/Depto"
+          type="number"
+          value={data.piso_depto}
+          onChange={(e) => handleInputChange(`${prefix}.piso_depto`, e.target.value)}
+          size="small"
+        />
+      </Grid>
+      <Grid item xs={6}>
+        <TextField
+          fullWidth
+          label="Lote"
+          type="number"
+          value={data.lote}
+          onChange={(e) => handleInputChange(`${prefix}.lote`, e.target.value)}
+          size="small"
+        />
+      </Grid>
+      <Grid item xs={6}>
+        <TextField
+          fullWidth
+          label="Manzana"
+          type="number"
+          value={data.mza}
+          onChange={(e) => handleInputChange(`${prefix}.mza`, e.target.value)}
+          size="small"
+        />
+      </Grid>
+      <Grid item xs={6}>
+        <TextField
+          fullWidth
+          label="Número de Casa"
+          type="number"
+          value={data.casa_nro}
+          onChange={(e) => handleInputChange(`${prefix}.casa_nro`, e.target.value)}
+          size="small"
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <TextField
+          fullWidth
+          label="Referencia Geográfica"
+          multiline
+          rows={2}
+          value={data.referencia_geo}
+          onChange={(e) => handleInputChange(`${prefix}.referencia_geo`, e.target.value)}
+          size="small"
+        />
+      </Grid>
+      <Grid item xs={6}>
+        <FormControl fullWidth size="small">
+          <InputLabel>Barrio</InputLabel>
+          <Select
+            value={data.barrio}
+            onChange={(e) => handleInputChange(`${prefix}.barrio`, e.target.value)}
+            label="Barrio"
+          >
+            {barrios.map((barrio) => (
+              <MenuItem key={barrio.id} value={barrio.id}>
+                {barrio.nombre}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+      <Grid item xs={6}>
+        <FormControl fullWidth size="small">
+          <InputLabel>Localidad</InputLabel>
+          <Select
+            value={data.localidad}
+            onChange={(e) => handleInputChange(`${prefix}.localidad`, e.target.value)}
+            label="Localidad"
+          >
+            {localidades.map((localidad) => (
+              <MenuItem key={localidad.id} value={localidad.id}>
+                {localidad.nombre}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+      <Grid item xs={6}>
+        <FormControl fullWidth size="small">
+          <InputLabel>CPC</InputLabel>
+          <Select
+            value={data.cpc}
+            onChange={(e) => handleInputChange(`${prefix}.cpc`, e.target.value)}
+            label="CPC"
+          >
+            {cpcs.map((cpc) => (
+              <MenuItem key={cpc.id} value={cpc.id}>
+                {cpc.nombre}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+    </>
+  )
+const RenderstepContent = ({
   activeStep,
   formData,
   handleInputChange,
+  mode = 'nuevoIngreso', // 'nuevoIngreso' or 'demandaDetalle'
+  readOnly = false, // Determines if fields are editable
   addNinoAdolescente,
   addVulneraciontext,
   addAdultoConviviente,
@@ -179,8 +171,6 @@ export const renderStepContent = ({
   institucionesSanitarias,
   institucionesUsuarioExterno,
   vinculosUsuarioExterno,
-  addVinculacion,
-  removeVinculacion,
   vinculoPersonas,
   addCondicionVulnerabilidad,
   removeCondicionVulnerabilidad,
@@ -188,19 +178,8 @@ export const renderStepContent = ({
   subOrigenes,
   institucionesDemanda,
 }) => {
-
+  console.log('RenderStepContent formData:', formData);
   
-  const handleVulneracionChange = (field, value) => {
-    setNewVulneracion(prev => {
-      const updated = { ...prev, [field]: value }
-      if (field === 'categoria_motivo') {
-        updated.categoria_submotivo = ''
-      }
-      return updated
-    })
-  }
-
-
   switch (activeStep) {
     case 0:
       return (
@@ -1105,3 +1084,5 @@ export const renderStepContent = ({
   }
 }
 
+
+export default RenderstepContent;

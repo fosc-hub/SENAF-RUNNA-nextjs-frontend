@@ -1,5 +1,6 @@
-import { sub } from 'date-fns';
-import { useState } from 'react'
+import { useState } from 'react';
+
+// Define the structure for Vulneracion
 type Vulneracion = {
   principal_demanda: boolean;
   transcurre_actualidad: boolean;
@@ -9,9 +10,11 @@ type Vulneracion = {
   urgencia_vulneracion: string;
   nnya: number;
   autor_dv: number;
-}
+};
+
+// Initial form data with all fields initialized
 const initialFormData = {
-  fecha_y_hora_ingreso: new Date(),
+  fecha_y_hora_ingreso: new Date(), // Initialized with current date
   origen: '',
   sub_origen: '',
   institucion: '',
@@ -33,7 +36,6 @@ const initialFormData = {
     localidad: '',
     cpc: '',
   },
-  
   usuarioExterno: {
     id: null,
     nombre: '',
@@ -48,9 +50,9 @@ const initialFormData = {
   createNewUsuarioExterno: false,
   ninosAdolescentes: [],
   adultosConvivientes: [],
-  vulneraciones: [] as Vulneracion[], // Add type assertion here
+  vulneraciones: [] as Vulneracion[],
   vinculaciones: [],
-  condicionesVulnerabilidad:[],
+  condicionesVulnerabilidad: [],
   presuntaVulneracion: {
     motivo: '',
     ambitoVulneracion: '',
@@ -78,32 +80,35 @@ const initialFormData = {
     contactoInstitucion: '',
     nombreCargoResponsable: '',
   },
-}
+};
 
 export const useFormData = () => {
-  const [formData, setFormData] = useState(initialFormData)
-  
-  const handleInputChange = (field, value) => {
-    setFormData(prevData => {
-      const updatedData = { ...prevData }
-      const fieldParts = field.split('.')
-      let current = updatedData
+  const [formData, setFormData] = useState(initialFormData);
+
+  // Handle input change with deep updates for nested fields
+  const handleInputChange = (field: string, value: any) => {
+    setFormData((prevData) => {
+      const updatedData = { ...prevData };
+      const fieldParts = field.split('.');
+      let current = updatedData;
+
       for (let i = 0; i < fieldParts.length - 1; i++) {
         if (fieldParts[i].includes('[')) {
-          const [arrayName, indexStr] = fieldParts[i].split('[')
-          const index = parseInt(indexStr.replace(']', ''))
-          current = current[arrayName][index]
+          const [arrayName, indexStr] = fieldParts[i].split('[');
+          const index = parseInt(indexStr.replace(']', ''));
+          current = current[arrayName][index];
         } else {
-          current = current[fieldParts[i]]
+          current = current[fieldParts[i]];
         }
       }
-      current[fieldParts[fieldParts.length - 1]] = value
-      return updatedData
-    })
-  }
+      current[fieldParts[fieldParts.length - 1]] = value;
+      return updatedData;
+    });
+  };
 
+  // Methods to dynamically manage arrays
   const addNinoAdolescente = () => {
-    setFormData(prevData => ({
+    setFormData((prevData) => ({
       ...prevData,
       ninosAdolescentes: [
         ...prevData.ninosAdolescentes,
@@ -133,12 +138,13 @@ export const useFormData = () => {
           vinculacion: {
             vinculo: '',
             conviven: false,
-            garantiza_proteccion: false
-          }
+            garantiza_proteccion: false,
+          },
         },
       ],
-    }))
-  }
+    }));
+  };
+
   const addVulneraciontext = () => {
     setFormData((prevData) => ({
       ...prevData,
@@ -151,12 +157,13 @@ export const useFormData = () => {
           categoria_submotivo: '',
           gravedad_vulneracion: '',
           urgencia_vulneracion: '',
-          nnya: '',
-          autor_dv: '',
+          nnya: 0,
+          autor_dv: 0,
         },
       ],
-    }))
-  }
+    }));
+  };
+
   const addAdultoConviviente = () => {
     setFormData((prevData) => ({
       ...prevData,
@@ -179,15 +186,15 @@ export const useFormData = () => {
           vinculacion: {
             vinculo: '',
             conviven: false,
-            garantiza_proteccion: false
-          }
+            garantiza_proteccion: false,
+          },
         },
       ],
-    }))
-  }
+    }));
+  };
 
   const addVinculacion = () => {
-    setFormData(prevData => ({
+    setFormData((prevData) => ({
       ...prevData,
       vinculaciones: [
         ...prevData.vinculaciones,
@@ -198,34 +205,43 @@ export const useFormData = () => {
           conviven: false,
           autordv: false,
           garantiza_proteccion: false,
-        }
-      ]
-    }))
-  }
+        },
+      ],
+    }));
+  };
 
-  const removeVinculacion = (index) => {
-    setFormData(prevData => ({
+  const removeVinculacion = (index: number) => {
+    setFormData((prevData) => ({
       ...prevData,
-      vinculaciones: prevData.vinculaciones.filter((_, i) => i !== index)
-    }))
-  }
+      vinculaciones: prevData.vinculaciones.filter((_, i) => i !== index),
+    }));
+  };
+
   const addCondicionVulnerabilidad = () => {
-    setFormData(prevData => ({
+    setFormData((prevData) => ({
       ...prevData,
       condicionesVulnerabilidad: [
         ...prevData.condicionesVulnerabilidad,
-        { persona: '', condicion_vulnerabilidad: '', si_no: false }
-      ]
-    }))
-  }  
-  const removeCondicionVulnerabilidad = (index) => {
-    setFormData(prevData => ({
+        { persona: '', condicion_vulnerabilidad: '', si_no: false },
+      ],
+    }));
+  };
+
+  const removeCondicionVulnerabilidad = (index: number) => {
+    setFormData((prevData) => ({
       ...prevData,
-      condicionesVulnerabilidad: prevData.condicionesVulnerabilidad.filter((_, i) => i !== index)
-    }))
-  }
+      condicionesVulnerabilidad: prevData.condicionesVulnerabilidad.filter((_, i) => i !== index),
+    }));
+  };
 
-  return { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext, addVinculacion, removeVinculacion, addCondicionVulnerabilidad, removeCondicionVulnerabilidad
-  }
-}
-
+  return {
+    formData,
+    handleInputChange,
+    setFormData, // Ensure this is included in the return object
+    addNinoAdolescente,
+    addAdultoConviviente,
+    addVulneraciontext,
+    addCondicionVulnerabilidad,
+    removeCondicionVulnerabilidad,
+  };
+};
