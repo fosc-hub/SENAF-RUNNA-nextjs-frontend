@@ -8,7 +8,7 @@ import {
   FormControlLabel,
   Radio,
   RadioGroup,
-  IconButton, Select, MenuItem, InputLabel,
+  IconButton, Select, MenuItem, InputLabel,SelectChangeEvent 
 } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import { PDFDocument } from 'pdf-lib';
@@ -17,10 +17,12 @@ import { TIndicadoresValoracion } from '../../api/interfaces';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useParams } from 'next/navigation';
-import { createTEvaluacion } from '../../api/TableFunctions/evaluaciones'; 
-import { getTDemandaPersonas } from '../../api/TableFunctions/demandaPersonas'; 
+import { createTEvaluacion } from '../../api/TableFunctions/evaluaciones';
+import { getTDemandaPersonas } from '../../api/TableFunctions/demandaPersonas';
 import { TDemandaPersona } from '../../api/interfaces';
 import { getTPersona } from '../../api/TableFunctions/personas';
+import { getTSuggestDecisions } from '../../api/TableFunctions/suggestDecision';
+import { TsuggestDecision } from '../../api/interfaces';
 
 export function EvaluacionesContent() {
   const [indicadores, setIndicadores] = useState<TIndicadoresValoracion[]>([]);
@@ -77,10 +79,55 @@ export function EvaluacionesContent() {
     }
   };
   const [selectedNNYA, setSelectedNNYA] = useState('');
+  const [decisionSuggestions, setDecisionSuggestions] = useState<TsuggestDecision[]>([]);
 
-  const handleNNYAChange = (event) => {
-    setSelectedNNYA(event.target.value);
+  const handleNNYAChange = async (event: SelectChangeEvent<string>) => {
+    const selectedId = event.target.value;
+  
+    setSelectedNNYA(selectedId);
+  
+    try {
+      // Si `id` es un array de strings, obtén el primer elemento válido
+      const demandaId = Array.isArray(id) ? parseInt(id[0]) : parseInt(id);
+      const nnyaId = parseInt(selectedId);
+  
+      if (demandaId && nnyaId) {
+        const data = await getTSuggestDecisions(demandaId, nnyaId);
+        console.log('Sugerencias de decisión:', data);
+        // Manejar los datos si es necesario
+      }
+    } catch (error) {
+      console.error('Error al obtener sugerencias de decisión:', error);
+    }
   };
+  
+
+
+  useEffect(() => {
+    const fetchDecisionSuggestions = async () => {
+      try {
+        if (id && selectedNNYA) {
+          // Validar y convertir `id` y `selectedNNYA` a números
+          const demandaId = Array.isArray(id) ? parseInt(id[0], 10) : parseInt(id, 10);
+          const nnyaId = parseInt(selectedNNYA, 10);
+
+          if (!isNaN(demandaId) && !isNaN(nnyaId)) {
+            const data = await getTSuggestDecisions(demandaId, nnyaId);
+            console.log('Sugerencias de decisión inicial:', data);
+            // Maneja los datos devueltos aquí si es necesario
+            // setDecisionSuggestions(data);
+          } else {
+            console.error('ID o NNYA no válidos para parseInt.');
+          }
+        }
+      } catch (error) {
+        console.error('Error al obtener sugerencias de decisión al cargar:', error);
+      }
+    };
+
+    fetchDecisionSuggestions();
+  }, [id, selectedNNYA]);
+
 
   const [nnyaOptions, setNnyaOptions] = useState<TDemandaPersona[]>([]);
 
@@ -90,8 +137,8 @@ export function EvaluacionesContent() {
 
       const detailedData = await Promise.all(
         allData.map(async (nnya) => {
-          const personaData = await getTPersona(nnya.persona); 
-          return { ...nnya, nombrePersona: personaData.nombre }; 
+          const personaData = await getTPersona(nnya.persona);
+          return { ...nnya, nombrePersona: personaData.nombre };
         })
       );
 
@@ -157,6 +204,11 @@ export function EvaluacionesContent() {
       }
     }
   };
+  useEffect(() => {
+    if (id) {
+      fetchNNYAData();
+    }
+  }, [fetchNNYAData, id]);
   return (
     <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 3, overflow: 'auto' }}>
       <Box sx={{ mb: 2 }}>
@@ -247,7 +299,7 @@ export function EvaluacionesContent() {
           <Select
             labelId="nnya-select-label"
             value={selectedNNYA}
-            onChange={handleNNYAChange}
+            onChange={handleNNYAChange} // Aquí está la función corregida
             displayEmpty
             label="Seleccionar NNYA"
           >
