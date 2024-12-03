@@ -2,6 +2,7 @@
 'use client'
 import axios from 'axios';
 import { AsignarDemandaModal } from './AsignarDemandaModal'
+import EvaluarButton from './EvaluarButton';
 import {
   Person as PersonIcon,
 } from '@mui/icons-material'
@@ -45,6 +46,7 @@ const precalificacionOptions = [
   { value: 'NO_URGENTE', label: 'No Urgente' },
   { value: 'COMPLETAR', label: 'Completar' },
 ]
+
 interface MainContentProps {
   asignadoProp?: boolean;
   constatacionProp?: boolean;
@@ -52,6 +54,7 @@ interface MainContentProps {
   archivadoProp?: boolean;
   completadoProp?: boolean;
   recibidoProp?: boolean;
+  onEvaluacionClick?: (id: number) => void; // Add this line
 }
 
 export function MainContent({
@@ -61,6 +64,7 @@ export function MainContent({
   archivadoProp = false,
   completadoProp = false,
   recibidoProp = false,
+  onEvaluacionClick,
   }: MainContentProps) {
   const [demands, setDemands] = useState<TDemanda[]>([])
   const [personaData, setPersonaData] = useState<Record<number, TPersona>>({})
@@ -386,7 +390,21 @@ const columns: GridColDef[] = useMemo(() => {
         </Button>
       ),
     });
-  }  
+  }
+  
+  if (user) {
+    baseColumns.push({
+      field: 'Evaluar',
+      headerName: 'Evaluar',
+      width: 160,
+      renderCell: (params: GridRenderCellParams) => (
+        <EvaluarButton
+          id={params.row.id} // Pasa el id de la fila
+          onClick={onEvaluacionClick} // Asegúrate de que esta función sea pasada como prop
+        />
+      ),
+    });
+  }
 
   return baseColumns;
 }, [user, handlePrecalificacionChange]);
