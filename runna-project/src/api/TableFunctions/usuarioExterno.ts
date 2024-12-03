@@ -1,7 +1,7 @@
 import { getAll, getOne, create, update } from '../services/apiService';
 import { TUsuarioExterno } from '../interfaces';
 
-const endpoint = 'usuario-externo';
+const endpoint = 'informante';
 
 export const getTUsuariosExternos = () => getAll<TUsuarioExterno>(endpoint);
 export const getTUsuarioExterno = (id: number) => getOne<TUsuarioExterno>(endpoint, id);

@@ -17,8 +17,6 @@ import {getTVulneracions} from '../../../api/TableFunctions/vulneraciones'
 import {createTVulneracion} from '../../../api/TableFunctions/vulneraciones'
 import {getTInstitucionEducativas} from '../../../api/TableFunctions/institucionesEducativas'
 import {getTInstitucionSanitarias} from '../../../api/TableFunctions/institucionesSanitarias'
-import { getInstitucionesUsuarioExterno } from '../../../api/TableFunctions/institucionUsuarioExterno' 
-import { getVinculosUsuarioExterno } from '../../../api/TableFunctions/vinculoUsuarioExterno'
 import { getTUsuariosExternos } from '../../../api/TableFunctions/usuarioExterno'
 import {getTVinculos} from '../../../api/TableFunctions/vinculos'
 import { createTVinculoPersonaPersona } from '../../../api/TableFunctions/vinculospersonaspersonas'
@@ -41,8 +39,6 @@ export const useApiData = () => {
       vulneraciones: [],
       institucionesEducativas: [],
       institucionesSanitarias: [],
-      institucionesUsuarioExterno: [],
-      vinculosUsuarioExterno: [],
       vinculoPersonas: [],
     })
   
@@ -65,8 +61,6 @@ export const useApiData = () => {
             fetchedVulneraciones,
             fetchedInstitucionesEducativas,
             fetchedInstitucionesSanitarias,
-            fetchedInstitucionesUsuarioExterno,
-            fetchedVinculosUsuarioExterno,
             fetchedVinculosPersonas,
           ] = await Promise.all([
             getTUsuariosExternos(),
@@ -84,8 +78,6 @@ export const useApiData = () => {
             getTVulneracions(),
             getTInstitucionEducativas(),
             getTInstitucionSanitarias(),
-            getInstitucionesUsuarioExterno(),
-            getVinculosUsuarioExterno(),
             getTVinculos(),
 
           ])
@@ -105,8 +97,6 @@ export const useApiData = () => {
             condicionesVulnerabilidadAdultos: fetchedCondicionesAdultos,            vulneraciones: fetchedVulneraciones,
             institucionesEducativas: fetchedInstitucionesEducativas,
             institucionesSanitarias: fetchedInstitucionesSanitarias,
-            institucionesUsuarioExterno: fetchedInstitucionesUsuarioExterno,
-            vinculosUsuarioExterno: fetchedVinculosUsuarioExterno,
             vinculoPersonas: fetchedVinculosPersonas,
           })
         } catch (error) {
