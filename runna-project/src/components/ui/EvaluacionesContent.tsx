@@ -308,51 +308,108 @@ export function EvaluacionesContent() {
         </FormControl>
       </Box>
       {decisionSuggestions.length > 0 && (
-        <Box
-          sx={{
-            mt: 3,
-            p: 2,
-            border: '1px solid #ddd',
-            borderRadius: 2,
-            backgroundColor: 'background.paper',
-          }}
-        >
-          <Typography variant="h6" sx={{ mb: 2, color: 'black' }}>
-            Sugerencias de decisión
-          </Typography>
-          {decisionSuggestions.map((suggestion, index) => (
-            <Box key={index} sx={{ mb: 2 }}>
-              <Typography variant="body1" sx={{ fontWeight: '500', color: 'black' }}>
-                Decisión sugerida:
-              </Typography>
-              <Typography variant="body2" sx={{ mb: 1, color: 'black' }}>
-                {suggestion.decision}
-              </Typography>
+  <Box
+    sx={{
+      mt: 3,
+      p: 3,
+      border: '1px solid #ddd',
+      borderRadius: 2,
+      backgroundColor: 'background.paper',
+      boxShadow: 3,
+    }}
+  >
+    <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'text.primary' }}>
+      Sugerencias de decisión
+    </Typography>
+    {decisionSuggestions.map((suggestion, index) => (
+      <Box
+        key={index}
+        sx={{
+          mb: 3,
+          p: 3,
+          border: '1px solid #ddd',
+          borderRadius: 1,
+          backgroundColor: 'background.default',
+          boxShadow: 1,
+        }}
+      >
+        <Typography variant="body1" sx={{ fontWeight: '500', color: 'primary.main', mb: 1 }}>
+          Decisión sugerida:
+        </Typography>
+        <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+          {suggestion.decision}
+        </Typography>
 
-              <Typography variant="body1" sx={{ fontWeight: '500', color: 'black' }}>
-                Razón:
-              </Typography>
-              <Typography variant="body2" sx={{ mb: 1, color: 'black' }}>
-                {suggestion.reason}
-              </Typography>
+        <Typography variant="body1" sx={{ fontWeight: '500', color: 'primary.main', mb: 1 }}>
+          Razón:
+        </Typography>
+        <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+          {suggestion.reason}
+        </Typography>
 
-              <Typography variant="body1" sx={{ fontWeight: '500', color: 'black' }}>
-                Scores de Demanda:
-              </Typography>
-              <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word', color: 'black' }}>
-                {JSON.stringify(suggestion['Demanda Scores'], null, 2)}
-              </pre>
-
-              <Typography variant="body1" sx={{ fontWeight: '500', color: 'black' }}>
-                Scores de NNyA:
-              </Typography>
-              <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word', color: 'black' }}>
-                {JSON.stringify(suggestion['NNyA Scores'], null, 2)}
-              </pre>
-            </Box>
-          ))}
+        <Typography variant="body1" sx={{ fontWeight: '500', color: 'primary.main', mb: 1 }}>
+          Scores de Demanda:
+        </Typography>
+        {/* Mejor presentación para Scores de Demanda */}
+        <Box sx={{
+          mb: 2,
+          p: 2,
+          backgroundColor: '#f5f5f5',
+          borderRadius: 1,
+          boxShadow: 1,
+          overflowX: 'auto',
+        }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th style={{ borderBottom: '2px solid #ddd', padding: '8px', textAlign: 'left', color: 'black' }}>Score</th>
+                <th style={{ borderBottom: '2px solid #ddd', padding: '8px', textAlign: 'left', color: 'black' }}>Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(suggestion['Demanda Scores']).map(([key, value]) => (
+                <tr key={key}>
+                  <td style={{ padding: '8px', borderBottom: '1px solid #ddd', color: 'black' }}>{key}</td>
+                  <td style={{ padding: '8px', borderBottom: '1px solid #ddd', color: 'black' }}>{value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </Box>
-      )}
+
+        <Typography variant="body1" sx={{ fontWeight: '500', color: 'primary.main', mb: 1 }}>
+          Scores de NNyA:
+        </Typography>
+        {/* Mejor presentación para Scores de NNyA */}
+        <Box sx={{
+          mb: 2,
+          p: 2,
+          backgroundColor: '#f5f5f5',
+          borderRadius: 1,
+          boxShadow: 1,
+          overflowX: 'auto',
+        }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th style={{ borderBottom: '2px solid #ddd', padding: '8px', textAlign: 'left', color: 'black' }}>Score</th>
+                <th style={{ borderBottom: '2px solid #ddd', padding: '8px', textAlign: 'left', color: 'black' }}>Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(suggestion['NNyA Scores']).map(([key, value]) => (
+                <tr key={key}>
+                  <td style={{ padding: '8px', borderBottom: '1px solid #ddd', color: 'black' }}>{key}</td>
+                  <td style={{ padding: '8px', borderBottom: '1px solid #ddd', color: 'black' }}>{value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Box>
+      </Box>
+    ))}
+  </Box>
+)}
 
     </Box>
   );
