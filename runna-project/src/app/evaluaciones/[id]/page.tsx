@@ -73,7 +73,7 @@ function EvaluacionesPage() {
       </div>
       <div className="flex-1 flex">
         {/* <Sidebar /> */}
-        <EvaluacionesContent demands={demands} onUpdateDemands={handleUpdateDemands} />
+        <EvaluacionesContent />
       </div>
     </div>
   );
