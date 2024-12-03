@@ -16,15 +16,7 @@ export default function LoginPage() {
   const [errorDetails, setErrorDetails] = useState(''); // Para los detalles del error
   const router = useRouter();
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.info('¡Texto copiado al portapapeles!', {
-      position: 'top-center',
-      autoClose: 2000,
-      hideProgressBar: true,
-      theme: 'light',
-    });
-  };
+  
 
   const login = async (username: string, password: string): Promise<void> => {
     try {
