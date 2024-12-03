@@ -45,8 +45,23 @@ const precalificacionOptions = [
   { value: 'NO_URGENTE', label: 'No Urgente' },
   { value: 'COMPLETAR', label: 'Completar' },
 ]
+interface MainContentProps {
+  asignadoProp?: boolean;
+  constatacionProp?: boolean;
+  evaluacionProp?: boolean;
+  archivadoProp?: boolean;
+  completadoProp?: boolean;
+  recibidoProp?: boolean;
+}
 
-export function MainContent() {
+export function MainContent({
+  asignadoProp = false,
+  constatacionProp = false,
+  evaluacionProp = false,
+  archivadoProp = false,
+  completadoProp = false,
+  recibidoProp = false,
+  }: MainContentProps) {
   const [demands, setDemands] = useState<TDemanda[]>([])
   const [personaData, setPersonaData] = useState<Record<number, TPersona>>({})
   const [precalificacionData, setPrecalificacionData] = useState<Record<number, TPrecalificacionDemanda>>({})
@@ -66,19 +81,26 @@ export function MainContent() {
       let demandsData = [];
 
       if (user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tdemandaasignado')) {
-        demandsData = await getDemands();
-      } else {
-        const assignedDemands = await getTDemandaAsignados({ user: user.id });
-        const demandPromises = assignedDemands.map(async (assigned) => {
-          try {
-        const demand = await getDemand(assigned.demanda);
-        return demand;
-          } catch (error) {
-        console.error(`Error fetching demand ${assigned.demanda}:`, error);
-        return null;
-          }
+        demandsData = await getDemands({
+          asignado: asignadoProp,
+          constatacion: constatacionProp,
+          evaluacion: evaluacionProp,
+          archivado: archivadoProp,
+          completado: completadoProp,
         });
-        demandsData = (await Promise.all(demandPromises)).filter((demand) => demand !== null);
+      } else {
+        const assignedDemands = await getTDemandaAsignados({ 
+          user: user.id,
+          recibido: recibidoProp,
+        });
+        demandsData = await getDemands({
+          asignado: asignadoProp,
+          constatacion: constatacionProp,
+          evaluacion: evaluacionProp,
+          archivado: archivadoProp,
+          completado: completadoProp,
+        })
+        demandsData = demandsData.filter((demand) => assignedDemands.some((a) => a.demanda === demand.id));
       }
       setDemands(demandsData);
       const personaPromises = demandsData.map(async (demand) => {
