@@ -47,6 +47,10 @@ const ErrorToast: React.FC<ErrorToastProps> = ({ message, details }) => {
               closeOnClick: true,
               hideProgressBar: true,
               theme: 'colored',
+              style: {
+                backgroundColor: '#e74c3c', // Fondo rojo
+                color: 'white', // Texto blanco
+              },
             }
           );
         }}
