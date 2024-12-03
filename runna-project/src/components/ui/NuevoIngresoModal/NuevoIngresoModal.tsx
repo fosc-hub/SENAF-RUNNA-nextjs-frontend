@@ -382,7 +382,6 @@ addDebugInfo(`Created ${demandaPersonaResponses.length} demanda-persona entries`
 
 
 
-      onSubmit(demandaResponse)
       onClose()
     } catch (error) {
       console.error('Error submitting form:', error)
