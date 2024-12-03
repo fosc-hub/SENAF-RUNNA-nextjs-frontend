@@ -536,20 +536,20 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
             </Paper>
           )}
 
-          <Typography variant="h6" gutterBottom>Archivos adjuntos ({formData.archivosAdjuntos?.length || 0})</Typography>
+          {/* <Typography variant="h6" gutterBottom>Archivos adjuntos ({formData.archivosAdjuntos?.length || 0})</Typography>
           <Box component="ul" sx={{ mb: 3, pl: 2 }}>
             {formData.archivosAdjuntos?.map((archivo, index) => (
               <Typography component="li" key={index}>{archivo}</Typography>
             ))}
-          </Box>
+          </Box> */}
 
             <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
               <Button variant="contained" startIcon={<MessageIcon />} onClick={() => setIsEnviarRespuestaOpen(true)}>
                 Enviar Respuesta
               </Button>
-              <Button variant="outlined" startIcon={<AttachFileIcon />} onClick={() => setIsArchivosModalOpen(true)}>
+              {/* <Button variant="outlined" startIcon={<AttachFileIcon />} onClick={() => setIsArchivosModalOpen(true)}>
                 Archivos adjuntos
-              </Button>
+              </Button> */}
               <Button variant="contained" onClick={() => setIsRegistrarModalOpen(true)}>
                 Registrar actividad
               </Button>
@@ -742,13 +742,13 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
         </Box>
       </Modal >
 
-      <ArchivosAdjuntosModal
+      {/* <ArchivosAdjuntosModal
         isOpen={isArchivosModalOpen}
         onClose={() => setIsArchivosModalOpen(false)}
         onSave={handleArchivosSubmit}
         initialFiles={formData.archivosAdjuntos || []}
         initialComments=""
-      />
+      /> */}
 
       <RegistrarActividadModal
         isOpen={isRegistrarModalOpen}
