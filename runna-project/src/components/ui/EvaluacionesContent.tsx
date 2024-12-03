@@ -17,10 +17,10 @@ import { TIndicadoresValoracion } from '../../api/interfaces';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useParams } from 'next/navigation';
-import { createTEvaluacion } from '../../api/TableFunctions/evaluaciones'; // Ya importado en tu código
-import { getTDemandaPersonas } from '../../api/TableFunctions/demandaPersonas'; // Importa la función
+import { createTEvaluacion } from '../../api/TableFunctions/evaluaciones'; 
+import { getTDemandaPersonas } from '../../api/TableFunctions/demandaPersonas'; 
 import { TDemandaPersona } from '../../api/interfaces';
-import { getTPersona } from '../../api/TableFunctions/personas'; // Importa la función
+import { getTPersona } from '../../api/TableFunctions/personas';
 
 export function EvaluacionesContent() {
   const [indicadores, setIndicadores] = useState<TIndicadoresValoracion[]>([]);
@@ -78,7 +78,6 @@ export function EvaluacionesContent() {
   };
   const [selectedNNYA, setSelectedNNYA] = useState('');
 
-  // Función para manejar cambios en el combobox
   const handleNNYAChange = (event) => {
     setSelectedNNYA(event.target.value);
   };
@@ -87,31 +86,23 @@ export function EvaluacionesContent() {
 
   const fetchNNYAData = useCallback(async () => {
     try {
-      // Obtener todas las opciones relacionadas con la demanda
       const allData = await getTDemandaPersonas({ demanda: id });
 
-      // Identificar la opción principal
-      const principalData = allData.find(item => item.nnya_principal === true);
-
-      // Evitar duplicar la opción principal
-      const filteredData = allData.filter(item => item.id !== principalData?.id);
-
-      // Combinar la opción principal con las demás
-      const combinedData = principalData ? [principalData, ...filteredData] : allData;
-
-      // Obtener detalles de las personas para cada NNYA
       const detailedData = await Promise.all(
-        combinedData.map(async (nnya) => {
-          const persona = await getTPersona(nnya.persona);  // Asumiendo que nnya.persona es el ID de la persona
-          return { ...nnya, nombrePersona: persona.nombre }; // Agrega el nombre de la persona al objeto NNYA
+        allData.map(async (nnya) => {
+          const personaData = await getTPersona(nnya.persona); 
+          return { ...nnya, nombrePersona: personaData.nombre }; 
         })
       );
 
-      console.log('NNYA data with personas:', detailedData);
       setNnyaOptions(detailedData);
 
-      // Establece la opción por defecto si existe
-      if (principalData) setSelectedNNYA(String(principalData.id));
+      const principalData = detailedData.find(item => item.nnya_principal === true);
+      if (principalData) {
+        setSelectedNNYA(String(principalData.id));
+      } else if (detailedData.length > 0) {
+        setSelectedNNYA(String(detailedData[0].id));
+      }
     } catch (error) {
       console.error('Error fetching NNYA data:', error);
     }
@@ -156,7 +147,7 @@ export function EvaluacionesContent() {
         await createTEvaluacion(evaluationData);
         console.log(`Evaluación para el indicador ${indicador.id} enviada correctamente.`);
       } catch (error) {
-        const errorMessage = error.message || error.toString(); // Captura el mensaje del error
+        const errorMessage = error.message || error.toString();
         if (errorMessage.includes('Failed to create data')) {
           alert(`El indicador ${indicador.nombre} ya ha sido valorado.`);
         } else {
@@ -245,12 +236,12 @@ export function EvaluacionesContent() {
       <Box sx={{ display: 'flex', alignItems: 'center', mt: 3 }}>
         <Typography
           variant="body1"
-          sx={{ mr: 2, fontWeight: '500', color: 'text.primary' }} // Color explícito
+          sx={{ mr: 2, fontWeight: '500', color: 'text.primary' }}
         >
           Tomar decisión sobre NNYA:
         </Typography>
         <FormControl fullWidth sx={{ maxWidth: 300 }}>
-          <InputLabel id="nnya-select-label" shrink> {/* Evita superposición */}
+          <InputLabel id="nnya-select-label" shrink>
             Seleccionar NNYA
           </InputLabel>
           <Select
@@ -266,7 +257,6 @@ export function EvaluacionesContent() {
               </MenuItem>
             ))}
           </Select>
-
         </FormControl>
       </Box>
     </Box>
