@@ -15,8 +15,8 @@ export const handleApiError = (error: any, endpoint: string): void => {
     const errorMessage = getErrorMessage(status || 500);
     
     const errorCode = error?.response?.status || 'Desconocido';
-    const detailMessage = error?.response?.data?.message || 'Sin detalles adicionales.';
-    const errorDetails = `Código de error: ${errorCode}\nRespuesta del servidor: ${error.message}`;
+    const detailMessage = error?.response?.data?.non_field_errors || 'Sin detalles adicionales.';
+    const errorDetails = `Código de error: ${errorCode}\nRespuesta del servidor: ${detailMessage}`;
 
     showErrorToast(errorMessage, errorDetails); // Show toast for non-GET errors
   } else {
