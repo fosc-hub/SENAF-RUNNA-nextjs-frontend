@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import Header from '../../components/ui/Header';
-import Sidebar from '../../components/ui/Sidebar';
-import { EvaluacionesContent } from '../../components/ui/EvaluacionesContent';
-import { AuthProvider, useAuth } from '../../context/AuthContext';
+import Header from '../../../components/ui/Header';
+import Sidebar from '../../../components/ui/Sidebar';
+import { EvaluacionesContent } from '../../../components/ui/EvaluacionesContent';
+import { AuthProvider, useAuth } from '../../../context/AuthContext';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 const theme = createTheme({
