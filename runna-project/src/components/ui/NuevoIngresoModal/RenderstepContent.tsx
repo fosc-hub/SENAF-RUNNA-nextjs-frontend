@@ -186,108 +186,7 @@ export const renderStepContent = ({
   removeCondicionVulnerabilidad,
 }) => {
 
-  const renderVinculacion = (vinculacion, index) => (
-    <Grid container spacing={2} key={index} sx={{ mb: 4, p: 2, border: '1px solid #e0e0e0', borderRadius: 2 }}>
-      <Grid item xs={12}>
-        <Typography variant="h6" gutterBottom>Vinculación {index + 1}</Typography>
-      </Grid>
-      
-      <Grid item xs={12} md={6}>
-        <Typography variant="subtitle1" gutterBottom>
-          Persona 1 (NNyA Principal):
-        </Typography>
-        <Typography>
-          {formData.ninosAdolescentes[0].nombre} {formData.ninosAdolescentes[0].apellido}
-        </Typography>
-      </Grid>
   
-      <Grid item xs={12} md={6}>
-        <FormControl fullWidth>
-          <InputLabel>Persona 2</InputLabel>
-          <Select
-            value={vinculacion.persona_2}
-            onChange={(e) => handleInputChange(`vinculaciones[${index}].persona_2`, e.target.value)}
-            label="Persona 2"
-          >
-            {formData.ninosAdolescentes.slice(1).map((nnya, i) => (
-              <MenuItem key={`nnya-${i+1}`} value={i+1}>
-                {nnya.nombre} {nnya.apellido} (NNyA)
-              </MenuItem>
-            ))}
-            {formData.adultosConvivientes.map((adulto, i) => (
-              <MenuItem key={`adulto-${i}`} value={formData.ninosAdolescentes.length + i}>
-                {adulto.nombre} {adulto.apellido} (Adulto)
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Grid>
-  
-      <Grid item xs={12} md={6}>
-        <FormControl fullWidth>
-          <InputLabel>Vínculo</InputLabel>
-          <Select
-            value={vinculacion.vinculo}
-            onChange={(e) => handleInputChange(`vinculaciones[${index}].vinculo`, e.target.value)}
-            label="Vínculo"
-          >
-            {vinculoPersonas.map((vinculo) => (
-              <MenuItem key={vinculo.id} value={vinculo.id}>
-                {vinculo.nombre}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Grid>
-  
-      <Grid item xs={12} md={6}>
-        <FormGroup>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={vinculacion.conviven}
-                onChange={(e) => handleInputChange(`vinculaciones[${index}].conviven`, e.target.checked)}
-              />
-            }
-            label="Conviven"
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={vinculacion.autordv}
-                onChange={(e) => handleInputChange(`vinculaciones[${index}].autordv`, e.target.checked)}
-              />
-            }
-            label="Autor DV"
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={vinculacion.garantiza_proteccion}
-                onChange={(e) => handleInputChange(`vinculaciones[${index}].garantiza_proteccion`, e.target.checked)}
-              />
-            }
-            label="Garantiza Protección"
-          />
-        </FormGroup>
-      </Grid>
-  
-      <Grid item xs={12}>
-        <Button 
-          variant="outlined" 
-          color="secondary" 
-          onClick={() => removeVinculacion(index)}
-        >
-          Eliminar Vinculación
-        </Button>
-      </Grid>
-    </Grid>
-  )
-  
-  
-
-
-
   const handleVulneracionChange = (field, value) => {
     setNewVulneracion(prev => {
       const updated = { ...prev, [field]: value }
@@ -639,7 +538,25 @@ export const renderStepContent = ({
                   onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].observaciones`, e.target.value)}
                   margin="normal"
                 />
-    
+     {index !== 0 && (
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="subtitle1" gutterBottom>Vinculación con NNyA Principal</Typography>
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Vínculo</InputLabel>
+              <Select
+                value={nino.vinculacion?.vinculo || ''}
+                onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].vinculacion.vinculo`, e.target.value)}
+                label="Vínculo"
+              >
+                {vinculoPersonas.map((vinculo) => (
+                  <MenuItem key={vinculo.id} value={vinculo.id}>
+                    {vinculo.nombre}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+        )}
                 <FormControlLabel
                   control={
                     <Switch
@@ -918,6 +835,44 @@ export const renderStepContent = ({
                       )}
                     </Box>
                   )}
+              <Box sx={{ mt: 2 }}>
+          <Typography variant="subtitle1" gutterBottom>Vinculación con NNyA Principal</Typography>
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Vínculo</InputLabel>
+            <Select
+              value={adulto.vinculacion?.vinculo || ''}
+              onChange={(e) => handleInputChange(`adultosConvivientes[${index}].vinculacion.vinculo`, e.target.value)}
+              label="Vínculo"
+            >
+              {vinculoPersonas.map((vinculo) => (
+                <MenuItem key={vinculo.id} value={vinculo.id}>
+                  {vinculo.nombre}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormGroup row>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={adulto.vinculacion?.conviven || false}
+                  onChange={(e) => handleInputChange(`adultosConvivientes[${index}].vinculacion.conviven`, e.target.checked)}
+                />
+              }
+              label="Conviven"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={adulto.vinculacion?.garantiza_proteccion || false}
+                  onChange={(e) => handleInputChange(`adultosConvivientes[${index}].vinculacion.garantiza_proteccion`, e.target.checked)}
+                />
+              }
+              label="Garantiza Protección"
+            />
+          </FormGroup>
+        </Box>
+
                 </Box>
               ))}
               <Button
@@ -1066,19 +1021,8 @@ export const renderStepContent = ({
         </Box>
       )
 
-      case 4:
-        return (
-          <Box>
-            <Typography variant="h6" gutterBottom>
-              Vínculos
-            </Typography>
-            {formData.vinculaciones.map((vinculacion, index) => renderVinculacion(vinculacion, index))}
-            <Button variant="contained" color="primary" onClick={addVinculacion} sx={{ mt: 2 }}>
-              Agregar Vinculación
-            </Button>
-          </Box>
-        )
-        case 5:
+
+        case 4:
           return (
             <Box>
               <Typography color="primary" sx={{ mb: 2 }}>Condiciones de Vulnerabilidad</Typography>
