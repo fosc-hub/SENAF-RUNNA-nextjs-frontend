@@ -67,7 +67,7 @@ export function AsignarDemandaModal({ demandaId, isOpen, onClose, onAssign }: As
       console.log('Creating TDemandaAsignado:', newTDemandaAsignado);
 
       // Call the method to create the TDemandaAsignado object
-      const response = await createTDemandaAsignado(newTDemandaAsignado);
+      const response = await createTDemandaAsignado(newTDemandaAsignado, true, '¡Demanda asignada con éxito!');
       console.log('TDemandaAsignado created:', response);
 
       // Trigger the onAssign callback with the assignment data
@@ -75,18 +75,6 @@ export function AsignarDemandaModal({ demandaId, isOpen, onClose, onAssign }: As
 
       // Close the modal
       onClose();
-      
-      //success toast
-      toast.success('¡Registro asignado con exito!', {
-        position: 'top-center',
-        autoClose: 3000,
-        hideProgressBar: true,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        theme: 'colored',
-        
-      });
 
     } catch (err) {
       // console.error('Error creating TDemandaAsignado:', err);

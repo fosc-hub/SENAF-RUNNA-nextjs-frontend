@@ -214,23 +214,7 @@ export function MainContent() {
       }
     }
   }, [selectedDemand, fetchAllData])
-// Function to update PrecalificacionDemanda without 'demanda' in payload
-const updatePrecalificacionDemanda = async (id: number, payload: Partial<TPrecalificacionDemanda>) => {
-  const { demanda, ...filteredPayload } = payload;
-  const url = `/precalificacion-demanda/${id}/`; // Correct URL
 
-  console.log('Sending PATCH request to:', url); // Debug log
-  console.log('Payload:', filteredPayload); // Debug log
-
-  try {
-    const response = await axiosInstance.patch(url, filteredPayload);
-    console.log('Update successful:', response.data);
-    return response.data;
-  } catch (error) {
-    console.error('Error updating precalificacion-demanda:', error);
-    throw error;
-  }
-};
   const [isAsignarModalOpen, setIsAsignarModalOpen] = useState(false)
   
   const handleAsignarSubmit = (data: { collaborator: string; comments: string; demandaId: number | undefined }) => {
@@ -249,13 +233,13 @@ const handlePrecalificacionChange = useCallback(
       if (precalificacionData[demandId]) {
         // Update existing precalificacion
         updatedPrecalificacion = {
-          ...precalificacionData[demandId],
           estado_demanda: newValue,
           descripcion: `Cambio de precalificación de ${precalificacionData[demandId].estado_demanda} a ${newValue}`,
           ultima_actualizacion: currentDate,
         };
 
-        await updatePrecalificacionDemanda(precalificacionData[demandId].id!, updatedPrecalificacion);
+        await updateTPrecalificacionDemanda(precalificacionData[demandId].id!, updatedPrecalificacion, true, '¡Precalificación actualizada con éxito!');
+
       } else {
         // Create a new precalificacion
         updatedPrecalificacion = await createTPrecalificacionDemanda({
@@ -264,7 +248,9 @@ const handlePrecalificacionChange = useCallback(
           descripcion: `Nueva precalificación: ${newValue}`,
           fecha_y_hora: currentDate,
           ultima_actualizacion: currentDate,
-        });
+        },
+        true,
+        '¡Precalificación creada con éxito!');
       }
 
       // Update the state locally
@@ -272,16 +258,7 @@ const handlePrecalificacionChange = useCallback(
         ...prev,
         [demandId]: updatedPrecalificacion,
       }));
-      toast.success('¡Cambio realizado con exito!', {
-        position: 'top-center',
-        autoClose: 2000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        theme: 'colored',
-        
-      });
+
     } catch (error) {
       console.error('Error updating precalificacion:', error);
     }
