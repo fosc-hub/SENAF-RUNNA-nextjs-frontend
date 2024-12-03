@@ -8,7 +8,7 @@ import {
   FormControlLabel,
   Radio,
   RadioGroup,
-  IconButton, Select, MenuItem, InputLabel,SelectChangeEvent 
+  IconButton, Select, MenuItem, InputLabel, SelectChangeEvent
 } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import { PDFDocument } from 'pdf-lib';
@@ -83,39 +83,35 @@ export function EvaluacionesContent() {
 
   const handleNNYAChange = async (event: SelectChangeEvent<string>) => {
     const selectedId = event.target.value;
-  
+
     setSelectedNNYA(selectedId);
-  
+
     try {
       // Si `id` es un array de strings, obtén el primer elemento válido
       const demandaId = Array.isArray(id) ? parseInt(id[0]) : parseInt(id);
       const nnyaId = parseInt(selectedId);
-  
+
       if (demandaId && nnyaId) {
         const data = await getTSuggestDecisions(demandaId, nnyaId);
         console.log('Sugerencias de decisión:', data);
-        // Manejar los datos si es necesario
       }
     } catch (error) {
       console.error('Error al obtener sugerencias de decisión:', error);
     }
   };
-  
-
 
   useEffect(() => {
     const fetchDecisionSuggestions = async () => {
       try {
         if (id && selectedNNYA) {
-          // Validar y convertir `id` y `selectedNNYA` a números
           const demandaId = Array.isArray(id) ? parseInt(id[0], 10) : parseInt(id, 10);
           const nnyaId = parseInt(selectedNNYA, 10);
 
           if (!isNaN(demandaId) && !isNaN(nnyaId)) {
             const data = await getTSuggestDecisions(demandaId, nnyaId);
-            console.log('Sugerencias de decisión inicial:', data);
-            // Maneja los datos devueltos aquí si es necesario
-            // setDecisionSuggestions(data);
+
+            const suggestionsArray = Array.isArray(data) ? data : [data];
+            setDecisionSuggestions(suggestionsArray);
           } else {
             console.error('ID o NNYA no válidos para parseInt.');
           }
@@ -311,6 +307,53 @@ export function EvaluacionesContent() {
           </Select>
         </FormControl>
       </Box>
+      {decisionSuggestions.length > 0 && (
+        <Box
+          sx={{
+            mt: 3,
+            p: 2,
+            border: '1px solid #ddd',
+            borderRadius: 2,
+            backgroundColor: 'background.paper',
+          }}
+        >
+          <Typography variant="h6" sx={{ mb: 2, color: 'black' }}>
+            Sugerencias de decisión
+          </Typography>
+          {decisionSuggestions.map((suggestion, index) => (
+            <Box key={index} sx={{ mb: 2 }}>
+              <Typography variant="body1" sx={{ fontWeight: '500', color: 'black' }}>
+                Decisión sugerida:
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 1, color: 'black' }}>
+                {suggestion.decision}
+              </Typography>
+
+              <Typography variant="body1" sx={{ fontWeight: '500', color: 'black' }}>
+                Razón:
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 1, color: 'black' }}>
+                {suggestion.reason}
+              </Typography>
+
+              <Typography variant="body1" sx={{ fontWeight: '500', color: 'black' }}>
+                Scores de Demanda:
+              </Typography>
+              <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word', color: 'black' }}>
+                {JSON.stringify(suggestion['Demanda Scores'], null, 2)}
+              </pre>
+
+              <Typography variant="body1" sx={{ fontWeight: '500', color: 'black' }}>
+                Scores de NNyA:
+              </Typography>
+              <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word', color: 'black' }}>
+                {JSON.stringify(suggestion['NNyA Scores'], null, 2)}
+              </pre>
+            </Box>
+          ))}
+        </Box>
+      )}
+
     </Box>
   );
 }
