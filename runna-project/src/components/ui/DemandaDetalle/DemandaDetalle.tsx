@@ -241,11 +241,6 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
     setIsArchivosModalOpen(false)
   }
 
-  const handleAsignarSubmit = (data: { collaborator: string, comments: string }) => {
-    console.log('Asignar demanda:', data)
-    setIsAsignarModalOpen(false)
-  }
-
   const handleRegistrarSubmit = async (data: any) => {
     try {
       console.log('Registrar actividad:', data);
@@ -555,9 +550,6 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
               <Button variant="outlined" startIcon={<AttachFileIcon />} onClick={() => setIsArchivosModalOpen(true)}>
                 Archivos adjuntos
               </Button>
-              <Button variant="outlined" startIcon={<PersonIcon />} onClick={() => setIsAsignarModalOpen(true)}>
-                Asignar
-              </Button>
               <Button variant="contained" onClick={() => setIsRegistrarModalOpen(true)}>
                 Registrar actividad
               </Button>
@@ -756,12 +748,6 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
         onSave={handleArchivosSubmit}
         initialFiles={formData.archivosAdjuntos || []}
         initialComments=""
-      />
-
-      <AsignarDemandaModal
-        isOpen={isAsignarModalOpen}
-        onClose={() => setIsAsignarModalOpen(false)}
-        onAssign={handleAsignarSubmit}
       />
 
       <RegistrarActividadModal
