@@ -6,7 +6,10 @@ import { TOrigen, TSubOrigen, TInstitucionDemanda, TUsuarioExterno } from '../..
 import { getTUsuariosExternos } from '../../../api/TableFunctions/usuarioExterno';
 import { getTMotivoIntervencions } from '../../../api/TableFunctions/motivoIntervencion';
 import { getTDemandaMotivoIntervencions } from '../../../api/TableFunctions/demandasMotivoIntervencion';
-
+import { getTBarrios } from '../../../api/TableFunctions/barrios';
+import { getTCPCs } from '../../../api/TableFunctions/cpcs';
+import { getTLocalidads } from '../../../api/TableFunctions/localidades';
+import { getLocalizacion } from '../../../api/TableFunctions/localizacion';
 const useDemandData = (demanda) => {
   const [origenes, setOrigenes] = useState<TOrigen[]>([]);
   const [subOrigenes, setSubOrigenes] = useState<TSubOrigen[]>([]);
@@ -14,7 +17,10 @@ const useDemandData = (demanda) => {
   const [informante, setInformante] = useState<TUsuarioExterno[]>([]);
   const [motivosIntervencion, setMotivosIntervencion] = useState([]);
   const [selectedMotivo, setSelectedMotivo] = useState(null);
-
+  const [localizacion, setLocalizacion] = useState(null);
+  const [barrios, setBarrios] = useState([]);
+  const [localidades, setLocalidades] = useState([]);
+  const [cpcs, setCpcs] = useState([]);
   const [selectedData, setSelectedData] = useState({
     origen: null,
     subOrigen: null,
@@ -25,19 +31,25 @@ const useDemandData = (demanda) => {
   useEffect(() => {
     const fetchDemandData = async () => {
       try {
-        // Fetch general data
+
         const [
           origenData,
           subOrigenData,
           institucionData,
           informanteData,
           motivoData,
+          barrioData,
+          localidadData,
+          cpcData,
         ] = await Promise.all([
           getOrigens(),
           getSubOrigens(),
           getTInstitucionDemands(),
           getTUsuariosExternos(),
           getTMotivoIntervencions(),
+          getTBarrios(),
+          getTLocalidads(),
+          getTCPCs(),
         ]);
 
         setOrigenes(origenData);
@@ -45,6 +57,9 @@ const useDemandData = (demanda) => {
         setInstituciones(institucionData);
         setInformante(informanteData);
         setMotivosIntervencion(motivoData);
+        setBarrios(barrioData);
+        setLocalidades(localidadData);
+        setCpcs(cpcData);
 
         // Preselect dropdown values based on demanda
         setSelectedData({
@@ -65,6 +80,17 @@ const useDemandData = (demanda) => {
             setSelectedMotivo(motivoData.find((motivo) => motivo.id === motivoId) || null);
           }
         }
+
+        if (demanda?.localizacion) {
+            console.log("Fetching localizacion with ID:", demanda.localizacion);
+            const localizacionData = await getLocalizacion(demanda.localizacion);
+            console.log("Fetched localizacion data:", localizacionData);
+            setLocalizacion(localizacionData);
+            
+          } else {
+            console.log("No localizacion ID provided in demanda");
+          }
+          
       } catch (error) {
         console.error('Error fetching demand-related data:', error);
       }
@@ -84,6 +110,10 @@ const useDemandData = (demanda) => {
     selectedData,
     selectedInformante,
     selectedMotivo,
+    localizacion,
+    barrios,
+    localidades,
+    cpcs,
   };
 };
 

@@ -99,7 +99,17 @@ export const useFormData = (demanda, apiData) => {
       }));
     }
   }, [apiData.adultsList]);
-  
+  useEffect(() => {
+    if (apiData?.localizacion) {
+      setFormData((prevData) => ({
+        ...prevData,
+        localizacion: {
+          ...prevData.localizacion,
+          ...apiData.localizacion, // Merge API data
+        },
+      }));
+    }
+  }, [apiData.localizacion]);
   const handleInputChange = (field, value) => {
     setFormData(prevData => {
       const updatedData = { ...prevData }

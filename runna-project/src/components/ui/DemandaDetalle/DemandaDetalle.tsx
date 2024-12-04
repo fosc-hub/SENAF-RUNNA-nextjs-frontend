@@ -109,15 +109,19 @@ function CollapsibleSection({ title, children, isOpen, onToggle }: CollapsibleSe
 const steps = ['Ingreso', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Vinculos', 'Condiciones de Vulnerabilidad']
 
 export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
-  const { 
-    origenes, 
-    subOrigenes, 
-    instituciones, 
-    informante, 
-    selectedData, 
-    selectedInformante, 
-    motivosIntervencion, 
-    selectedMotivo // Add these two properties
+  const {
+    origenes,
+    subOrigenes,
+    instituciones,
+    informante,
+    motivosIntervencion,
+    selectedMotivo,
+    selectedData,
+    selectedInformante,
+    localizacion,
+    barrios,
+    localidades,
+    cpcs,
   } = useDemandData(demanda);
   const [demandState, setDemandState] = useState('constatacion');
   const [activeStep, setActiveStep] = useState(0)
@@ -606,6 +610,10 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
     selectedInformante, // Pass pre-selected informante
     motivosIntervencion, // Pass all motivosIntervencion
     selectedMotivo, // Pass pre-selected motivo
+    localizacion: formData.localizacion, // Pass updated localizacion
+    barrios,
+    localidades,
+    cpcs,
   })}
 </LocalizationProvider>
 

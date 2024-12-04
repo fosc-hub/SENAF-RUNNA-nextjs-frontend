@@ -32,18 +32,17 @@ const getCategoriaMotivosNombre = (motivoId: number, categoriaMotivos: any[]) =>
 
 
 
-
-const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, localidades, cpcs,   errors = {}) => (
+const renderLocalizacionFields = (prefix, data = {}, handleInputChange, barrios, localidades, cpcs, errors = {}) => (
   <>
     <Grid item xs={6}>
-    <TextField
+      <TextField
         fullWidth
         label={
           <>
             Calle <span style={{ color: "red" }}>*</span>
           </>
         }
-        value={data.calle}
+        value={data.calle || ""} // Default to empty string if undefined
         onChange={(e) => handleInputChange(`${prefix}.calle`, e.target.value)}
         size="small"
         error={!!errors[`${prefix}.calle`]}
@@ -51,18 +50,21 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
       />
     </Grid>
     <Grid item xs={6}>
-    <FormControl fullWidth size="small" error={!!errors[`${prefix}.tipo_calle`]}>
+      <FormControl fullWidth size="small" error={!!errors[`${prefix}.tipo_calle`]}>
         <InputLabel>
           Tipo de Calle <span style={{ color: "red" }}>*</span>
         </InputLabel>
         <Select
-          value={data.tipo_calle}
+          value={data.tipo_calle || "CALLE"} // Default to 'CALLE' if undefined
           onChange={(e) => handleInputChange(`${prefix}.tipo_calle`, e.target.value)}
           label="Tipo de Calle"
         >
           <MenuItem value="CALLE">CALLE</MenuItem>
           <MenuItem value="AVENIDA">AVENIDA</MenuItem>
           <MenuItem value="PASAJE">PASAJE</MenuItem>
+          <MenuItem value="RUTA">RUTA</MenuItem>
+          <MenuItem value="BOULEVARD">BOULEVARD</MenuItem>
+          <MenuItem value="OTRO">OTRO</MenuItem>
         </Select>
         {errors[`${prefix}.tipo_calle`] && (
           <FormHelperText>Este campo es obligatorio.</FormHelperText>
@@ -74,7 +76,7 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
         fullWidth
         label="Piso/Depto"
         type="number"
-        value={data.piso_depto}
+        value={data.piso_depto || ""} // Default to empty string
         onChange={(e) => handleInputChange(`${prefix}.piso_depto`, e.target.value)}
         size="small"
       />
@@ -84,7 +86,7 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
         fullWidth
         label="Lote"
         type="number"
-        value={data.lote}
+        value={data.lote || ""} // Default to empty string
         onChange={(e) => handleInputChange(`${prefix}.lote`, e.target.value)}
         size="small"
       />
@@ -94,7 +96,7 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
         fullWidth
         label="Manzana"
         type="number"
-        value={data.mza}
+        value={data.mza || ""} // Default to empty string
         onChange={(e) => handleInputChange(`${prefix}.mza`, e.target.value)}
         size="small"
       />
@@ -104,13 +106,13 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
         fullWidth
         label="Número de Casa"
         type="number"
-        value={data.casa_nro}
+        value={data.casa_nro || ""} // Default to empty string
         onChange={(e) => handleInputChange(`${prefix}.casa_nro`, e.target.value)}
         size="small"
       />
     </Grid>
     <Grid item xs={12}>
-    <TextField
+      <TextField
         fullWidth
         label={
           <>
@@ -119,10 +121,8 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
         }
         multiline
         rows={2}
-        value={data.referencia_geo}
-        onChange={(e) =>
-          handleInputChange(`${prefix}.referencia_geo`, e.target.value)
-        }
+        value={data.referencia_geo || ""} // Default to empty string
+        onChange={(e) => handleInputChange(`${prefix}.referencia_geo`, e.target.value)}
         size="small"
         error={!!errors[`${prefix}.referencia_geo`]}
         helperText={
@@ -136,7 +136,7 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
       <FormControl fullWidth size="small">
         <InputLabel>Barrio</InputLabel>
         <Select
-          value={data.barrio}
+          value={data.barrio || ""} // Default to empty string
           onChange={(e) => handleInputChange(`${prefix}.barrio`, e.target.value)}
           label="Barrio"
         >
@@ -149,12 +149,12 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
       </FormControl>
     </Grid>
     <Grid item xs={6}>
-    <FormControl fullWidth size="small" error={!!errors[`${prefix}.localidad`]}>
+      <FormControl fullWidth size="small" error={!!errors[`${prefix}.localidad`]}>
         <InputLabel>
           Localidad <span style={{ color: "red" }}>*</span>
         </InputLabel>
         <Select
-          value={data.localidad}
+          value={data.localidad || ""} // Default to empty string
           onChange={(e) => handleInputChange(`${prefix}.localidad`, e.target.value)}
           label="Localidad"
         >
@@ -173,7 +173,7 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
       <FormControl fullWidth size="small">
         <InputLabel>CPC</InputLabel>
         <Select
-          value={data.cpc}
+          value={data.cpc || ""} // Default to empty string
           onChange={(e) => handleInputChange(`${prefix}.cpc`, e.target.value)}
           label="CPC"
         >
@@ -186,7 +186,8 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
       </FormControl>
     </Grid>
   </>
-)
+);
+
 export const renderStepContent = ({
   activeStep,
   formData,
@@ -199,15 +200,15 @@ export const renderStepContent = ({
   barrios,
   localidades,
   cpcs,
-  motivosIntervencion, // Add this
-  selectedMotivo, // Add this
+  motivosIntervencion,
+  selectedMotivo,
   categoriaMotivos,
   categoriaSubmotivos,
   gravedadVulneraciones,
   urgenciaVulneraciones,
   condicionesVulnerabilidadNNyA,
   condicionesVulnerabilidadAdultos,
-    addVulneracionApi,
+  addVulneracionApi,
   institucionesEducativas,
   institucionesSanitarias,
   addVinculacion,
@@ -219,7 +220,9 @@ export const renderStepContent = ({
   subOrigenes,
   institucionesDemanda,
   selectedInformante,
+  localizacion, // Add localizacion here
 }) => {
+
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
 
