@@ -79,9 +79,10 @@ export const useFormData = (demanda, apiData) => {
           apellido: nnya.apellido || '',
           fechaNacimiento: nnya.fechaNacimiento || null,
           genero: nnya.genero || '',
-          localizacion: nnya.localizacion || {}, // Safeguard for null values
-          educacion: nnya.educacion || {},       // Ensure structure is consistent
-          salud: nnya.salud || {},               // Include health data
+          edadAproximada: nnya.edadAproximada || '',
+          dni: nnya.dni || '',
+          situacionDni: nnya.situacionDni || '',
+          botonAntipanico: nnya.boton_antipanico || false,
           observaciones: nnya.observaciones || '',
           demandaPersonaId: nnya.demandaPersonaId,
         })),
@@ -93,12 +94,23 @@ export const useFormData = (demanda, apiData) => {
       setFormData((prevData) => ({
         ...prevData,
         adultosConvivientes: apiData.adultsList.map((adult) => ({
-          ...adult,
-          localizacion: adult.localizacion || {}, // Ensure structure
+          id: adult.id,
+          nombre: adult.nombre || '',
+          apellido: adult.apellido || '',
+          fechaNacimiento: adult.fecha_nacimiento || null,
+          genero: adult.genero || '',
+          edadAproximada: adult.edad_aproximada || '',
+          dni: adult.dni || '',
+          situacionDni: adult.situacion_dni || '',
+          botonAntipanico: adult.boton_antipanico || false,
+          supuesto_autordv: adult.supuesto_autordv || false,
+          conviviente: true,
+          observaciones: adult.observaciones || '',
+          demandaPersonaId: adult.demandaPersonaId,
         })),
       }));
     }
-  }, [apiData.adultsList]);
+  }, [apiData?.adultsList]);
   useEffect(() => {
     if (apiData?.localizacion) {
       setFormData((prevData) => ({

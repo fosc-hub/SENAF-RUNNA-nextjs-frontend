@@ -106,7 +106,7 @@ function CollapsibleSection({ title, children, isOpen, onToggle }: CollapsibleSe
 }
 
 
-const steps = ['Ingreso', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Vinculos', 'Condiciones de Vulnerabilidad']
+const steps = ['Ingreso', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración',  'Condiciones de Vulnerabilidad']
 
 export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
   const {
@@ -614,6 +614,8 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
     barrios,
     localidades,
     cpcs,
+    nnyaList: apiData.nnyaList, // Pass fetched NNYA data
+    adultsList: apiData.adultsList, // Pass fetched adultos convivientes data
   })}
 </LocalizationProvider>
 

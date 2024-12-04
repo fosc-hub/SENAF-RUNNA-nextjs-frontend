@@ -10,6 +10,8 @@ import { getTBarrios } from '../../../api/TableFunctions/barrios';
 import { getTCPCs } from '../../../api/TableFunctions/cpcs';
 import { getTLocalidads } from '../../../api/TableFunctions/localidades';
 import { getLocalizacion } from '../../../api/TableFunctions/localizacion';
+import { getTDemandaPersonas } from '../../../api/TableFunctions/demandaPersonas';
+import { getTPersona } from '../../../api/TableFunctions/personas';
 const useDemandData = (demanda) => {
   const [origenes, setOrigenes] = useState<TOrigen[]>([]);
   const [subOrigenes, setSubOrigenes] = useState<TSubOrigen[]>([]);
@@ -21,13 +23,51 @@ const useDemandData = (demanda) => {
   const [barrios, setBarrios] = useState([]);
   const [localidades, setLocalidades] = useState([]);
   const [cpcs, setCpcs] = useState([]);
+  const [nnyaList, setNnyaList] = useState([]); // NNYA data
+  const [adultsList, setAdultsList] = useState([]); // Adultos convivientes
   const [selectedData, setSelectedData] = useState({
     origen: null,
     subOrigen: null,
     institucion: null,
   });
   const [selectedInformante, setSelectedInformante] = useState<TUsuarioExterno | null>(null);
+  useEffect(() => {
+    const fetchPersonaData = async () => {
+      try {
+        if (demanda?.id) {
+          // Fetch demanda-persona data
+          const demandaPersonaData = await getTDemandaPersonas({ demanda: demanda.id });
 
+          // Split into NNYA and adultos convivientes
+          const nnyaEntries = demandaPersonaData.filter((entry) => entry.nnya_principal);
+          const adultEntries = demandaPersonaData.filter((entry) => entry.conviviente);
+
+          // Fetch full persona data for NNYA
+          const fetchedNnya = await Promise.all(
+            nnyaEntries.map(async (entry) => {
+              const personaData = await getTPersona(entry.persona);
+              return { ...personaData, demandaPersonaId: entry.id };
+            })
+          );
+
+          // Fetch full persona data for adultos convivientes
+          const fetchedAdults = await Promise.all(
+            adultEntries.map(async (entry) => {
+              const personaData = await getTPersona(entry.persona);
+              return { ...personaData, demandaPersonaId: entry.id };
+            })
+          );
+
+          setNnyaList(fetchedNnya);
+          setAdultsList(fetchedAdults);
+        }
+      } catch (error) {
+        console.error('Error fetching persona-related data:', error);
+      }
+    };
+
+    fetchPersonaData();
+  }, [demanda]);
   useEffect(() => {
     const fetchDemandData = async () => {
       try {
@@ -81,6 +121,7 @@ const useDemandData = (demanda) => {
           }
         }
 
+
         if (demanda?.localizacion) {
             console.log("Fetching localizacion with ID:", demanda.localizacion);
             const localizacionData = await getLocalizacion(demanda.localizacion);
@@ -102,6 +143,8 @@ const useDemandData = (demanda) => {
   }, [demanda]);
 
   return {
+    nnyaList,
+    adultsList,
     origenes,
     subOrigenes,
     instituciones,
