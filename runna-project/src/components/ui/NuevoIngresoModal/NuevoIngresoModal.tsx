@@ -29,6 +29,7 @@ import { createTPersonaCondicionesVulnerabilidad } from '../../../api/TableFunct
 import { toast } from 'react-toastify'
 import {createTVinculoPersonaPersona} from '../../../api/TableFunctions/vinculospersonaspersonas'
 const steps = ['Ingreso', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Condiciones de Vulnerabilidad']
+const initialTouched = {};
 
 export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
   const [activeStep, setActiveStep] = useState(0)
@@ -37,6 +38,7 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
   const [debugInfo, setDebugInfo] = useState([])
   const isSubmittingRef = useRef(false)
   const [localFilteredSubmotivos, setLocalFilteredSubmotivos] = useState([])
+  const [touched, setTouched] = useState(initialTouched)
   const [newVulneracion, setNewVulneracion] = useState({
     principal_demanda: false,
     transcurre_actualidad: false,
@@ -49,6 +51,60 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
   })
   const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext, addVinculacion, removeVinculacion, addCondicionVulnerabilidad, removeCondicionVulnerabilidad } = useFormData()
   const apiData = useApiData()
+  const validateStep = (activeStep) => {
+    switch (activeStep) {
+      case 0: // Validation for Step 0
+        return (
+          formData.fecha_y_hora_ingreso &&
+          formData.origen &&
+          formData.sub_origen &&
+          formData.institucion &&
+          formData.presuntaVulneracion?.motivos
+        );
+
+      case 1: // Validation for Step 1
+        return formData.ninosAdolescentes.every(
+          (nino) =>
+            nino.nombre &&
+            nino.apellido &&
+            nino.situacionDni &&
+            nino.genero &&
+            nino.educacion?.curso &&
+            nino.educacion?.nivel &&
+            nino.educacion?.turno &&
+            nino.salud?.institucion_sanitaria
+        );
+
+      case 2: // Validation for Step 2
+        return formData.adultosConvivientes.every(
+          (adulto) =>
+            adulto.nombre &&
+            adulto.apellido &&
+            adulto.situacionDni &&
+            adulto.genero &&
+            adulto.vinculacion?.vinculo
+        );
+
+      case 3: // Validation for Step 3
+        return formData.vulneraciones.every(
+          (vulneracion) =>
+            vulneracion.categoria_motivo &&
+            vulneracion.categoria_submotivo &&
+            vulneracion.gravedad_vulneracion &&
+            vulneracion.urgencia_vulneracion &&
+            vulneracion.nnya
+        );
+
+      case 4: // Validation for Step 4
+        return formData.condicionesVulnerabilidad.every(
+          (condicion) =>
+            condicion.persona && condicion.condicion_vulnerabilidad
+        );
+
+      default:
+        return true;
+    }
+  };
   useEffect(() => {
     if (formData.presuntaVulneracion.categoria_motivo) {
       const filtered = apiData.categoriaSubmotivos.filter(submotivo =>
@@ -69,7 +125,70 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
     )
   }, [apiData.categoriaSubmotivos, formData.presuntaVulneracion.categoriaMotivos])
 
-  const handleNext = () => setActiveStep((prevStep) => Math.min(prevStep + 1, steps.length - 1))
+  const handleNext = () => {
+    if (!validateStep(activeStep)) {
+      // Mark all fields in the current step as touched
+      const updatedTouched = { ...touched };
+
+      switch (activeStep) {
+        case 0:
+          updatedTouched.fecha_y_hora_ingreso = true;
+          updatedTouched.origen = true;
+          updatedTouched.sub_origen = true;
+          updatedTouched.institucion = true;
+          updatedTouched["presuntaVulneracion.motivos"] = true;
+          break;
+
+        case 1:
+          formData.ninosAdolescentes.forEach((_, index) => {
+            updatedTouched[`ninosAdolescentes[${index}].nombre`] = true;
+            updatedTouched[`ninosAdolescentes[${index}].apellido`] = true;
+            updatedTouched[`ninosAdolescentes[${index}].situacionDni`] = true;
+            updatedTouched[`ninosAdolescentes[${index}].genero`] = true;
+            updatedTouched[`ninosAdolescentes[${index}].educacion.curso`] = true;
+            updatedTouched[`ninosAdolescentes[${index}].educacion.nivel`] = true;
+            updatedTouched[`ninosAdolescentes[${index}].educacion.turno`] = true;
+            updatedTouched[`ninosAdolescentes[${index}].salud.institucion_sanitaria`] = true;
+          });
+          break;
+
+        case 2:
+          formData.adultosConvivientes.forEach((_, index) => {
+            updatedTouched[`adultosConvivientes[${index}].nombre`] = true;
+            updatedTouched[`adultosConvivientes[${index}].apellido`] = true;
+            updatedTouched[`adultosConvivientes[${index}].situacionDni`] = true;
+            updatedTouched[`adultosConvivientes[${index}].genero`] = true;
+            updatedTouched[`adultosConvivientes[${index}].vinculacion.vinculo`] = true;
+          });
+          break;
+
+        case 3:
+          formData.vulneraciones.forEach((_, index) => {
+            updatedTouched[`vulneraciones[${index}].categoria_motivo`] = true;
+            updatedTouched[`vulneraciones[${index}].categoria_submotivo`] = true;
+            updatedTouched[`vulneraciones[${index}].gravedad_vulneracion`] = true;
+            updatedTouched[`vulneraciones[${index}].urgencia_vulneracion`] = true;
+            updatedTouched[`vulneraciones[${index}].nnya`] = true;
+          });
+          break;
+
+        case 4:
+          formData.condicionesVulnerabilidad.forEach((_, index) => {
+            updatedTouched[`condicionesVulnerabilidad[${index}].persona`] = true;
+            updatedTouched[`condicionesVulnerabilidad[${index}].condicion_vulnerabilidad`] = true;
+          });
+          break;
+
+        default:
+          break;
+      }
+
+      setTouched(updatedTouched); // Update the touched state
+      alert("Por favor, complete todos los campos obligatorios antes de continuar.");
+    } else {
+      setActiveStep((prevActiveStep) => prevActiveStep + 1);
+    }
+  };
   const handleBack = () => setActiveStep((prevStep) => Math.max(prevStep - 1, 0))
 
   const addDebugInfo = (info) => setDebugInfo(prev => [...prev, info])
@@ -94,7 +213,7 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
       addDebugInfo(`Form Data: ${JSON.stringify(formData, null, 2)}`)
 
       // Validate required fields
-      const requiredFields = ['origen', 'descripcion', 'usuarioExterno']
+      const requiredFields = ['origen', 'usuarioExterno']
       const missingFields = requiredFields.filter(field => !formData[field])
       if (missingFields.length > 0) {
         throw new Error(`Missing required fields: ${missingFields.join(', ')}`)
