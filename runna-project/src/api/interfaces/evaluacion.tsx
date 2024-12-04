@@ -57,8 +57,8 @@ export interface TEvaluaciones extends TEvaluacionesBase {}
 
 export interface TDecision {
     id: number;
-    fecha_y_hora: Date;
     justificacion: string;
-    decision: 'APERTURA DE LEGAJO' | 'RECHAZAR CASO';
+    decision: 'APERTURA DE LEGAJO' | 'RECHAZAR CASO' | 'MPI_MPE';
     demanda: number;
+    nnya: number;
 }

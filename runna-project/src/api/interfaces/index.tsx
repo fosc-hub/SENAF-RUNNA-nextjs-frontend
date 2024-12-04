@@ -5,3 +5,4 @@ export * from './localizacion';
 export * from './persona';
 export * from './user';
 export * from './vulneracion';
+export * from './suggestDecision';

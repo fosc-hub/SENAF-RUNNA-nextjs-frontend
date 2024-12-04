@@ -18,6 +18,42 @@ export const getAll = async <T>(
   return response.data;
 };
 
+export const getWithCustomParams = async <T>(
+  endpoint: string,
+  filters?: Record<string, any>, // Parámetros de filtro opcionales
+  usePathParams: boolean = false // Si es true, usará los parámetros como segmentos de la ruta
+): Promise<T[]> => {
+  try {
+    let url = endpoint;
+
+    if (usePathParams && filters) {
+      // Limpia el endpoint y une los valores de los filtros
+      const pathParams = Object.values(filters)
+        .map(param => encodeURIComponent(String(param))) // Codificar los parámetros
+        .join('/'); // Unir con "/"
+
+      // Asegura que el endpoint no termina con un "/"
+      url = endpoint.endsWith('/') ? endpoint.slice(0, -1) : endpoint;
+
+      // Forma la URL final
+      url = `${url}/${pathParams}`;
+    } else if (filters) {
+      // Si no se usan parámetros en la ruta, se construyen como query string
+      const queryString = `?${new URLSearchParams(filters as Record<string, string>).toString()}`;
+      url = `${endpoint}${queryString}`;
+    }
+
+    // Realiza la llamada HTTP directamente
+    const response = await axiosInstance.get<T[]>(url);
+
+    return response.data;
+  } catch (error) {
+    handleApiError(error, endpoint);
+    throw new Error(`Failed to fetch data from ${endpoint}.`);
+  }
+};
+
+
 /**
  * Generic function to fetch a single resource by ID.
  * @param endpoint API endpoint to fetch data from.
