@@ -109,7 +109,16 @@ function CollapsibleSection({ title, children, isOpen, onToggle }: CollapsibleSe
 const steps = ['Ingreso', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Vinculos', 'Condiciones de Vulnerabilidad']
 
 export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
-  const { origenes, subOrigenes, instituciones } = useDemandData(demanda.id);
+  const { 
+    origenes, 
+    subOrigenes, 
+    instituciones, 
+    informante, 
+    selectedData, 
+    selectedInformante, 
+    motivosIntervencion, 
+    selectedMotivo // Add these two properties
+  } = useDemandData(demanda);
   const [demandState, setDemandState] = useState('constatacion');
   const [activeStep, setActiveStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -274,29 +283,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
     setEditedFechaHora(localISODate);
   };
 
-  // const handleDeleteClick = (actividadId: number) => {
-  //   setActividadToDelete(actividadId);
-  //   setOpenConfirmDialog(true);
-  // };
 
-  // const handleConfirmDelete = async () => {
-  //   if (actividadToDelete === null) return;
-
-  //   try {
-  //     await deleteTActividad(actividadToDelete);
-  //     setActividades(actividades.filter((actividad) => actividad.id !== actividadToDelete));
-  //   } catch (error) {
-  //     console.error('Error eliminando la actividad:', error);
-  //   }
-  //   setOpenConfirmDialog(false);
-  //   setActividadToDelete(null);
-  //   setEditingActividad(null);
-  // };
-
-  // const handleCancelDelete = () => {
-  //   setOpenConfirmDialog(false);
-  //   setActividadToDelete(null);
-  // };
   const handleVincular = async () => {
     if (!selectedNnya) {
       setVinculacionError('Por favor, seleccione un NNYA principal');
@@ -430,81 +417,22 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
   const apiData = useApiData(demanda?.id, demanda?.localizacion, demanda?.usuarioExterno);
   const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext, addVinculacion, removeVinculacion, addCondicionVulnerabilidad, removeCondicionVulnerabilidad
   } = useFormData(demanda, apiData);
-  useEffect(() => {
-    if (apiData.localizacion) {
-      handleInputChange('localizacion', {
-        ...formData.localizacion,
-        ...apiData.localizacion,
-      })
-    }
-  }, [apiData.localizacion])
-  useEffect(() => {
-    if (apiData.vinculaciones) {
-      handleInputChange('vinculaciones', apiData.vinculaciones);
-    }
-  }, [apiData.vinculaciones]);
-  
-  useEffect(() => {
-    if (apiData.vinculoPersonas) {
-      handleInputChange('vinculoPersonas', apiData.vinculoPersonas);
-    }
-  }, [apiData.vinculoPersonas]);
+
   
   
-  useEffect(() => {
-    if (apiData.nnyaList) {
-      handleInputChange('ninosAdolescentes', apiData.nnyaList);
-    }
-  }, [apiData.nnyaList]);
-
-  // Synchronize currentMotivoIntervencion into formData
-  useEffect(() => {
-    if (
-      apiData.currentMotivoIntervencion &&
-      formData.presuntaVulneracion.motivos !== apiData.currentMotivoIntervencion.id
-    ) {
-      handleInputChange(
-        'presuntaVulneracion.motivos',
-        apiData.currentMotivoIntervencion.id
-      )
-    }
-  }, [apiData.currentMotivoIntervencion, formData.presuntaVulneracion.motivos])
-  useEffect(() => {
-    console.log('Localización ID:', demanda?.localizacion);
-  }, [demanda?.localizacion]);
-  useEffect(() => {
-    if (apiData.vulneraciones?.length) {
-      handleInputChange('vulneraciones', apiData.vulneraciones);
-    }
-  }, [apiData.vulneraciones]);
 
 
 
 
-  useEffect(() => {
-    const fetchUsuariosExternos = async () => {
-      try {
-        const response = await fetch('http://localhost:8000/api/informante/');
-        const data = await response.json();
-        setUsuariosExternos(data);
-      } catch (error) {
-        console.error('Error fetching usuarios externos:', error);
-      }
-    };
 
-    fetchUsuariosExternos();
-  }, []);
+
+
+
 
   const handleOpenEnviarRespuesta = () => setIsEnviarRespuestaOpen(true)
   const handleCloseEnviarRespuesta = () => setIsEnviarRespuestaOpen(false)
 
-  const handleDemandaClick = () => {
-    if (!demanda?.id) {
-      console.error('Demanda ID is undefined');
-      return;
-    }
-    console.log('Clicked demanda ID:', demanda.id);
-  };
+
 
   const handleBack = () => setActiveStep((prevStep) => Math.max(prevStep - 1, 0))
   const handleEnviarAEvaluacion = async () => {
@@ -569,65 +497,10 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
     setIsSubmitting(true)
 
     try {
-      if (formData.createNewUsuarioExterno || (formData.usuarioExterno.id && formData.usuarioExterno.nombre)) {
-        const usuarioExternoResponse = await fetch(
-          formData.usuarioExterno.id
-            ? `http://localhost:8000/api/informante/${formData.usuarioExterno.id}/`
-            : 'http://localhost:8000/api/informante/',
-          {
-            method: formData.usuarioExterno.id ? 'PUT' : 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData.usuarioExterno),
-          }
-        );
+      
 
-        if (!usuarioExternoResponse.ok) {
-          throw new Error('Failed to save usuario externo');
-        }
 
-        const savedUsuarioExterno = await usuarioExternoResponse.json();
-        handleInputChange('usuarioExterno', savedUsuarioExterno);
-      }
 
-      const localizacionResponse = await fetch(
-        formData.localizacion.id
-          ? `http://localhost:8000/api/localizacion/${formData.localizacion.id}/`
-          : 'http://localhost:8000/api/localizacion/',
-        {
-          method: formData.localizacion.id ? 'PUT' : 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData.localizacion),
-        }
-      );
-
-      if (!localizacionResponse.ok) {
-        throw new Error('Failed to save localizacion');
-      }
-
-      const savedLocalizacion = await localizacionResponse.json();
-      handleInputChange('localizacion', savedLocalizacion);
-
-      const updatedDemanda = {
-        ...demanda,
-        usuarioExterno: formData.usuarioExterno.id,
-        localizacion: savedLocalizacion.id,
-      };
-
-      const demandaResponse = await fetch(`http://localhost:8000/api/demanda/${demanda.id}/`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedDemanda),
-      });
-
-      if (!demandaResponse.ok) {
-        throw new Error('Failed to update demanda');
-      }
 
       console.log('Form submitted successfully');
       onClose();
@@ -712,45 +585,29 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
               </Stepper>
 
               <form onSubmit={handleSubmit}>
-                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-                  {apiData.barrios && apiData.localidades && apiData.cpcs ? (
-                    renderStepContent({
-                      activeStep,
-                      formData: {
-                        ...formData,
-                        ninosAdolescentes: apiData.nnyaList,
-                      },
-                      handleInputChange,
-                      motivosIntervencion: apiData.motivosIntervencion,
-                      currentMotivoIntervencion: apiData.currentMotivoIntervencion,
-                      demandaMotivoIntervencion: apiData.demandaMotivoIntervencion,
-                      barrios: apiData.barrios,
-                      localidades: apiData.localidades,
-                      cpcs: apiData.cpcs,
-                      localizacion: apiData.localizacion,
-                      usuarioExterno: apiData.usuarioExterno,
-                      vinculosUsuarioExterno: apiData.vinculosUsuarioExterno,
-                      institucionesUsuarioExterno: apiData.institucionesUsuarioExterno,
-                      usuariosExternos,
-                      demanda,
-                      getMotivoIntervencion: apiData.getMotivoIntervencion,
-                      institucionesEducativas: apiData.institucionesEducativas,
-                      institucionesSanitarias: apiData.institucionesSanitarias,
-                      addNinoAdolescente,
-                      addAdultoConviviente,
-                      addVulneraciontext,
-                      categoriaMotivos: apiData.categoriaMotivos,
-                      categoriaSubmotivos: apiData.categoriaSubmotivos,
-                      gravedadVulneraciones: apiData.gravedadVulneraciones,
-                      urgenciaVulneraciones: apiData.urgenciaVulneraciones,
-                      origenes,
-                      subOrigenes,
-                      institucionesDemanda: instituciones,
-                    })
-                  ) : (
-                    <Typography>Loading data...</Typography>
-                  )}
-                </LocalizationProvider>
+              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+  {renderStepContent({
+    activeStep,
+    formData,
+    handleInputChange,
+    addNinoAdolescente,
+    addAdultoConviviente,
+    addVinculacion,
+    removeVinculacion,
+    addVulneraciontext,
+    addCondicionVulnerabilidad,
+    removeCondicionVulnerabilidad,
+    ...apiData,
+    addVulneracionApi: apiData.addVulneracion,
+    origenes,
+    subOrigenes,
+    institucionesDemanda: instituciones,
+    informante,
+    selectedInformante, // Pass pre-selected informante
+    motivosIntervencion, // Pass all motivosIntervencion
+    selectedMotivo, // Pass pre-selected motivo
+  })}
+</LocalizationProvider>
 
                 <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
                   <Button onClick={handleBack} disabled={activeStep === 0}>

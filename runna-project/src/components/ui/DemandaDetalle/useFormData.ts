@@ -24,7 +24,7 @@ const initialFormData = (demanda) => ({
     localidad: '',
     cpc: '',
   },
-  usuarioExterno: demanda?.usuarioExterno || {
+  informante: demanda?.informante || {
     id: null,
     nombre: '',
     apellido: '',
@@ -35,7 +35,7 @@ const initialFormData = (demanda) => ({
     vinculo: '',
     institucion: '',
   },
-  createNewUsuarioExterno: false,
+  createNewinformante: demanda?.informante ? false : true, // Set to false if an informante exists
   ninosAdolescentes: demanda?.ninosAdolescentes || [],
   adultosConvivientes: demanda?.adultosConvivientes || [],
   vulneraciones: demanda?.vulneraciones || [],

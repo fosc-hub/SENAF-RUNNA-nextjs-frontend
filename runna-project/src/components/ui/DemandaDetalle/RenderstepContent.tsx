@@ -195,11 +195,12 @@ export const renderStepContent = ({
   addVulneraciontext,
   addAdultoConviviente,
   addAutor,
-  usuariosExternos,
+  informante,
   barrios,
   localidades,
   cpcs,
-  motivosIntervencion,
+  motivosIntervencion, // Add this
+  selectedMotivo, // Add this
   categoriaMotivos,
   categoriaSubmotivos,
   gravedadVulneraciones,
@@ -209,8 +210,6 @@ export const renderStepContent = ({
     addVulneracionApi,
   institucionesEducativas,
   institucionesSanitarias,
-  institucionesUsuarioExterno,
-  vinculosUsuarioExterno,
   addVinculacion,
   removeVinculacion,
   vinculoPersonas,
@@ -219,6 +218,7 @@ export const renderStepContent = ({
   origenes,
   subOrigenes,
   institucionesDemanda,
+  selectedInformante,
 }) => {
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
@@ -421,33 +421,31 @@ const handleBlur = (field) => {
           <Grid item xs={12}>
 
           <FormControl
-            fullWidth
-            size="small"
-            error={!!errors.presuntaVulneracion?.motivos}
-          >
-            <InputLabel>
-              Motivo de Intervención <span style={{ color: "red" }}>*</span>
-            </InputLabel>
-            <Select
-              value={formData.presuntaVulneracion?.motivos || ""}
-              onChange={(e) =>
-                handleInputChange(
-                  "presuntaVulneracion.motivos",
-                  e.target.value
-                )
-              }
-              label="Motivo de Intervención"
-            >
-              {motivosIntervencion.map((motivo) => (
-                <MenuItem key={motivo.id} value={motivo.id}>
-                  {motivo.nombre}
-                </MenuItem>
-              ))}
-            </Select>
-            {errors.presuntaVulneracion?.motivos && (
-              <FormHelperText>Este campo es obligatorio.</FormHelperText>
-            )}
-          </FormControl>
+  fullWidth
+  size="small"
+  error={!!errors.presuntaVulneracion?.motivos}
+>
+  <InputLabel>
+    Motivo de Intervención <span style={{ color: "red" }}>*</span>
+  </InputLabel>
+  <Select
+    value={formData.presuntaVulneracion?.motivos || selectedMotivo?.id || ""}
+    onChange={(e) =>
+      handleInputChange("presuntaVulneracion.motivos", e.target.value)
+    }
+    label="Motivo de Intervención"
+  >
+    {motivosIntervencion.map((motivo) => (
+      <MenuItem key={motivo.id} value={motivo.id}>
+        {motivo.nombre}
+      </MenuItem>
+    ))}
+  </Select>
+  {errors.presuntaVulneracion?.motivos && (
+    <FormHelperText>Este campo es obligatorio.</FormHelperText>
+  )}
+</FormControl>
+
           </Grid>
 
 
@@ -463,14 +461,14 @@ const handleBlur = (field) => {
   <FormControlLabel
     control={
       <Switch
-        checked={formData.createNewUsuarioExterno}
-        onChange={(e) => handleInputChange("createNewUsuarioExterno", e.target.checked)}
+        checked={formData.createNewinformante}
+        onChange={(e) => handleInputChange("createNewinformante", e.target.checked)}
       />
     }
     label="Crear nuevo Informante"
   />
 </Grid>
-{formData.createNewUsuarioExterno ? (
+{formData.createNewinformante ? (
   <>
     {/* Nombre */}
     <Grid item xs={6}>
@@ -481,13 +479,13 @@ const handleBlur = (field) => {
             Nombre <span style={{ color: "red" }}>*</span>
           </>
         }
-        value={formData.usuarioExterno.nombre}
-        onChange={(e) => handleInputChange("usuarioExterno.nombre", e.target.value)}
-        onBlur={() => handleBlur("usuarioExternoNombre")}
+        value={formData.informante.nombre}
+        onChange={(e) => handleInputChange("informante.nombre", e.target.value)}
+        onBlur={() => handleBlur("informanteNombre")}
         size="small"
-        error={touched.usuarioExternoNombre && !formData.usuarioExterno.nombre}
+        error={touched.informanteNombre && !formData.informante.nombre}
         helperText={
-          touched.usuarioExternoNombre && !formData.usuarioExterno.nombre
+          touched.informanteNombre && !formData.informante.nombre
             ? "Completa este campo"
             : ""
         }
@@ -503,13 +501,13 @@ const handleBlur = (field) => {
             Apellido <span style={{ color: "red" }}>*</span>
           </>
         }
-        value={formData.usuarioExterno.apellido}
-        onChange={(e) => handleInputChange("usuarioExterno.apellido", e.target.value)}
-        onBlur={() => handleBlur("usuarioExternoApellido")}
+        value={formData.informante.apellido}
+        onChange={(e) => handleInputChange("informante.apellido", e.target.value)}
+        onBlur={() => handleBlur("informanteApellido")}
         size="small"
-        error={touched.usuarioExternoApellido && !formData.usuarioExterno.apellido}
+        error={touched.informanteApellido && !formData.informante.apellido}
         helperText={
-          touched.usuarioExternoApellido && !formData.usuarioExterno.apellido
+          touched.informanteApellido && !formData.informante.apellido
             ? "Completa este campo"
             : ""
         }
@@ -526,13 +524,13 @@ const handleBlur = (field) => {
           </>
         }
         type="number"
-        value={formData.usuarioExterno.telefono}
-        onChange={(e) => handleInputChange("usuarioExterno.telefono", e.target.value)}
-        onBlur={() => handleBlur("usuarioExternoTelefono")}
+        value={formData.informante.telefono}
+        onChange={(e) => handleInputChange("informante.telefono", e.target.value)}
+        onBlur={() => handleBlur("informanteTelefono")}
         size="small"
-        error={touched.usuarioExternoTelefono && !formData.usuarioExterno.telefono}
+        error={touched.informanteTelefono && !formData.informante.telefono}
         helperText={
-          touched.usuarioExternoTelefono && !formData.usuarioExterno.telefono
+          touched.informanteTelefono && !formData.informante.telefono
             ? "Completa este campo"
             : ""
         }
@@ -549,13 +547,13 @@ const handleBlur = (field) => {
           </>
         }
         type="email"
-        value={formData.usuarioExterno.mail}
-        onChange={(e) => handleInputChange("usuarioExterno.mail", e.target.value)}
-        onBlur={() => handleBlur("usuarioExternoMail")}
+        value={formData.informante.mail}
+        onChange={(e) => handleInputChange("informante.mail", e.target.value)}
+        onBlur={() => handleBlur("informanteMail")}
         size="small"
-        error={touched.usuarioExternoMail && !formData.usuarioExterno.mail}
+        error={touched.informanteMail && !formData.informante.mail}
         helperText={
-          touched.usuarioExternoMail && !formData.usuarioExterno.mail
+          touched.informanteMail && !formData.informante.mail
             ? "Completa este campo"
             : ""
         }
@@ -565,34 +563,35 @@ const handleBlur = (field) => {
 ) : (
   // Select Existing Informante
   <Grid item xs={12}>
-    <FormControl
-      fullWidth
-      size="small"
-      error={touched.usuarioExternoId && !formData.usuarioExterno.id}
-    >
-      <InputLabel>
-        Informante <span style={{ color: "red" }}>*</span>
-      </InputLabel>
-      <Select
-        value={formData.usuarioExterno.id || ""}
-        onChange={(e) => handleInputChange("usuarioExterno.id", e.target.value)}
-        onBlur={() => handleBlur("usuarioExternoId")}
-        label="Informante"
-        renderValue={(selected) => {
-          const usuario = usuariosExternos.find((u) => u.id === selected);
-          return usuario ? `${usuario.nombre} ${usuario.apellido}` : "Seleccione un informante";
-        }}
-      >
-        {usuariosExternos.map((usuario) => (
-          <MenuItem key={usuario.id} value={usuario.id}>
-            {`${usuario.nombre} ${usuario.apellido}`}
-          </MenuItem>
-        ))}
-      </Select>
-      {touched.usuarioExternoId && !formData.usuarioExterno.id && (
-        <FormHelperText>Selecciona un informante</FormHelperText>
-      )}
-    </FormControl>
+<FormControl
+  fullWidth
+  size="small"
+  error={touched.informante && !selectedInformante?.id} // Add error state
+>
+  <InputLabel>
+    Informante <span style={{ color: "red" }}>*</span>
+  </InputLabel>
+  <Select
+    value={selectedInformante?.id || ""}
+    onChange={(e) => handleInputChange("informante.id", e.target.value)}
+    onBlur={() => handleBlur("informante")} // Mark the field as touched
+    label="Informante"
+  >
+    {/* Add a placeholder option */}
+    <MenuItem value="">
+      <em>Seleccione un informante</em>
+    </MenuItem>
+    {informante.map((inf) => (
+      <MenuItem key={inf.id} value={inf.id}>
+        {`${inf.nombre} ${inf.apellido}`}
+      </MenuItem>
+    ))}
+  </Select>
+  {touched.informante && !selectedInformante?.id && (
+    <FormHelperText>Este campo es obligatorio</FormHelperText>
+  )}
+</FormControl>
+
   </Grid>
 )}
 
