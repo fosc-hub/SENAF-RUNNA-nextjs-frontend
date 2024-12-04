@@ -26,6 +26,7 @@ import { TsuggestDecision } from '../../api/interfaces';
 import { getTLegajos } from '../../api/TableFunctions/legajos';
 import { createTDecision } from '../../api/TableFunctions/decisiones';
 import { useRouter } from 'next/navigation';
+import EditableTable from '../common/EditableTable';
 
 export function EvaluacionesContent() {
   const [indicadores, setIndicadores] = useState<TIndicadoresValoracion[]>([]);
@@ -38,6 +39,14 @@ export function EvaluacionesContent() {
   const id = params.id;
   const [justification, setJustification] = useState('');
   const router = useRouter();
+  const [familiares, setFamiliares] = useState([
+    { nombre: 'Jane Doe', dni: '12345678' },
+    { nombre: 'Jim Doe', dni: '87654321' },
+  ]);
+
+  const handleDataChange = (updatedFamiliares) => {
+    setFamiliares(updatedFamiliares);
+  };
 
   const handleDownloadReport = async () => {
     const data = {
@@ -45,20 +54,17 @@ export function EvaluacionesContent() {
       fecha: '04/12/2024',
       cargo: 'Director',
       nombreApellido: 'John Doe',
-      familiares: [
-        { nombre: 'Jane Doe', dni: '12345678' },
-        { nombre: 'Jim Doe', dni: '87654321' },
-      ],
+      familiares: familiares,
       conclusiones: 'Caso cerrado satisfactoriamente.',
       refNumero: '1234/2024',
     };
-  
+
     const response = await fetch('/api/generate-pdf', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-  
+
     if (response.ok) {
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
@@ -71,6 +77,7 @@ export function EvaluacionesContent() {
       console.error('Error downloading the PDF');
     }
   };
+
 
   const fetchTIndicadoresValoracions = useCallback(async () => {
     try {
@@ -262,8 +269,17 @@ export function EvaluacionesContent() {
   }, [fetchNNYAData, id]);
   return (
     <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 3, overflow: 'auto' }}>
-      <Box sx={{ mb: 2 }}>
-        <Button variant="contained" startIcon={<DownloadIcon />} onClick={handleDownloadReport}>
+      <Box>
+        <Typography variant="h5" sx={{ mb: 2 }}>
+          Editar Información de Familiares
+        </Typography>
+        <EditableTable data={familiares} onDataChange={handleDataChange} />
+        <Button
+          variant="contained"
+          startIcon={<DownloadIcon />}
+          onClick={handleDownloadReport}
+          sx={{ mt: 3 }}
+        >
           Descargar Informe
         </Button>
       </Box>
