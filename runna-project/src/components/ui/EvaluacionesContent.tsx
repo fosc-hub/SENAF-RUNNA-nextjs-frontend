@@ -40,14 +40,36 @@ export function EvaluacionesContent() {
   const router = useRouter();
 
   const handleDownloadReport = async () => {
-    const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage();
-    const pdfBytes = await pdfDoc.save();
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = '100 - MPI - INFORME TECNICO.pdf';
-    link.click();
+    const data = {
+      localidad: 'Buenos Aires',
+      fecha: '04/12/2024',
+      cargo: 'Director',
+      nombreApellido: 'John Doe',
+      familiares: [
+        { nombre: 'Jane Doe', dni: '12345678' },
+        { nombre: 'Jim Doe', dni: '87654321' },
+      ],
+      conclusiones: 'Caso cerrado satisfactoriamente.',
+      refNumero: '1234/2024',
+    };
+  
+    const response = await fetch('/api/generate-pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  
+    if (response.ok) {
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'Informe.pdf';
+      link.click();
+      URL.revokeObjectURL(url);
+    } else {
+      console.error('Error downloading the PDF');
+    }
   };
 
   const fetchTIndicadoresValoracions = useCallback(async () => {
