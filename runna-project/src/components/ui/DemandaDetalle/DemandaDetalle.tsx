@@ -44,6 +44,7 @@ import { renderStepContent } from './RenderstepContent'
 import { getTActividadTipo } from '../../../api/TableFunctions/actividadTipos';
 import { getTInstitucionActividad } from '../../../api/TableFunctions/institucionActividades';
 import { getDemand } from '../../../api/TableFunctions/demands';
+import useDemandData from './useDemandData';
 
 interface Actividad {
   id: number;
@@ -104,9 +105,11 @@ function CollapsibleSection({ title, children, isOpen, onToggle }: CollapsibleSe
   );
 }
 
+
 const steps = ['Ingreso', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Vinculos', 'Condiciones de Vulnerabilidad']
 
 export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
+  const { origenes, subOrigenes, instituciones } = useDemandData(demanda.id);
   const [demandState, setDemandState] = useState('constatacion');
   const [activeStep, setActiveStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -740,6 +743,9 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
                       categoriaSubmotivos: apiData.categoriaSubmotivos,
                       gravedadVulneraciones: apiData.gravedadVulneraciones,
                       urgenciaVulneraciones: apiData.urgenciaVulneraciones,
+                      origenes,
+                      subOrigenes,
+                      institucionesDemanda: instituciones,
                     })
                   ) : (
                     <Typography>Loading data...</Typography>

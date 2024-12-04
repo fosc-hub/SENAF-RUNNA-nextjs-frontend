@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Typography,
   TextField,
@@ -16,34 +16,47 @@ import {
   Button,
   Radio,
   RadioGroup,
-  Paper,
   FormGroup,
+  FormHelperText,
 } from '@mui/material'
 import { ImportIcon as AddIcon } from 'lucide-react'
-
-import { LocalizationProvider, DateTimePicker, DatePicker } from '@mui/x-date-pickers'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3'
+import { LocalizationProvider, DateTimePicker, DatePicker } from '@mui/x-date-pickers'
 import { es } from 'date-fns/locale'
-
+import { getTCategoriaMotivo } from '../../../api/TableFunctions/categoriasMotivos'
 const formatDate = (date) => date ? date.toISOString().split('T')[0] : null
+const getCategoriaMotivosNombre = (motivoId: number, categoriaMotivos: any[]) => {
+  const categoria = categoriaMotivos.find(cat => cat.id === motivoId)
+  return categoria ? categoria.nombre : 'Desconocido'
+}
 
-const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, localidades, cpcs) => (
+
+
+
+const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, localidades, cpcs,   errors = {}) => (
   <>
-    {/* Calle */}
     <Grid item xs={6}>
-      <TextField
+    <TextField
         fullWidth
-        label="Calle"
-        value={data.calle || ''} // Safeguard for missing values
+        label={
+          <>
+            Calle <span style={{ color: "red" }}>*</span>
+          </>
+        }
+        value={data.calle}
         onChange={(e) => handleInputChange(`${prefix}.calle`, e.target.value)}
         size="small"
+        error={!!errors[`${prefix}.calle`]}
+        helperText={errors[`${prefix}.calle`] ? "Este campo es obligatorio." : ""}
       />
     </Grid>
     <Grid item xs={6}>
-      <FormControl fullWidth size="small">
-        <InputLabel>Tipo de Calle</InputLabel>
+    <FormControl fullWidth size="small" error={!!errors[`${prefix}.tipo_calle`]}>
+        <InputLabel>
+          Tipo de Calle <span style={{ color: "red" }}>*</span>
+        </InputLabel>
         <Select
-          value={data.tipo_calle || ''} // Safeguard for missing values
+          value={data.tipo_calle}
           onChange={(e) => handleInputChange(`${prefix}.tipo_calle`, e.target.value)}
           label="Tipo de Calle"
         >
@@ -51,48 +64,79 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
           <MenuItem value="AVENIDA">AVENIDA</MenuItem>
           <MenuItem value="PASAJE">PASAJE</MenuItem>
         </Select>
+        {errors[`${prefix}.tipo_calle`] && (
+          <FormHelperText>Este campo es obligatorio.</FormHelperText>
+        )}
       </FormControl>
     </Grid>
-
-
-    {/* Additional fields */}
-    {[
-      { label: 'Piso/Depto', name: 'piso_depto' },
-      { label: 'Lote', name: 'lote' },
-      { label: 'Manzana', name: 'mza' },
-      { label: 'Número de Casa', name: 'casa_nro' },
-    ].map((field) => (
-      <Grid item xs={6} key={field.name}>
-        <TextField
-          fullWidth
-          label={field.label}
-          type="number"
-          value={data[field.name] || ''}
-          onChange={(e) => handleInputChange(`${prefix}.${field.name}`, e.target.value)}
-          size="small"
-        />
-      </Grid>
-    ))}
-
-    {/* Referencia Geográfica */}
-    <Grid item xs={12}>
+    <Grid item xs={6}>
       <TextField
         fullWidth
-        label="Referencia Geográfica"
-        multiline
-        rows={2}
-        value={data.referencia_geo || ''}
-        onChange={(e) => handleInputChange(`${prefix}.referencia_geo`, e.target.value)}
+        label="Piso/Depto"
+        type="number"
+        value={data.piso_depto}
+        onChange={(e) => handleInputChange(`${prefix}.piso_depto`, e.target.value)}
         size="small"
       />
     </Grid>
-
-    {/* Barrio */}
+    <Grid item xs={6}>
+      <TextField
+        fullWidth
+        label="Lote"
+        type="number"
+        value={data.lote}
+        onChange={(e) => handleInputChange(`${prefix}.lote`, e.target.value)}
+        size="small"
+      />
+    </Grid>
+    <Grid item xs={6}>
+      <TextField
+        fullWidth
+        label="Manzana"
+        type="number"
+        value={data.mza}
+        onChange={(e) => handleInputChange(`${prefix}.mza`, e.target.value)}
+        size="small"
+      />
+    </Grid>
+    <Grid item xs={6}>
+      <TextField
+        fullWidth
+        label="Número de Casa"
+        type="number"
+        value={data.casa_nro}
+        onChange={(e) => handleInputChange(`${prefix}.casa_nro`, e.target.value)}
+        size="small"
+      />
+    </Grid>
+    <Grid item xs={12}>
+    <TextField
+        fullWidth
+        label={
+          <>
+            Referencia Geográfica <span style={{ color: "red" }}>*</span>
+          </>
+        }
+        multiline
+        rows={2}
+        value={data.referencia_geo}
+        onChange={(e) =>
+          handleInputChange(`${prefix}.referencia_geo`, e.target.value)
+        }
+        size="small"
+        error={!!errors[`${prefix}.referencia_geo`]}
+        helperText={
+          errors[`${prefix}.referencia_geo`]
+            ? "Este campo es obligatorio."
+            : ""
+        }
+      />
+    </Grid>
     <Grid item xs={6}>
       <FormControl fullWidth size="small">
         <InputLabel>Barrio</InputLabel>
         <Select
-          value={data.barrio || ''}
+          value={data.barrio}
           onChange={(e) => handleInputChange(`${prefix}.barrio`, e.target.value)}
           label="Barrio"
         >
@@ -104,13 +148,13 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
         </Select>
       </FormControl>
     </Grid>
-
-    {/* Localidad */}
     <Grid item xs={6}>
-      <FormControl fullWidth size="small">
-        <InputLabel>Localidad</InputLabel>
+    <FormControl fullWidth size="small" error={!!errors[`${prefix}.localidad`]}>
+        <InputLabel>
+          Localidad <span style={{ color: "red" }}>*</span>
+        </InputLabel>
         <Select
-          value={data.localidad || ''}
+          value={data.localidad}
           onChange={(e) => handleInputChange(`${prefix}.localidad`, e.target.value)}
           label="Localidad"
         >
@@ -120,15 +164,16 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
             </MenuItem>
           ))}
         </Select>
+        {errors[`${prefix}.localidad`] && (
+          <FormHelperText>Este campo es obligatorio.</FormHelperText>
+        )}
       </FormControl>
     </Grid>
-
-    {/* CPC */}
     <Grid item xs={6}>
       <FormControl fullWidth size="small">
         <InputLabel>CPC</InputLabel>
         <Select
-          value={data.cpc || ''}
+          value={data.cpc}
           onChange={(e) => handleInputChange(`${prefix}.cpc`, e.target.value)}
           label="CPC"
         >
@@ -141,176 +186,174 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
       </FormControl>
     </Grid>
   </>
-);
-
-
-
+)
 export const renderStepContent = ({
   activeStep,
   formData,
   handleInputChange,
-  motivosIntervencion,
+  addNinoAdolescente,
+  addVulneraciontext,
+  addAdultoConviviente,
+  addAutor,
+  usuariosExternos,
   barrios,
   localidades,
   cpcs,
-  vinculosUsuarioExterno,
-  institucionesUsuarioExterno,
-  usuarioExterno,
-  usuariosExternos, // Add this new prop
-  demandaMotivoIntervencion,
-  demanda,
-  getMotivoIntervencion,
-  currentMotivoIntervencion,
-  localizacion,
-  addNinoAdolescente,
-  addAdultoConviviente,
-  addVinculacion,
-  removeVinculacion,
-  addCondicionVulnerabilidad,
-  removeCondicionVulnerabilidad,
-  institucionesEducativas,
-  institucionesSanitarias,
-  addVulneraciontext,
-  addVulneracion,
-  categoriaMotivos, // Receive it as a prop
-  categoriaSubmotivos, // Receive submotivos as a prop
-  gravedadVulneraciones, // Receive gravedadVulneraciones as a prop
+  motivosIntervencion,
+  categoriaMotivos,
+  categoriaSubmotivos,
+  gravedadVulneraciones,
   urgenciaVulneraciones,
   condicionesVulnerabilidadNNyA,
   condicionesVulnerabilidadAdultos,
-  vinculoPersonas, // Add this here
-  condicionesVulnerabilidad,
-  personasWithCondiciones,
-
-
-
+    addVulneracionApi,
+  institucionesEducativas,
+  institucionesSanitarias,
+  institucionesUsuarioExterno,
+  vinculosUsuarioExterno,
+  addVinculacion,
+  removeVinculacion,
+  vinculoPersonas,
+  addCondicionVulnerabilidad,
+  removeCondicionVulnerabilidad,
+  origenes,
+  subOrigenes,
+  institucionesDemanda,
 }) => {
-  const renderVinculacion = (vinculacion, index) => (
-    <Grid container spacing={2} key={index} sx={{ mb: 4, p: 2, border: '1px solid #e0e0e0', borderRadius: 2 }}>
-      <Grid item xs={12}>
-        <Typography variant="h6" gutterBottom>Vinculación {index + 1}</Typography>
-      </Grid>
-      
-      <Grid item xs={12} md={6}>
-        <Typography variant="subtitle1" gutterBottom>
-          Persona 1 (NNyA Principal):
-        </Typography>
-        <Typography>
-          {formData.ninosAdolescentes[0].nombre} {formData.ninosAdolescentes[0].apellido}
-        </Typography>
-      </Grid>
-  
-      <Grid item xs={12} md={6}>
-      <FormControl fullWidth>
-  <InputLabel>Persona 2</InputLabel>
-  <Select
-    value={vinculacion.persona_2}
-    onChange={(e) => handleInputChange(`vinculaciones[${index}].persona_2`, e.target.value)}
-    label="Persona 2"
-  >
-    {formData.ninosAdolescentes.map((nino, i) => (
-      <MenuItem key={`nnya-${nino.id}`} value={nino.id}>
-        {nino.nombre} {nino.apellido} (NNyA)
-      </MenuItem>
-    ))}
-    {formData.adultosConvivientes.map((adulto, i) => (
-      <MenuItem key={`adulto-${adulto.id}`} value={adulto.id}>
-        {adulto.nombre} {adulto.apellido} (Adulto)
-      </MenuItem>
-    ))}
-  </Select>
-</FormControl>
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
 
-      </Grid>
-  
-      <Grid item xs={12} md={6}>
-      <FormControl fullWidth>
-  <InputLabel>Vínculo</InputLabel>
-  <Select
-    value={vinculacion.vinculo}
-    onChange={(e) => handleInputChange(`vinculaciones[${index}].vinculo`, e.target.value)}
-    label="Vínculo"
-  >
-    {vinculoPersonas.map((vinculo) => (
-      <MenuItem key={vinculo.id} value={vinculo.id}>
-        {vinculo.nombre}
-      </MenuItem>
-    ))}
-  </Select>
-</FormControl>
+const handleBlur = (field) => {
+  setTouched((prev) => ({ ...prev, [field]: true }));
+};
 
-      </Grid>
+  const validateFields = () => {
+    const newErrors = {};
+    if (!formData.fecha_y_hora_ingreso) newErrors.fecha_y_hora_ingreso = true;
+    if (!formData.origen) newErrors.origen = true;
+    if (!formData.sub_origen) newErrors.sub_origen = true;
+    if (!formData.institucion) newErrors.institucion = true;
+    if (!formData.presuntaVulneracion?.motivos)
+      newErrors.presuntaVulneracion = { motivos: true };
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
   
-      <Grid item xs={12} md={6}>
-        <FormGroup>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={vinculacion.conviven}
-                onChange={(e) => handleInputChange(`vinculaciones[${index}].conviven`, e.target.checked)}
-              />
-            }
-            label="Conviven"
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={vinculacion.autordv}
-                onChange={(e) => handleInputChange(`vinculaciones[${index}].autordv`, e.target.checked)}
-              />
-            }
-            label="Autor DV"
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={vinculacion.garantiza_proteccion}
-                onChange={(e) => handleInputChange(`vinculaciones[${index}].garantiza_proteccion`, e.target.checked)}
-              />
-            }
-            label="Garantiza Protección"
-          />
-        </FormGroup>
-      </Grid>
-  
-      <Grid item xs={12}>
-        <Button 
-          variant="outlined" 
-          color="secondary" 
-          onClick={() => removeVinculacion(index)}
-        >
-          Eliminar Vinculación
-        </Button>
-      </Grid>
-    </Grid>
-  )
+  const handleVulneracionChange = (field, value) => {
+    setNewVulneracion(prev => {
+      const updated = { ...prev, [field]: value }
+      if (field === 'categoria_motivo') {
+        updated.categoria_submotivo = ''
+      }
+      return updated
+    })
+  }
+
+
   switch (activeStep) {
     case 0:
       return (
         <Grid container spacing={2}>
           <Grid item xs={12}>
-            <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-              <DateTimePicker
-                label="Fecha y hora de ingreso"
-                value={formData.fecha_y_hora_ingreso}
-                onChange={(newValue) => handleInputChange('fecha_y_hora_ingreso', newValue)}
-                renderInput={(params) => <TextField {...params} fullWidth size="small" />}
-              />
-            </LocalizationProvider>
+          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+            <DateTimePicker
+              label={
+                <>
+                  Fecha y hora de ingreso <span style={{ color: "red" }}>*</span>
+                </>
+              }
+              value={formData.fecha_y_hora_ingreso}
+              onChange={(newValue) =>
+                handleInputChange("fecha_y_hora_ingreso", newValue)
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  fullWidth
+                  size="small"
+                  error={!!errors.fecha_y_hora_ingreso}
+                  helperText={
+                    errors.fecha_y_hora_ingreso ? "Este campo es obligatorio." : ""
+                  }
+                />
+              )}
+            />
+          </LocalizationProvider>
           </Grid>
           <Grid item xs={12}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Origen</InputLabel>
-              <Select
-                value={formData.origen}
-                onChange={(e) => handleInputChange('origen', e.target.value)}
-                label="Origen"
-              >
-                <MenuItem value="WEB">WEB</MenuItem>
-                <MenuItem value="TELEFONO">TELEFONO</MenuItem>
-                <MenuItem value="PRESENCIAL">PRESENCIAL</MenuItem>
-              </Select>
-            </FormControl>
+          <FormControl fullWidth size="small" error={!!errors.origen}>
+      <InputLabel>
+        Origen <span style={{ color: "red" }}>*</span>
+      </InputLabel>
+      <Select
+        value={formData.origen || ""}
+        onChange={(e) => handleInputChange("origen", e.target.value)}
+        label="Origen"
+      >
+        {origenes.map((origen) => (
+          <MenuItem key={origen.id} value={origen.id}>
+            {origen.nombre}
+          </MenuItem>
+        ))}
+      </Select>
+      {errors.origen && (
+        <FormHelperText>Este campo es obligatorio.</FormHelperText>
+      )}
+    </FormControl>
+
+
+          </Grid>
+          <Grid item xs={12}>
+          <FormControl fullWidth size="small" error={!!errors.sub_origen}>
+  <InputLabel>
+    Sub Origen <span style={{ color: "red" }}>*</span>
+  </InputLabel>
+  <Select
+    value={formData.sub_origen || ""}
+    onChange={(e) => handleInputChange("sub_origen", e.target.value)}
+    label="Sub Origen"
+  >
+    {subOrigenes?.map((subOrigen) => (
+      <MenuItem key={subOrigen.id} value={subOrigen.id}>
+        {subOrigen.nombre}
+      </MenuItem>
+    )) || (
+      <MenuItem value="" disabled>
+        No data available
+      </MenuItem>
+    )}
+  </Select>
+  {errors.sub_origen && (
+    <FormHelperText>Este campo es obligatorio.</FormHelperText>
+  )}
+</FormControl>
+
+          </Grid>
+          <Grid item xs={12}>
+          <FormControl fullWidth size="small" error={!!errors.institucion}>
+  <InputLabel>
+    Institución <span style={{ color: "red" }}>*</span>
+  </InputLabel>
+  <Select
+    value={formData.institucion || ""}
+    onChange={(e) => handleInputChange("institucion", e.target.value)}
+    label="Institución"
+  >
+    {institucionesDemanda?.map((institucion) => (
+      <MenuItem key={institucion.id} value={institucion.id}>
+        {institucion.nombre}
+      </MenuItem>
+    )) || (
+      <MenuItem value="" disabled>
+        No data available
+      </MenuItem>
+    )}
+  </Select>
+  {errors.institucion && (
+    <FormHelperText>Este campo es obligatorio.</FormHelperText>
+  )}
+</FormControl>
+
           </Grid>
           <Grid item xs={6}>
             <TextField
@@ -373,256 +416,187 @@ export const renderStepContent = ({
               size="small"
             />
           </Grid>
+
+
           <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>Motivos de Intervención</InputLabel>
-              <Select
-                value={formData.presuntaVulneracion.motivos || ''}
-                onChange={async (e) => {
-                  const selectedMotivoId = e.target.value
-                  handleInputChange('presuntaVulneracion.motivos', selectedMotivoId)
 
-                  const existingDemandaMotivo = demandaMotivoIntervencion.find(
-                    dm => dm.demanda === demanda?.id && dm.motivo_intervencion === selectedMotivoId
-                  )
-
-                  if (!existingDemandaMotivo) {
-                    console.log('No existing demanda-motivo-intervencion found for this combination')
-                  } else {
-                    console.log('Existing demanda-motivo-intervencion:', existingDemandaMotivo)
-                  }
-
-                  const motivoDetails = await getMotivoIntervencion(selectedMotivoId)
-                  if (motivoDetails) {
-                    console.log('Motivo details:', motivoDetails)
-                  }
-                }}
-              >
-                {motivosIntervencion.map((motivo) => (
-                  <MenuItem key={motivo.id} value={motivo.id}>
-                    <ListItemText
-                      primary={motivo.nombre}
-                      secondary={`Descripción: ${motivo.descripcion}, Peso: ${motivo.peso}`}
-                    />
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+          <FormControl
+            fullWidth
+            size="small"
+            error={!!errors.presuntaVulneracion?.motivos}
+          >
+            <InputLabel>
+              Motivo de Intervención <span style={{ color: "red" }}>*</span>
+            </InputLabel>
+            <Select
+              value={formData.presuntaVulneracion?.motivos || ""}
+              onChange={(e) =>
+                handleInputChange(
+                  "presuntaVulneracion.motivos",
+                  e.target.value
+                )
+              }
+              label="Motivo de Intervención"
+            >
+              {motivosIntervencion.map((motivo) => (
+                <MenuItem key={motivo.id} value={motivo.id}>
+                  {motivo.nombre}
+                </MenuItem>
+              ))}
+            </Select>
+            {errors.presuntaVulneracion?.motivos && (
+              <FormHelperText>Este campo es obligatorio.</FormHelperText>
+            )}
+          </FormControl>
           </Grid>
+
+
           <Grid item xs={12}>
             <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Datos de Localización</Typography>
           </Grid>
-          <Grid item xs={12}>
-
-          </Grid>
-
-          {renderLocalizacionFields(
-
-            'localizacion',
-            formData.localizacion, // Ensure this contains all fetched data
-            handleInputChange,
-            barrios,
-            localidades,
-            cpcs
-          )}
-
+          {renderLocalizacionFields('localizacion', formData.localizacion, handleInputChange, barrios, localidades, cpcs)}
 
           <Grid item xs={12}>
-            <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Usuario Externo</Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formData.createNewUsuarioExterno}
-                  onChange={(e) => handleInputChange('createNewUsuarioExterno', e.target.checked)}
-                />
-              }
-              label="Crear nuevo usuario externo"
-            />
-          </Grid>
-          {formData.createNewUsuarioExterno ? (
-            <>
-              {/* Fields for creating a new usuario externo */}
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  label="Nombre"
-                  value={formData.usuarioExterno.nombre}
-                  onChange={(e) => handleInputChange('usuarioExterno.nombre', e.target.value)}
-                  size="small"
-                  required
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  label="Apellido"
-                  value={formData.usuarioExterno.apellido}
-                  onChange={(e) => handleInputChange('usuarioExterno.apellido', e.target.value)}
-                  size="small"
-                  required
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-                  <DatePicker
-                    label="Fecha de Nacimiento"
-                    value={formData.usuarioExterno.fecha_nacimiento ? new Date(formData.usuarioExterno.fecha_nacimiento) : null}
-                    onChange={(newValue) => handleInputChange('usuarioExterno.fecha_nacimiento', newValue ? newValue.toISOString().split('T')[0] : null)}
-                    renderInput={(params) => <TextField {...params} fullWidth size="small" required />}
-                  />
-                </LocalizationProvider>
-              </Grid>
-              <Grid item xs={6}>
-                <FormControl fullWidth size="small" required>
-                  <InputLabel>Género</InputLabel>
-                  <Select
-                    value={formData.usuarioExterno.genero}
-                    onChange={(e) => handleInputChange('usuarioExterno.genero', e.target.value)}
-                    label="Género"
-                  >
-                    <MenuItem value="MASCULINO">Masculino</MenuItem>
-                    <MenuItem value="FEMENINO">Femenino</MenuItem>
-                    <MenuItem value="OTRO">Otro</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  label="Teléfono"
-                  type="tel"
-                  value={formData.usuarioExterno.telefono}
-                  onChange={(e) => handleInputChange('usuarioExterno.telefono', e.target.value)}
-                  size="small"
-                  required
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  label="Email"
-                  type="email"
-                  value={formData.usuarioExterno.mail}
-                  onChange={(e) => handleInputChange('usuarioExterno.mail', e.target.value)}
-                  size="small"
-                  required
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <FormControl fullWidth size="small" required>
-                  <InputLabel>Vínculo</InputLabel>
-                  <Select
-                    value={formData.usuarioExterno.vinculo}
-                    onChange={(e) => handleInputChange('usuarioExterno.vinculo', e.target.value)}
-                    label="Vínculo"
-                  >
-                    {vinculosUsuarioExterno.map((vinculo) => (
-                      <MenuItem key={vinculo.id} value={vinculo.id}>
-                        {vinculo.nombre}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={6}>
-                <FormControl fullWidth size="small" required>
-                  <InputLabel>Institución</InputLabel>
-                  <Select
-                    value={formData.usuarioExterno.institucion}
-                    onChange={(e) => handleInputChange('usuarioExterno.institucion', e.target.value)}
-                    label="Institución"
-                  >
-                    {institucionesUsuarioExterno.map((institucion) => (
-                      <MenuItem key={institucion.id} value={institucion.id}>
-                        {institucion.nombre}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-            </>
-          ) : (
-            <Grid item xs={12}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Usuario Externo</InputLabel>
-                <Select
-                  value={formData.usuarioExterno.id || ''}
-                  onChange={(e) => {
-                    const selectedUser = usuariosExternos.find(user => user.id === e.target.value);
-                    handleInputChange('usuarioExterno', selectedUser || initialFormData(null).usuarioExterno);
-                  }}
-                  label="Usuario Externo"
-                >
-                  {usuariosExternos.map((usuario) => (
-                    <MenuItem key={usuario.id} value={usuario.id}>
-                      {`${usuario.nombre} ${usuario.apellido}`}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-          )}
-          {/* Display selected usuario externo details */}
-          {!formData.createNewUsuarioExterno && formData.usuarioExterno.id && (
-            <>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  label="Nombre"
-                  value={formData.usuarioExterno.nombre || ''}
-                  InputProps={{ readOnly: true }}
-                  size="small"
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  label="Apellido"
-                  value={formData.usuarioExterno.apellido || ''}
-                  InputProps={{ readOnly: true }}
-                  size="small"
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  label="Fecha de Nacimiento"
-                  value={formData.usuarioExterno.fecha_nacimiento || ''}
-                  InputProps={{ readOnly: true }}
-                  size="small"
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  label="Género"
-                  value={formData.usuarioExterno.genero || ''}
-                  InputProps={{ readOnly: true }}
-                  size="small"
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  label="Teléfono"
-                  value={formData.usuarioExterno.telefono || ''}
-                  InputProps={{ readOnly: true }}
-                  size="small"
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  label="Email"
-                  value={formData.usuarioExterno.mail || ''}
-                  InputProps={{ readOnly: true }}
-                  size="small"
-                />
-              </Grid>
-            </>
-          )}
+  <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Informante</Typography>
+</Grid>
+<Grid item xs={12}>
+  <FormControlLabel
+    control={
+      <Switch
+        checked={formData.createNewUsuarioExterno}
+        onChange={(e) => handleInputChange("createNewUsuarioExterno", e.target.checked)}
+      />
+    }
+    label="Crear nuevo Informante"
+  />
+</Grid>
+{formData.createNewUsuarioExterno ? (
+  <>
+    {/* Nombre */}
+    <Grid item xs={6}>
+      <TextField
+        fullWidth
+        label={
+          <>
+            Nombre <span style={{ color: "red" }}>*</span>
+          </>
+        }
+        value={formData.usuarioExterno.nombre}
+        onChange={(e) => handleInputChange("usuarioExterno.nombre", e.target.value)}
+        onBlur={() => handleBlur("usuarioExternoNombre")}
+        size="small"
+        error={touched.usuarioExternoNombre && !formData.usuarioExterno.nombre}
+        helperText={
+          touched.usuarioExternoNombre && !formData.usuarioExterno.nombre
+            ? "Completa este campo"
+            : ""
+        }
+      />
+    </Grid>
+
+    {/* Apellido */}
+    <Grid item xs={6}>
+      <TextField
+        fullWidth
+        label={
+          <>
+            Apellido <span style={{ color: "red" }}>*</span>
+          </>
+        }
+        value={formData.usuarioExterno.apellido}
+        onChange={(e) => handleInputChange("usuarioExterno.apellido", e.target.value)}
+        onBlur={() => handleBlur("usuarioExternoApellido")}
+        size="small"
+        error={touched.usuarioExternoApellido && !formData.usuarioExterno.apellido}
+        helperText={
+          touched.usuarioExternoApellido && !formData.usuarioExterno.apellido
+            ? "Completa este campo"
+            : ""
+        }
+      />
+    </Grid>
+
+    {/* Teléfono */}
+    <Grid item xs={6}>
+      <TextField
+        fullWidth
+        label={
+          <>
+            Teléfono <span style={{ color: "red" }}>*</span>
+          </>
+        }
+        type="number"
+        value={formData.usuarioExterno.telefono}
+        onChange={(e) => handleInputChange("usuarioExterno.telefono", e.target.value)}
+        onBlur={() => handleBlur("usuarioExternoTelefono")}
+        size="small"
+        error={touched.usuarioExternoTelefono && !formData.usuarioExterno.telefono}
+        helperText={
+          touched.usuarioExternoTelefono && !formData.usuarioExterno.telefono
+            ? "Completa este campo"
+            : ""
+        }
+      />
+    </Grid>
+
+    {/* Email */}
+    <Grid item xs={6}>
+      <TextField
+        fullWidth
+        label={
+          <>
+            Email <span style={{ color: "red" }}>*</span>
+          </>
+        }
+        type="email"
+        value={formData.usuarioExterno.mail}
+        onChange={(e) => handleInputChange("usuarioExterno.mail", e.target.value)}
+        onBlur={() => handleBlur("usuarioExternoMail")}
+        size="small"
+        error={touched.usuarioExternoMail && !formData.usuarioExterno.mail}
+        helperText={
+          touched.usuarioExternoMail && !formData.usuarioExterno.mail
+            ? "Completa este campo"
+            : ""
+        }
+      />
+    </Grid>
+  </>
+) : (
+  // Select Existing Informante
+  <Grid item xs={12}>
+    <FormControl
+      fullWidth
+      size="small"
+      error={touched.usuarioExternoId && !formData.usuarioExterno.id}
+    >
+      <InputLabel>
+        Informante <span style={{ color: "red" }}>*</span>
+      </InputLabel>
+      <Select
+        value={formData.usuarioExterno.id || ""}
+        onChange={(e) => handleInputChange("usuarioExterno.id", e.target.value)}
+        onBlur={() => handleBlur("usuarioExternoId")}
+        label="Informante"
+        renderValue={(selected) => {
+          const usuario = usuariosExternos.find((u) => u.id === selected);
+          return usuario ? `${usuario.nombre} ${usuario.apellido}` : "Seleccione un informante";
+        }}
+      >
+        {usuariosExternos.map((usuario) => (
+          <MenuItem key={usuario.id} value={usuario.id}>
+            {`${usuario.nombre} ${usuario.apellido}`}
+          </MenuItem>
+        ))}
+      </Select>
+      {touched.usuarioExternoId && !formData.usuarioExterno.id && (
+        <FormHelperText>Selecciona un informante</FormHelperText>
+      )}
+    </FormControl>
+  </Grid>
+)}
+
+
         </Grid>
       )
       case 1:
@@ -630,25 +604,62 @@ export const renderStepContent = ({
           <Box>
             <Typography color="primary" sx={{ mb: 2 }}>Niñas, niños y adolescentes convivientes</Typography>
             {formData.ninosAdolescentes.map((nino, index) => (
-              <Box key={index} sx={{ mb: 3 }}>
+              <Box key={index} sx={{ mb: 4, p: 2, border: '1px solid #ccc', borderRadius: '4px' }}>
+                <Typography variant="h6" gutterBottom>
+                  {index === 0 ? "Niño, Niña o Adolescente Principal" : `Niño, Niña o Adolescente ${index + 1}`}
+                </Typography>
+    
                 <Grid container spacing={2}>
-                  <Grid item xs={6}>
-                    <TextField
-                      fullWidth
-                      label="Nombre"
-                      value={nino.nombre}
-                      onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].nombre`, e.target.value)}
-                    />
-                  </Grid>
-                  <Grid item xs={6}>
-                    <TextField
-                      fullWidth
-                      label="Apellido"
-                      value={nino.apellido}
-                      onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].apellido`, e.target.value)}
-                    />
-                  </Grid>
+                <Grid item xs={6}>
+        <TextField
+          fullWidth
+          label={
+            <>
+              Nombre <span style={{ color: "red" }}>*</span>
+            </>
+          }
+          value={nino.nombre}
+          onChange={(e) =>
+            handleInputChange(`ninosAdolescentes[${index}].nombre`, e.target.value)
+          }
+          onBlur={() => handleBlur(`ninosAdolescentes[${index}].nombre`)}
+          size="small"
+          error={touched[`ninosAdolescentes[${index}].nombre`] && !nino.nombre}
+          helperText={
+            touched[`ninosAdolescentes[${index}].nombre`] && !nino.nombre
+              ? "Este campo es obligatorio"
+              : ""
+          }
+        />
+      </Grid>
+
+      <Grid item xs={6}>
+        <TextField
+          fullWidth
+          label={
+            <>
+              Apellido <span style={{ color: "red" }}>*</span>
+            </>
+          }
+          value={nino.apellido}
+          onChange={(e) =>
+            handleInputChange(
+              `ninosAdolescentes[${index}].apellido`,
+              e.target.value
+            )
+          }
+          onBlur={() => handleBlur(`ninosAdolescentes[${index}].apellido`)}
+          size="small"
+          error={touched[`ninosAdolescentes[${index}].apellido`] && !nino.apellido}
+          helperText={
+            touched[`ninosAdolescentes[${index}].apellido`] && !nino.apellido
+              ? "Este campo es obligatorio"
+              : ""
+          }
+        />
+      </Grid>
                 </Grid>
+    
                 <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
                   <DatePicker
                     label="Fecha de Nacimiento"
@@ -656,49 +667,89 @@ export const renderStepContent = ({
                     onChange={(newValue) => {
                       handleInputChange(`ninosAdolescentes[${index}].fechaNacimiento`, newValue ? formatDate(newValue) : null);
                     }}
-                    renderInput={(params) => <TextField {...params} fullWidth />}
+                    renderInput={(params) => <TextField {...params} fullWidth margin="normal" />}
                     inputFormat="yyyy-MM-dd"
                   />
                 </LocalizationProvider>
+    
                 <TextField
                   fullWidth
                   label="Edad Aproximada"
                   type="number"
                   value={nino.edadAproximada}
                   onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].edadAproximada`, e.target.value)}
+                  margin="normal"
                 />
+    
                 <TextField
                   fullWidth
                   label="DNI"
                   type="number"
                   value={nino.dni}
                   onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].dni`, e.target.value)}
+                  margin="normal"
                 />
-        <FormControl fullWidth>
-          <InputLabel>Situación DNI</InputLabel>
-          <Select
-            value={nino.situacionDni || ''}
-            onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].situacionDni`, e.target.value)}
-            label="Situación DNI"
-          >
-            <MenuItem value="EN_TRAMITE">En Trámite</MenuItem>
-            <MenuItem value="VENCIDO">Vencido</MenuItem>
-            <MenuItem value="EXTRAVIADO">Extraviado</MenuItem>
-          </Select>
-        </FormControl>
-                <FormControl fullWidth>
-                  <InputLabel>Género</InputLabel>
-                  <Select
-                    value={nino.genero}
-                    onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].genero`, e.target.value)}
-                    label="Género"
-                  >
-                    <MenuItem value="MASCULINO">Masculino</MenuItem>
-                    <MenuItem value="FEMENINO">Femenino</MenuItem>
-                    <MenuItem value="OTRO">Otro</MenuItem>
-                  </Select>
-                </FormControl>
+    
+    <FormControl
+        fullWidth
+        margin="normal"
+        error={
+          touched[`ninosAdolescentes[${index}].situacionDni`] && !nino.situacionDni
+        }
+      >
+        <InputLabel>
+          Situación DNI <span style={{ color: "red" }}>*</span>
+        </InputLabel>
+        <Select
+          value={nino.situacionDni}
+          onChange={(e) =>
+            handleInputChange(
+              `ninosAdolescentes[${index}].situacionDni`,
+              e.target.value
+            )
+          }
+          onBlur={() => handleBlur(`ninosAdolescentes[${index}].situacionDni`)}
+          label="Situación DNI"
+        >
+          <MenuItem value="VALIDO">Válido</MenuItem>
+          <MenuItem value="EN_TRAMITE">En Trámite</MenuItem>
+          <MenuItem value="VENCIDO">Vencido</MenuItem>
+          <MenuItem value="EXTRAVIADO">Extraviado</MenuItem>
+          <MenuItem value="INEXISTENTE">Inexistente</MenuItem>
+          <MenuItem value="OTRO">Otro</MenuItem>
+        </Select>
+        {touched[`ninosAdolescentes[${index}].situacionDni`] && !nino.situacionDni && (
+          <FormHelperText>Este campo es obligatorio</FormHelperText>
+        )}
+      </FormControl>
 
+    
+      <FormControl
+        fullWidth
+        margin="normal"
+        error={touched[`ninosAdolescentes[${index}].genero`] && !nino.genero}
+      >
+        <InputLabel>
+          Género <span style={{ color: "red" }}>*</span>
+        </InputLabel>
+        <Select
+          value={nino.genero}
+          onChange={(e) =>
+            handleInputChange(`ninosAdolescentes[${index}].genero`, e.target.value)
+          }
+          onBlur={() => handleBlur(`ninosAdolescentes[${index}].genero`)}
+          label="Género"
+        >
+          <MenuItem value="MASCULINO">Masculino</MenuItem>
+          <MenuItem value="FEMENINO">Femenino</MenuItem>
+          <MenuItem value="OTRO">Otro</MenuItem>
+        </Select>
+        {touched[`ninosAdolescentes[${index}].genero`] && !nino.genero && (
+          <FormHelperText>Este campo es obligatorio</FormHelperText>
+        )}
+      </FormControl>
+
+    
                 <TextField
                   fullWidth
                   label="Observaciones"
@@ -706,7 +757,45 @@ export const renderStepContent = ({
                   rows={4}
                   value={nino.observaciones}
                   onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].observaciones`, e.target.value)}
+                  margin="normal"
                 />
+ {index !== 0 && (
+        <FormControl
+          fullWidth
+          margin="normal"
+          error={
+            touched[`ninosAdolescentes[${index}].vinculacion.vinculo`] &&
+            !nino.vinculacion?.vinculo
+          }
+        >
+          <InputLabel>
+          Vínculo con NNYA principal <span style={{ color: "red" }}>*</span>
+          </InputLabel>
+          <Select
+            value={nino.vinculacion?.vinculo || ""}
+            onChange={(e) =>
+              handleInputChange(
+                `ninosAdolescentes[${index}].vinculacion.vinculo`,
+                e.target.value
+              )
+            }
+            onBlur={() =>
+              handleBlur(`ninosAdolescentes[${index}].vinculacion.vinculo`)
+            }
+            label="Vínculo"
+          >
+            {vinculoPersonas.map((vinculo) => (
+              <MenuItem key={vinculo.id} value={vinculo.id}>
+                {vinculo.nombre}
+              </MenuItem>
+            ))}
+          </Select>
+          {touched[`ninosAdolescentes[${index}].vinculacion.vinculo`] &&
+            !nino.vinculacion?.vinculo && (
+              <FormHelperText>Este campo es obligatorio</FormHelperText>
+            )}
+        </FormControl>
+      )}
                 <FormControlLabel
                   control={
                     <Switch
@@ -716,83 +805,134 @@ export const renderStepContent = ({
                   }
                   label="Usar localización de la demanda"
                 />
-                {!nino.useDefaultLocalizacion && (
-                  <Grid container spacing={2} sx={{ mt: 2 }}>
-                    <Grid item xs={12}>
-                      <Typography variant="subtitle1">Localización específica</Typography>
-                    </Grid>
-                    {renderLocalizacionFields(
-        `ninosAdolescentes[${index}].localizacion`,
-        nino.localizacion || {}, // Fetched localización data
-        handleInputChange,
-        barrios,
-        localidades,
-        cpcs
-      )}                  </Grid>
-                )}
-<Typography color="primary" sx={{ mt: 2, mb: 1 }}>Información Educativa</Typography>
-<FormControl fullWidth>
-  <InputLabel>Institución Educativa</InputLabel>
+    
+    {!nino.useDefaultLocalizacion && (
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="subtitle1">
+            Localización específica
+          </Typography>
+          {renderLocalizacionFields(
+            `ninosAdolescentes[${index}].localizacion`,
+            nino.localizacion,
+            handleInputChange,
+            barrios,
+            localidades,
+            cpcs
+          )}
+        </Box>
+      )}
+    
+                <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Información Educativa</Typography>
+                <FormControl
+        fullWidth
+        margin="normal"
+        error={
+          touched[`ninosAdolescentes[${index}].educacion.institucion_educativa`] &&
+          !nino.educacion?.institucion_educativa
+        }
+      >
+        <InputLabel>
+          Institución Educativa <span style={{ color: "red" }}>*</span>
+        </InputLabel>
+        <Select
+          value={nino.educacion?.institucion_educativa || ""}
+          onChange={(e) =>
+            handleInputChange(
+              `ninosAdolescentes[${index}].educacion.institucion_educativa`,
+              e.target.value
+            )
+          }
+          onBlur={() =>
+            handleBlur(`ninosAdolescentes[${index}].educacion.institucion_educativa`)
+          }
+          label="Institución Educativa"
+        >
+          {institucionesEducativas.map((institucion) => (
+            <MenuItem key={institucion.id} value={institucion.id}>
+              {institucion.nombre}
+            </MenuItem>
+          ))}
+        </Select>
+        {touched[`ninosAdolescentes[${index}].educacion.institucion_educativa`] &&
+          !nino.educacion?.institucion_educativa && (
+            <FormHelperText>Este campo es obligatorio</FormHelperText>
+          )}
+      </FormControl>
+    
+      <TextField
+  fullWidth
+  label={
+    <>
+      Curso <span style={{ color: "red" }}>*</span>
+    </>
+  }
+  value={nino.educacion?.curso || ""}
+  onChange={(e) =>
+    handleInputChange(`ninosAdolescentes[${index}].educacion.curso`, e.target.value)
+  }
+  onBlur={() => handleBlur(`ninosAdolescentes[${index}].educacion.curso`)}
+  margin="normal"
+  error={touched[`ninosAdolescentes[${index}].educacion.curso`] && !nino.educacion?.curso}
+  helperText={
+    touched[`ninosAdolescentes[${index}].educacion.curso`] && !nino.educacion?.curso
+      ? "Este campo es obligatorio"
+      : ""
+  }
+/>
+    
+<FormControl
+  fullWidth
+  margin="normal"
+  error={touched[`ninosAdolescentes[${index}].educacion.nivel`] && !nino.educacion?.nivel}
+>
+  <InputLabel>
+    Nivel <span style={{ color: "red" }}>*</span>
+  </InputLabel>
   <Select
-    value={nino.educacion?.institucion_educativa || ''}
+    value={nino.educacion?.nivel || ""}
     onChange={(e) =>
-      handleInputChange(
-        `ninosAdolescentes[${index}].educacion.institucion_educativa`,
-        e.target.value
-      )
+      handleInputChange(`ninosAdolescentes[${index}].educacion.nivel`, e.target.value)
     }
-    label="Institución Educativa"
+    onBlur={() => handleBlur(`ninosAdolescentes[${index}].educacion.nivel`)}
+    label="Nivel"
   >
-    {(institucionesEducativas || []).length > 0 ? (
-      institucionesEducativas.map((inst) => (
-        <MenuItem key={inst.id} value={inst.id}>
-          {inst.nombre}
-        </MenuItem>
-      ))
-    ) : (
-      <MenuItem value="" disabled>
-        No hay instituciones disponibles
-      </MenuItem>
-    )}
+    <MenuItem value="PRIMARIO">Primario</MenuItem>
+    <MenuItem value="SECUNDARIO">Secundario</MenuItem>
+    <MenuItem value="TERCIARIO">Terciario</MenuItem>
+    <MenuItem value="UNIVERSITARIO">Universitario</MenuItem>
+    <MenuItem value="OTRO">Otro</MenuItem>
   </Select>
+  {touched[`ninosAdolescentes[${index}].educacion.nivel`] && !nino.educacion?.nivel && (
+    <FormHelperText>Este campo es obligatorio</FormHelperText>
+  )}
 </FormControl>
-
-  
-                <TextField
-                  fullWidth
-                  label="Curso"
-                  value={nino.educacion?.curso || ''}
-                  onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].educacion.curso`, e.target.value)}
-                  sx={{ mb: 2 }}
-                />
-                <FormControl fullWidth sx={{ mb: 2 }}>
-                  <InputLabel>Nivel</InputLabel>
-                  <Select
-                    value={nino.educacion?.nivel || ''}
-                    onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].educacion.nivel`, e.target.value)}
-                    label="Nivel"
-                  >
-                    <MenuItem value="PRIMARIO">Primario</MenuItem>
-                    <MenuItem value="SECUNDARIO">Secundario</MenuItem>
-                    <MenuItem value="TERCIARIO">Terciario</MenuItem>
-                    <MenuItem value="UNIVERSITARIO">Universitario</MenuItem>
-                    <MenuItem value="OTRO">Otro</MenuItem>
-                  </Select>
-                </FormControl>
-                <FormControl fullWidth sx={{ mb: 2 }}>
-                  <InputLabel>Turno</InputLabel>
-                  <Select
-                    value={nino.educacion?.turno || ''}
-                    onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].educacion.turno`, e.target.value)}
-                    label="Turno"
-                  >
-                    <MenuItem value="MANIANA">Mañana</MenuItem>
-                    <MenuItem value="TARDE">Tarde</MenuItem>
-                    <MenuItem value="NOCHE">Noche</MenuItem>
-                    <MenuItem value="OTRO">Otro</MenuItem>
-                  </Select>
-                </FormControl>
-  
+    
+                <FormControl
+  fullWidth
+  margin="normal"
+  error={touched[`ninosAdolescentes[${index}].educacion.turno`] && !nino.educacion?.turno}
+>
+  <InputLabel>
+    Turno <span style={{ color: "red" }}>*</span>
+  </InputLabel>
+  <Select
+    value={nino.educacion?.turno || ""}
+    onChange={(e) =>
+      handleInputChange(`ninosAdolescentes[${index}].educacion.turno`, e.target.value)
+    }
+    onBlur={() => handleBlur(`ninosAdolescentes[${index}].educacion.turno`)}
+    label="Turno"
+  >
+    <MenuItem value="MANIANA">Mañana</MenuItem>
+    <MenuItem value="TARDE">Tarde</MenuItem>
+    <MenuItem value="NOCHE">Noche</MenuItem>
+    <MenuItem value="OTRO">Otro</MenuItem>
+  </Select>
+  {touched[`ninosAdolescentes[${index}].educacion.turno`] && !nino.educacion?.turno && (
+    <FormHelperText>Este campo es obligatorio</FormHelperText>
+  )}
+</FormControl>
+    
                 <TextField
                   fullWidth
                   label="Comentarios Educativos"
@@ -800,27 +940,46 @@ export const renderStepContent = ({
                   rows={2}
                   value={nino.educacion?.comentarios || ''}
                   onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].educacion.comentarios`, e.target.value)}
+                  margin="normal"
                 />
+    
                 <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Información de Salud</Typography>
-                <FormControl fullWidth>
-  <InputLabel>Institución Sanitaria</InputLabel>
+                <FormControl
+  fullWidth
+  margin="normal"
+  error={
+    touched[`ninosAdolescentes[${index}].salud.institucion_sanitaria`] &&
+    !nino.salud?.institucion_sanitaria
+  }
+>
+  <InputLabel>
+    Institución Sanitaria <span style={{ color: "red" }}>*</span>
+  </InputLabel>
   <Select
-    value={nino.salud?.institucion_sanitaria || ''}
-    onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].salud.institucion_sanitaria`, e.target.value)}
+    value={nino.salud?.institucion_sanitaria || ""}
+    onChange={(e) =>
+      handleInputChange(
+        `ninosAdolescentes[${index}].salud.institucion_sanitaria`,
+        e.target.value
+      )
+    }
+    onBlur={() =>
+      handleBlur(`ninosAdolescentes[${index}].salud.institucion_sanitaria`)
+    }
     label="Institución Sanitaria"
   >
-    {institucionesSanitarias && institucionesSanitarias.length > 0 ? (
-      institucionesSanitarias.map((inst) => (
-        <MenuItem key={inst.id} value={inst.id}>
-          {inst.nombre}
-        </MenuItem>
-      ))
-    ) : (
-      <MenuItem value="" disabled>No hay instituciones disponibles</MenuItem>
-    )}
+    {institucionesSanitarias.map((institucion) => (
+      <MenuItem key={institucion.id} value={institucion.id}>
+        {institucion.nombre}
+      </MenuItem>
+    ))}
   </Select>
+  {touched[`ninosAdolescentes[${index}].salud.institucion_sanitaria`] &&
+    !nino.salud?.institucion_sanitaria && (
+      <FormHelperText>Este campo es obligatorio</FormHelperText>
+    )}
 </FormControl>
-
+    
                 <TextField
                   fullWidth
                   label="Observaciones de Salud"
@@ -828,434 +987,667 @@ export const renderStepContent = ({
                   rows={2}
                   value={nino.salud?.observaciones || ''}
                   onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].salud.observaciones`, e.target.value)}
+                  margin="normal"
                 />
               </Box>
-  
-            )
-            )
-            }
+            ))}
             <Button
               startIcon={<AddIcon />}
               onClick={addNinoAdolescente}
-              sx={{ color: 'primary.main' }}
+              sx={{ color: 'primary.main', mt: 2 }}
             >
               Añadir otro niño o adolescente
             </Button>
           </Box>
         )
-      case 2:
-        return (
-<Box>
-  <Typography color="primary" sx={{ mb: 2 }}>Adultos convivientes</Typography>
-  {formData.adultosConvivientes.map((adulto, index) => (
-    <Box key={index} sx={{ mb: 3 }}>
-      <Grid container spacing={2}>
+        case 2:
+          return (
+            <Box>
+              <Typography color="primary" sx={{ mb: 2 }}>Adultos convivientes</Typography>
+              {formData.adultosConvivientes.map((adulto, index) => (
+                <Box key={index} sx={{ mb: 4, p: 2, border: '1px solid #ccc', borderRadius: '4px' }}>
+                  <Typography variant="h6" gutterBottom>
+                    Adulto Conviviente {index + 1}
+                  </Typography>
+      
+                  <Grid container spacing={2}>
+                  <Grid item xs={6}>
+          <TextField
+            fullWidth
+            label={
+              <>
+                Nombre <span style={{ color: "red" }}>*</span>
+              </>
+            }
+            value={adulto.nombre}
+            onChange={(e) =>
+              handleInputChange(`adultosConvivientes[${index}].nombre`, e.target.value)
+            }
+            onBlur={() => handleBlur(`adultosConvivientes[${index}].nombre`)}
+            margin="normal"
+            error={touched[`adultosConvivientes[${index}].nombre`] && !adulto.nombre}
+            helperText={
+              touched[`adultosConvivientes[${index}].nombre`] && !adulto.nombre
+                ? "Este campo es obligatorio"
+                : ""
+            }
+          />
+        </Grid>
+
         <Grid item xs={6}>
           <TextField
             fullWidth
-            label="Nombre"
-            value={adulto.nombre || ''}
-            onChange={(e) => handleInputChange(`adultosConvivientes[${index}].nombre`, e.target.value)}
+            label={
+              <>
+                Apellido <span style={{ color: "red" }}>*</span>
+              </>
+            }
+            value={adulto.apellido}
+            onChange={(e) =>
+              handleInputChange(`adultosConvivientes[${index}].apellido`, e.target.value)
+            }
+            onBlur={() => handleBlur(`adultosConvivientes[${index}].apellido`)}
+            margin="normal"
+            error={touched[`adultosConvivientes[${index}].apellido`] && !adulto.apellido}
+            helperText={
+              touched[`adultosConvivientes[${index}].apellido`] && !adulto.apellido
+                ? "Este campo es obligatorio"
+                : ""
+            }
           />
         </Grid>
-        <Grid item xs={6}>
-          <TextField
-            fullWidth
-            label="Apellido"
-            value={adulto.apellido || ''}
-            onChange={(e) => handleInputChange(`adultosConvivientes[${index}].apellido`, e.target.value)}
-          />
-        </Grid>
-      </Grid>
-      <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-        <DatePicker
-          label="Fecha de Nacimiento"
-          value={adulto.fechaNacimiento ? new Date(adulto.fechaNacimiento) : null}
-          onChange={(newValue) =>
-            handleInputChange(`adultosConvivientes[${index}].fechaNacimiento`, newValue ? formatDate(newValue) : null)
-          }
-          renderInput={(params) => <TextField {...params} fullWidth />}
-        />
-      </LocalizationProvider>
-      <TextField
+                  </Grid>
+      
+                  <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+                    <DatePicker
+                      label="Fecha de Nacimiento"
+                      value={adulto.fechaNacimiento ? new Date(adulto.fechaNacimiento) : null}
+                      onChange={(newValue) =>
+                        handleInputChange(`adultosConvivientes[${index}].fechaNacimiento`, newValue ? formatDate(newValue) : null)
+                      }
+                      renderInput={(params) => <TextField {...params} fullWidth margin="normal" />}
+                      inputFormat="yyyy-MM-dd"
+                    />
+                  </LocalizationProvider>
+      
+                  <TextField
+                    fullWidth
+                    label="Edad Aproximada"
+                    type="number"
+                    value={adulto.edadAproximada}
+                    onChange={(e) => handleInputChange(`adultosConvivientes[${index}].edadAproximada`, e.target.value)}
+                    margin="normal"
+                  />
+      
+                  <TextField
+                    fullWidth
+                    label="DNI"
+                    type="number"
+                    value={adulto.dni}
+                    onChange={(e) => handleInputChange(`adultosConvivientes[${index}].dni`, e.target.value)}
+                    margin="normal"
+                  />
+      
+      <FormControl
         fullWidth
-        label="Edad Aproximada"
-        type="number"
-        value={adulto.edadAproximada || ''}
-        onChange={(e) => handleInputChange(`adultosConvivientes[${index}].edadAproximada`, e.target.value)}
-      />
-      <TextField
-        fullWidth
-        label="DNI"
-        type="number"
-        value={adulto.dni || ''}
-        onChange={(e) => handleInputChange(`adultosConvivientes[${index}].dni`, e.target.value)}
-      />
-      <FormControl fullWidth>
-        <InputLabel>Situación DNI</InputLabel>
+        margin="normal"
+        error={
+          touched[`adultosConvivientes[${index}].situacionDni`] && !adulto.situacionDni
+        }
+      >
+        <InputLabel>
+          Situación DNI <span style={{ color: "red" }}>*</span>
+        </InputLabel>
         <Select
-          value={adulto.situacionDni || ''}
-          onChange={(e) => handleInputChange(`adultosConvivientes[${index}].situacionDni`, e.target.value)}
+          value={adulto.situacionDni}
+          onChange={(e) =>
+            handleInputChange(
+              `adultosConvivientes[${index}].situacionDni`,
+              e.target.value
+            )
+          }
+          onBlur={() => handleBlur(`adultosConvivientes[${index}].situacionDni`)}
           label="Situación DNI"
         >
+          <MenuItem value="VALIDO">Válido</MenuItem>
           <MenuItem value="EN_TRAMITE">En Trámite</MenuItem>
-          <MenuItem value="TIENE">Tiene</MenuItem>
-          <MenuItem value="NO_TIENE">No Tiene</MenuItem>
+          <MenuItem value="VENCIDO">Vencido</MenuItem>
+          <MenuItem value="EXTRAVIADO">Extraviado</MenuItem>
+          <MenuItem value="INEXISTENTE">Inexistente</MenuItem>
+          <MenuItem value="OTRO">Otro</MenuItem>
         </Select>
+        {touched[`adultosConvivientes[${index}].situacionDni`] && !adulto.situacionDni && (
+          <FormHelperText>Este campo es obligatorio</FormHelperText>
+        )}
       </FormControl>
-      <FormControl fullWidth>
-        <InputLabel>Género</InputLabel>
+      
+      <FormControl
+        fullWidth
+        margin="normal"
+        error={touched[`adultosConvivientes[${index}].genero`] && !adulto.genero}
+      >
+        <InputLabel>
+          Género <span style={{ color: "red" }}>*</span>
+        </InputLabel>
         <Select
-          value={adulto.genero || ''}
-          onChange={(e) => handleInputChange(`adultosConvivientes[${index}].genero`, e.target.value)}
+          value={adulto.genero}
+          onChange={(e) =>
+            handleInputChange(`adultosConvivientes[${index}].genero`, e.target.value)
+          }
+          onBlur={() => handleBlur(`adultosConvivientes[${index}].genero`)}
           label="Género"
         >
           <MenuItem value="MASCULINO">Masculino</MenuItem>
           <MenuItem value="FEMENINO">Femenino</MenuItem>
           <MenuItem value="OTRO">Otro</MenuItem>
         </Select>
+        {touched[`adultosConvivientes[${index}].genero`] && !adulto.genero && (
+          <FormHelperText>Este campo es obligatorio</FormHelperText>
+        )}
       </FormControl>
-      <FormControlLabel
-        control={
-          <Checkbox
-            checked={adulto.supuesto_autordv || false}
-            onChange={(e) => handleInputChange(`adultosConvivientes[${index}].supuesto_autordv`, e.target.checked)}
-          />
-        }
-        label="Supuesto autor DV"
-      />
-      <FormControlLabel
-        control={
-          <Checkbox
-            checked={adulto.conviviente || false}
-            onChange={(e) => handleInputChange(`adultosConvivientes[${index}].conviviente`, e.target.checked)}
-          />
-        }
-        label="Conviviente"
-      />
-      <FormControlLabel
-        control={
-          <Switch
-            checked={adulto.botonAntipanico || false}
-            onChange={(e) => handleInputChange(`adultosConvivientes[${index}].botonAntipanico`, e.target.checked)}
-          />
-        }
-        label="Botón Antipánico"
-      />
-      <TextField
-        fullWidth
-        label="Observaciones"
-        multiline
-        rows={4}
-        value={adulto.observaciones || ''}
-        onChange={(e) => handleInputChange(`adultosConvivientes[${index}].observaciones`, e.target.value)}
-      />
-      <FormControlLabel
-        control={
-          <Switch
-            checked={adulto.useDefaultLocalizacion || false}
-            onChange={(e) => handleInputChange(`adultosConvivientes[${index}].useDefaultLocalizacion`, e.target.checked)}
-          />
-        }
-        label="Usar localización de la demanda"
-      />
-      {!adulto.useDefaultLocalizacion && (
-        <Grid container spacing={2} sx={{ mt: 2 }}>
-          {!adulto.useDefaultLocalizacion && (
-  <Grid container spacing={2} sx={{ mt: 2 }}>
-    <Grid item xs={12}>
-      <Typography variant="subtitle1">Localización específica</Typography>
-    </Grid>
-    {renderLocalizacionFields(
-      `adultosConvivientes[${index}].localizacion`,
-      adulto.localizacion || {}, // Ensure safe access
-      handleInputChange,
-      barrios,
-      localidades,
-      cpcs
-    )}
-  </Grid>
-)}
-
-        </Grid>
-      )}
-    </Box>
-  ))}
-  <Button startIcon={<AddIcon />} onClick={addAdultoConviviente} sx={{ color: 'primary.main' }}>
-    Añadir otro adulto conviviente
-  </Button>
-</Box>
-
-        )
-        case 3:
-          return (
-            <Box>
-            <Typography variant="h6" color="primary" gutterBottom>
-              Presunta Vulneración de Derechos informada
-            </Typography>
-            
-            {formData.vulneraciones.map((vulneracion, index) => (
-              <Box key={index} sx={{ mb: 4, p: 2, border: '1px solid #ccc', borderRadius: '4px' }}>
-                <Typography variant="h6" gutterBottom>Vulneración {index + 1}</Typography>
-                
-                <FormControl fullWidth margin="normal">
-                  <InputLabel>Categoría de Motivo</InputLabel>
-                  <Select
-                    value={vulneracion.categoria_motivo || ''}
-                    onChange={(e) => handleInputChange(`vulneraciones[${index}].categoria_motivo`, e.target.value)}
-                  >
-                    {categoriaMotivos.map((motivo) => (
-                      <MenuItem key={motivo.id} value={motivo.id}>
-                        {motivo.nombre}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-        
-                  {/* Subcategoría */}
-                  <FormControl fullWidth margin="normal">
-                    <InputLabel>Subcategoría</InputLabel>
-                    <Select
-                      value={vulneracion.categoria_submotivo || ''}
-                      onChange={(e) =>
-                        handleInputChange(`vulneraciones[${index}].categoria_submotivo`, e.target.value)
+    
+      
+                  <Box sx={{ mt: 1 }}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={adulto.conviviente}
+                          onChange={(e) => handleInputChange(`adultosConvivientes[${index}].conviviente`, e.target.checked)}
+                        />
                       }
-                      disabled={!vulneracion.categoria_motivo}
-                    >
-                      {categoriaSubmotivos
-                        .filter((submotivo) => submotivo.motivo === vulneracion.categoria_motivo)
-                        .map((submotivo) => (
-                          <MenuItem key={submotivo.id} value={submotivo.id}>
-                            {submotivo.nombre}
-                          </MenuItem>
-                        ))}
-                    </Select>
-                  </FormControl>
-        
-                  {/* Gravedad de la Vulneración */}
-                  <FormControl fullWidth margin="normal">
-                    <InputLabel>Gravedad de la Vulneración</InputLabel>
-                    <Select
-                      value={vulneracion.gravedad_vulneracion || ''}
-                      onChange={(e) =>
-                        handleInputChange(`vulneraciones[${index}].gravedad_vulneracion`, e.target.value)
+                      label="Conviviente"
+                    />
+                  </Box>
+                  <FormGroup row>
+  <FormControlLabel
+    control={
+      <Checkbox
+        checked={adulto.supuesto_autordv || false}
+        onChange={(e) => {
+          handleInputChange(`adultosConvivientes[${index}].supuesto_autordv`, e.target.checked);
+          if (e.target.checked) {
+            handleInputChange(`adultosConvivientes[${index}].garantiza_proteccion`, false);
+          }
+        }}
+      />
+    }
+    label="Supuesto Autor DV"
+  />
+  <FormControlLabel
+    control={
+      <Checkbox
+        checked={adulto.garantiza_proteccion || false}
+        onChange={(e) => {
+          handleInputChange(`adultosConvivientes[${index}].garantiza_proteccion`, e.target.checked);
+          if (e.target.checked) {
+            handleInputChange(`adultosConvivientes[${index}].supuesto_autordv`, false);
+          }
+        }}
+      />
+    }
+    label="Garantiza Protección"
+  />
+</FormGroup>
+                  <Box sx={{ mt: 1 }}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={adulto.botonAntipanico}
+                          onChange={(e) => handleInputChange(`adultosConvivientes[${index}].botonAntipanico`, e.target.checked)}
+                        />
                       }
-                    >
-                      {gravedadVulneraciones.map((gravedad) => (
-                        <MenuItem key={gravedad.id} value={gravedad.id}>
-                          {gravedad.nombre}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-        
-                  {/* Urgencia de la Vulneración */}
-                  <FormControl fullWidth margin="normal">
-                    <InputLabel>Urgencia de la Vulneración</InputLabel>
-                    <Select
-                      value={vulneracion.urgencia_vulneracion || ''}
-                      onChange={(e) =>
-                        handleInputChange(`vulneraciones[${index}].urgencia_vulneracion`, e.target.value)
-                      }
-                    >
-                      {urgenciaVulneraciones.map((urgencia) => (
-                        <MenuItem key={urgencia.id} value={urgencia.id}>
-                          {urgencia.nombre}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-        
-                  {/* NNyA */}
-                  <FormControl fullWidth margin="normal">
-  <InputLabel>NNyA</InputLabel>
-  <Select
-    value={vulneracion.nnya || ''}
-    onChange={(e) => handleInputChange(`vulneraciones[${index}].nnya`, e.target.value)}
-  >
-    {formData.ninosAdolescentes.map((nino, index) => (
-      <MenuItem key={nino.id} value={nino.id}>
-        {`${nino.nombre} ${nino.apellido}`}
-      </MenuItem>
-    ))}
-  </Select>
-</FormControl>
-
-        
-                  {/* Autor DV */}
-                  <FormControl fullWidth margin="normal">
-  <InputLabel>Autor DV</InputLabel>
-  <Select
-    value={vulneracion.autor_dv || ''}
-    onChange={(e) => handleInputChange(`vulneraciones[${index}].autor_dv`, e.target.value)}
-  >
-    {formData.adultosConvivientes.map((adulto, index) => (
-      <MenuItem key={adulto.id} value={adulto.id}>
-        {`${adulto.nombre} ${adulto.apellido}`}
-      </MenuItem>
-    ))}
-  </Select>
-</FormControl>
-
-        
-                  {/* Principal Demanda */}
+                      label="Botón Antipánico"
+                    />
+                  </Box>
+      
+                  <TextField
+                    fullWidth
+                    label="Observaciones"
+                    multiline
+                    rows={4}
+                    value={adulto.observaciones}
+                    onChange={(e) => handleInputChange(`adultosConvivientes[${index}].observaciones`, e.target.value)}
+                    margin="normal"
+                  />
+      
                   <Box sx={{ mt: 2 }}>
                     <FormControlLabel
                       control={
-                        <Checkbox
-                          checked={vulneracion.principal_demanda || false}
-                          onChange={(e) =>
-                            handleInputChange(`vulneraciones[${index}].principal_demanda`, e.target.checked)
-                          }
+                        <Switch
+                          checked={adulto.useDefaultLocalizacion}
+                          onChange={(e) => handleInputChange(`adultosConvivientes[${index}].useDefaultLocalizacion`, e.target.checked)}
                         />
                       }
-                      label="Principal Demanda"
-                    />
-        
-                    {/* Transcurre en Actualidad */}
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={vulneracion.transcurre_actualidad || false}
-                          onChange={(e) =>
-                            handleInputChange(
-                              `vulneraciones[${index}].transcurre_actualidad`,
-                              e.target.checked
-                            )
-                          }
-                        />
-                      }
-                      label="Transcurre en Actualidad"
+                      label="Usar localización de la demanda"
                     />
                   </Box>
+      
+                  {!adulto.useDefaultLocalizacion && (
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="subtitle1">Localización específica</Typography>
+          {renderLocalizacionFields(
+            `adultosConvivientes[${index}].localizacion`,
+            adulto.localizacion,
+            handleInputChange,
+            barrios,
+            localidades,
+            cpcs
+          )}
+        </Box>
+      )}
+              <Box sx={{ mt: 2 }}>
+          <Typography variant="subtitle1" gutterBottom>Vinculación con NNyA Principal</Typography>
+          <FormControl
+        fullWidth
+        margin="normal"
+        error={
+          touched[`adultosConvivientes[${index}].vinculacion.vinculo`] &&
+          !adulto.vinculacion?.vinculo
+        }
+      >
+        <InputLabel>
+          Vínculo con NNyA Principal <span style={{ color: "red" }}>*</span>
+        </InputLabel>
+        <Select
+          value={adulto.vinculacion?.vinculo || ""}
+          onChange={(e) =>
+            handleInputChange(
+              `adultosConvivientes[${index}].vinculacion.vinculo`,
+              e.target.value
+            )
+          }
+          onBlur={() =>
+            handleBlur(`adultosConvivientes[${index}].vinculacion.vinculo`)
+          }
+          label="Vínculo"
+        >
+          {vinculoPersonas.map((vinculo) => (
+            <MenuItem key={vinculo.id} value={vinculo.id}>
+              {vinculo.nombre}
+            </MenuItem>
+          ))}
+        </Select>
+        {touched[`adultosConvivientes[${index}].vinculacion.vinculo`] &&
+          !adulto.vinculacion?.vinculo && (
+            <FormHelperText>Este campo es obligatorio</FormHelperText>
+          )}
+      </FormControl>
+        </Box>
+
                 </Box>
               ))}
-        
               <Button
                 startIcon={<AddIcon />}
-                onClick={() =>
-                  handleInputChange('vulneraciones', [
-                    ...formData.vulneraciones,
-                    { categoria_motivo: '', categoria_submotivo: '' },
-                  ])
-                }
-                sx={{ mt: 2, color: 'primary.main' }}
+                onClick={addAdultoConviviente}
+                sx={{ color: 'primary.main', mt: 2 }}
               >
-                Añadir otra vulneración
+                Añadir otro adulto conviviente
               </Button>
-        
-              <Typography variant="h6" color="primary" gutterBottom sx={{ mt: 4 }}>
-                Vulneraciones Añadidas: {formData.vulneraciones.length}
-              </Typography>
             </Box>
-          );
-          case 4:
-            return (
-              <Box>
-                <Typography variant="h6" gutterBottom>
-                  Vínculos
-                </Typography>
-                {formData.vinculaciones.map((vinculacion, index) => renderVinculacion(vinculacion, index))}
-                <Button variant="contained" color="primary" onClick={addVinculacion} sx={{ mt: 2 }}>
-                  Agregar Vinculación
-                </Button>
-              </Box>
+          )
+    case 3:
+      return (
+        <Box>
+          <Typography variant="h6" color="primary" gutterBottom>
+            Presunta Vulneración de Derechos informada
+          </Typography>
+
+          {formData.vulneraciones.map((vulneracion, index) => (
+            <Box key={index} sx={{ mb: 4, p: 2, border: '1px solid #ccc', borderRadius: '4px' }}>
+              <Typography variant="h6" gutterBottom>Vulneración {index + 1}</Typography>
+
+              <FormControl
+        fullWidth
+        margin="normal"
+        error={
+          touched[`vulneraciones[${index}].categoria_motivo`] &&
+          !vulneracion.categoria_motivo
+        }
+      >
+        <InputLabel>
+          Categoría de Motivos <span style={{ color: "red" }}>*</span>
+        </InputLabel>
+        <Select
+          value={vulneracion.categoria_motivo}
+          onChange={(e) =>
+            handleInputChange(`vulneraciones[${index}].categoria_motivo`, e.target.value)
+          }
+          onBlur={() => handleBlur(`vulneraciones[${index}].categoria_motivo`)}
+          label="Categoría de Motivos"
+        >
+          {categoriaMotivos.map((motivo) => (
+            <MenuItem key={motivo.id} value={motivo.id}>
+              {motivo.nombre}
+            </MenuItem>
+          ))}
+        </Select>
+        {touched[`vulneraciones[${index}].categoria_motivo`] &&
+          !vulneracion.categoria_motivo && (
+            <FormHelperText>Este campo es obligatorio</FormHelperText>
+          )}
+      </FormControl>
+
+
+      <FormControl
+        fullWidth
+        margin="normal"
+        error={
+          touched[`vulneraciones[${index}].categoria_submotivo`] &&
+          !vulneracion.categoria_submotivo
+        }
+      >
+        <InputLabel>
+          Subcategoría <span style={{ color: "red" }}>*</span>
+        </InputLabel>
+        <Select
+          value={vulneracion.categoria_submotivo}
+          onChange={(e) =>
+            handleInputChange(
+              `vulneraciones[${index}].categoria_submotivo`,
+              e.target.value
             )
-            case 5:
-              return (
-                <Box>
-                  <Typography color="primary" sx={{ mb: 2 }}>
-                    Condiciones de Vulnerabilidad
-                  </Typography>
-                  {formData.condicionesVulnerabilidad.map((condicion, index) => {
-                    const isAdulto = condicion.persona.startsWith('adulto-');
-                    const filteredCondiciones = isAdulto
-                      ? condicionesVulnerabilidadAdultos
-                      : condicionesVulnerabilidadNNyA;
-            
-                    return (
-                      <Box key={index} sx={{ mb: 4, p: 2, border: '1px solid #ccc', borderRadius: '4px' }}>
-                        <Typography variant="h6" gutterBottom>
-                          Condición de Vulnerabilidad {index + 1}
-                        </Typography>
-            
-                        <FormControl fullWidth margin="normal">
-                          <InputLabel>Persona</InputLabel>
-                          <Select
-                            value={condicion.persona}
-                            onChange={(e) => handleInputChange(`condicionesVulnerabilidad[${index}].persona`, e.target.value)}
-                            label="Persona"
-                          >
-                            {formData.ninosAdolescentes.map((nino, ninoIndex) => (
-                              <MenuItem key={`nino-${ninoIndex}`} value={`nino-${ninoIndex}`}>
-                                {nino.nombre} {nino.apellido} (NNyA)
-                              </MenuItem>
-                            ))}
-                            {formData.adultosConvivientes.map((adulto, adultoIndex) => (
-                              <MenuItem key={`adulto-${adultoIndex}`} value={`adulto-${adultoIndex}`}>
-                                {adulto.nombre} {adulto.apellido} (Adulto)
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-            
-                        <FormControl fullWidth margin="normal">
-                          <InputLabel>Condición de Vulnerabilidad</InputLabel>
-                          <Select
-                            value={condicion.condicion_vulnerabilidad}
-                            onChange={(e) =>
-                              handleInputChange(`condicionesVulnerabilidad[${index}].condicion_vulnerabilidad`, e.target.value)
-                            }
-                            label="Condición de Vulnerabilidad"
-                          >
-                            {filteredCondiciones.map((cv) => (
-                              <MenuItem key={cv.id} value={cv.id}>
-                                {cv.nombre} - {cv.descripcion}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-            
-                        <FormControl component="fieldset" margin="normal">
-                          <Typography component="legend">¿Aplica esta condición?</Typography>
-                          <RadioGroup
-                            row
-                            value={condicion.si_no ? 'si' : 'no'}
-                            onChange={(e) =>
-                              handleInputChange(`condicionesVulnerabilidad[${index}].si_no`, e.target.value === 'si')
-                            }
-                          >
-                            <FormControlLabel value="si" control={<Radio />} label="Sí" />
-                            <FormControlLabel value="no" control={<Radio />} label="No" />
-                          </RadioGroup>
-                        </FormControl>
-            
-                        <Box sx={{ mt: 2 }}>
-                          <Button
-                            variant="outlined"
-                            color="secondary"
-                            onClick={() => removeCondicionVulnerabilidad(index)}
-                          >
-                            Eliminar Condición de Vulnerabilidad
-                          </Button>
-                        </Box>
-                      </Box>
-                    );
-                  })}
-                  <Button
-                    startIcon={<AddIcon />}
-                    onClick={addCondicionVulnerabilidad}
-                    sx={{ color: 'primary.main', mt: 2 }}
-                  >
-                    Añadir otra Condición de Vulnerabilidad
-                  </Button>
-                </Box>
-              );
-            
+          }
+          onBlur={() => handleBlur(`vulneraciones[${index}].categoria_submotivo`)}
+          label="Subcategoría"
+          disabled={!vulneracion.categoria_motivo}
+        >
+          {categoriaSubmotivos
+            .filter((submotivo) => submotivo.motivo === vulneracion.categoria_motivo)
+            .map((submotivo) => (
+              <MenuItem key={submotivo.id} value={submotivo.id}>
+                {submotivo.nombre}
+              </MenuItem>
+            ))}
+        </Select>
+        {touched[`vulneraciones[${index}].categoria_submotivo`] &&
+          !vulneracion.categoria_submotivo && (
+            <FormHelperText>Este campo es obligatorio</FormHelperText>
+          )}
+      </FormControl>
+
+      <FormControl
+        fullWidth
+        margin="normal"
+        error={
+          touched[`vulneraciones[${index}].gravedad_vulneracion`] &&
+          !vulneracion.gravedad_vulneracion
+        }
+      >
+        <InputLabel>
+          Gravedad de la Vulneración <span style={{ color: "red" }}>*</span>
+        </InputLabel>
+        <Select
+          value={vulneracion.gravedad_vulneracion}
+          onChange={(e) =>
+            handleInputChange(
+              `vulneraciones[${index}].gravedad_vulneracion`,
+              e.target.value
+            )
+          }
+          onBlur={() => handleBlur(`vulneraciones[${index}].gravedad_vulneracion`)}
+          label="Gravedad de la Vulneración"
+        >
+          {gravedadVulneraciones.map((gravedad) => (
+            <MenuItem key={gravedad.id} value={gravedad.id}>
+              {gravedad.nombre}
+            </MenuItem>
+          ))}
+        </Select>
+        {touched[`vulneraciones[${index}].gravedad_vulneracion`] &&
+          !vulneracion.gravedad_vulneracion && (
+            <FormHelperText>Este campo es obligatorio</FormHelperText>
+          )}
+      </FormControl>
+
+      <FormControl
+        fullWidth
+        margin="normal"
+        error={
+          touched[`vulneraciones[${index}].urgencia_vulneracion`] &&
+          !vulneracion.urgencia_vulneracion
+        }
+      >
+        <InputLabel>
+          Urgencia de la Vulneración <span style={{ color: "red" }}>*</span>
+        </InputLabel>
+        <Select
+          value={vulneracion.urgencia_vulneracion}
+          onChange={(e) =>
+            handleInputChange(
+              `vulneraciones[${index}].urgencia_vulneracion`,
+              e.target.value
+            )
+          }
+          onBlur={() => handleBlur(`vulneraciones[${index}].urgencia_vulneracion`)}
+          label="Urgencia de la Vulneración"
+        >
+          {urgenciaVulneraciones.map((urgencia) => (
+            <MenuItem key={urgencia.id} value={urgencia.id}>
+              {urgencia.nombre}
+            </MenuItem>
+          ))}
+        </Select>
+        {touched[`vulneraciones[${index}].urgencia_vulneracion`] &&
+          !vulneracion.urgencia_vulneracion && (
+            <FormHelperText>Este campo es obligatorio</FormHelperText>
+          )}
+      </FormControl>
+
+      <FormControl
+  fullWidth
+  margin="normal"
+  error={touched[`vulneraciones[${index}].nnya`] && (vulneracion.nnya === null || vulneracion.nnya === "")}
+>
+  <InputLabel>
+    NNyA <span style={{ color: "red" }}>*</span>
+  </InputLabel>
+  <Select
+    value={vulneracion.nnya ?? ""} // Ensure controlled value, handling null or undefined
+    onChange={(e) =>
+      handleInputChange(`vulneraciones[${index}].nnya`, e.target.value)
+    }
+    onBlur={() => handleBlur(`vulneraciones[${index}].nnya`)}
+    label="NNyA"
+  >
+    {/* Add a placeholder option */}
+    <MenuItem value="">
+      <em>Seleccione una opción</em>
+    </MenuItem>
+    {formData.ninosAdolescentes.map((nnya, nnyaIndex) => (
+      <MenuItem key={nnyaIndex} value={nnyaIndex}>
+        {`${nnya.nombre} ${nnya.apellido}`}
+      </MenuItem>
+    ))}
+  </Select>
+  {touched[`vulneraciones[${index}].nnya`] &&
+    (vulneracion.nnya === null || vulneracion.nnya === "") && (
+      <FormHelperText>Este campo es obligatorio</FormHelperText>
+    )}
+</FormControl>
+
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Autor DV</InputLabel>
+                <Select
+                  value={vulneracion.autor_dv}
+                  onChange={(e) => handleInputChange(`vulneraciones[${index}].autor_dv`, e.target.value)}
+                >
+                  {formData.adultosConvivientes.map((adulto, adultoIndex) => (
+                    <MenuItem key={adultoIndex} value={adultoIndex}>
+                      {`${adulto.nombre} ${adulto.apellido}`}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <Box sx={{ mt: 2 }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={vulneracion.principal_demanda}
+                      onChange={(e) => handleInputChange(`vulneraciones[${index}].principal_demanda`, e.target.checked)}
+                    />
+                  }
+                  label="Principal Demanda"
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={vulneracion.transcurre_actualidad}
+                      onChange={(e) => handleInputChange(`vulneraciones[${index}].transcurre_actualidad`, e.target.checked)}
+                    />
+                  }
+                  label="Transcurre Actualidad"
+                />
+              </Box>
+            </Box>
+          ))}
+
+          <Button
+            startIcon={<AddIcon />}
+            onClick={addVulneraciontext}
+            sx={{ mt: 2, color: 'primary.main' }}
+          >
+            Añadir otra vulneración
+          </Button>
+
+          <Typography variant="h6" color="primary" gutterBottom sx={{ mt: 4 }}>
+            Vulneraciones Añadidas: {formData.vulneraciones.length}
+          </Typography>
+        </Box>
+      )
+
+
+        case 4:
+          return (
+            <Box>
+              <Typography color="primary" sx={{ mb: 2 }}>Condiciones de Vulnerabilidad</Typography>
+              {formData.condicionesVulnerabilidad.map((condicion, index) => {
+                const isAdulto = condicion.persona.startsWith('adulto-');
+                const filteredCondiciones = isAdulto ? condicionesVulnerabilidadAdultos : condicionesVulnerabilidadNNyA;
+      
+                return (
+                  <Box key={index} sx={{ mb: 4, p: 2, border: '1px solid #ccc', borderRadius: '4px' }}>
+                    <Typography variant="h6" gutterBottom>
+                      Condición de Vulnerabilidad {index + 1}
+                    </Typography>
+      
+                    <FormControl
+          fullWidth
+          margin="normal"
+          error={
+            touched[`condicionesVulnerabilidad[${index}].persona`] &&
+            !condicion.persona
+          }
+        >
+          <InputLabel>
+            Persona <span style={{ color: "red" }}>*</span>
+          </InputLabel>
+          <Select
+            value={condicion.persona || ""}
+            onChange={(e) =>
+              handleInputChange(
+                `condicionesVulnerabilidad[${index}].persona`,
+                e.target.value
+              )
+            }
+            onBlur={() => handleBlur(`condicionesVulnerabilidad[${index}].persona`)}
+            label="Persona"
+          >
+            <MenuItem value="">
+              <em>Seleccione una opción</em>
+            </MenuItem>
+            {formData.ninosAdolescentes.map((nino, ninoIndex) => (
+              <MenuItem key={`nino-${ninoIndex}`} value={`nino-${ninoIndex}`}>
+                {nino.nombre} {nino.apellido} (NNyA)
+              </MenuItem>
+            ))}
+            {formData.adultosConvivientes.map((adulto, adultoIndex) => (
+              <MenuItem key={`adulto-${adultoIndex}`} value={`adulto-${adultoIndex}`}>
+                {adulto.nombre} {adulto.apellido} (Adulto)
+              </MenuItem>
+            ))}
+          </Select>
+          {touched[`condicionesVulnerabilidad[${index}].persona`] &&
+            !condicion.persona && (
+              <FormHelperText>Este campo es obligatorio</FormHelperText>
+            )}
+        </FormControl>
+        <FormControl
+          fullWidth
+          margin="normal"
+          error={
+            touched[`condicionesVulnerabilidad[${index}].condicion_vulnerabilidad`] &&
+            !condicion.condicion_vulnerabilidad
+          }
+        >
+          <InputLabel>
+            Condición de Vulnerabilidad <span style={{ color: "red" }}>*</span>
+          </InputLabel>
+          <Select
+            value={condicion.condicion_vulnerabilidad || ""}
+            onChange={(e) =>
+              handleInputChange(
+                `condicionesVulnerabilidad[${index}].condicion_vulnerabilidad`,
+                e.target.value
+              )
+            }
+            onBlur={() =>
+              handleBlur(
+                `condicionesVulnerabilidad[${index}].condicion_vulnerabilidad`
+              )
+            }
+            label="Condición de Vulnerabilidad"
+          >
+            <MenuItem value="">
+              <em>Seleccione una opción</em>
+            </MenuItem>
+            {filteredCondiciones.map((cv) => (
+              <MenuItem key={cv.id} value={cv.id}>
+                {cv.nombre} - {cv.descripcion}
+              </MenuItem>
+            ))}
+          </Select>
+          {touched[`condicionesVulnerabilidad[${index}].condicion_vulnerabilidad`] &&
+            !condicion.condicion_vulnerabilidad && (
+              <FormHelperText>Este campo es obligatorio</FormHelperText>
+            )}
+        </FormControl>
+      
+                    <FormControl component="fieldset" margin="normal">
+                      <Typography component="legend">¿Aplica esta condición?</Typography>
+                      <RadioGroup
+                        row
+                        value={condicion.si_no ? 'si' : 'no'}
+                        onChange={(e) => handleInputChange(`condicionesVulnerabilidad[${index}].si_no`, e.target.value === 'si')}
+                      >
+                        <FormControlLabel value="si" control={<Radio />} label="Sí" />
+                        <FormControlLabel value="no" control={<Radio />} label="No" />
+                      </RadioGroup>
+                    </FormControl>
+      
+                    <Box sx={{ mt: 2 }}>
+                      <Button 
+                        variant="outlined" 
+                        color="secondary" 
+                        onClick={() => removeCondicionVulnerabilidad(index)}
+                      >
+                        Eliminar Condición de Vulnerabilidad
+                      </Button>
+                    </Box>
+                  </Box>
+                );
+              })}
+              <Button
+                startIcon={<AddIcon />}
+                onClick={addCondicionVulnerabilidad}
+                sx={{ color: 'primary.main', mt: 2 }}
+              >
+                Añadir otra Condición de Vulnerabilidad
+              </Button>
+            </Box>
+          )
     default:
       return null
   }
-
-  
 }
 

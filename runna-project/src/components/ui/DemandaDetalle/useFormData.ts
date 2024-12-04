@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 const initialFormData = (demanda) => ({
   fecha_y_hora_ingreso: demanda?.fecha_y_hora_ingreso ? new Date(demanda.fecha_y_hora_ingreso) : new Date(),
   origen: demanda?.origen || '',
+  sub_origen: demanda?.sub_origen || '', // Use `sub_origen` to match dropdown field
+  institucion: demanda?.institucion || '',
   nro_notificacion_102: demanda?.nro_notificacion_102 || '',
   nro_sac: demanda?.nro_sac || '',
   nro_suac: demanda?.nro_suac || '',
