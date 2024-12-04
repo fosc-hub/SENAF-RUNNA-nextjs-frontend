@@ -25,6 +25,7 @@ import { getTSuggestDecisions } from '../../api/TableFunctions/suggestDecision';
 import { TsuggestDecision } from '../../api/interfaces';
 import { getTLegajos } from '../../api/TableFunctions/legajos';
 import { createTDecision } from '../../api/TableFunctions/decisiones';
+import { useRouter } from 'next/navigation';
 
 export function EvaluacionesContent() {
   const [indicadores, setIndicadores] = useState<TIndicadoresValoracion[]>([]);
@@ -36,6 +37,7 @@ export function EvaluacionesContent() {
   const params = useParams();
   const id = params.id;
   const [justification, setJustification] = useState('');
+  const router = useRouter();
 
   const handleDownloadReport = async () => {
     const pdfDoc = await PDFDocument.create();
@@ -90,15 +92,12 @@ export function EvaluacionesContent() {
     setSelectedNNYA(selectedId);
 
     try {
-      // Si `id` es un array de strings, obtén el primer elemento válido
       const demandaId = Array.isArray(id) ? parseInt(id[0]) : parseInt(id);
       const nnyaId = parseInt(selectedId);
 
       if (demandaId && nnyaId) {
-        // Llama a getTSuggestDecisions
         const data = await getTSuggestDecisions(demandaId, nnyaId);
 
-        // Llama a getTLegajos y actualiza tieneLegajo
         const legajosData = await getTLegajos({ nnya: selectedId });
 
         if (legajosData && legajosData.length > 0) {
@@ -113,24 +112,25 @@ export function EvaluacionesContent() {
     }
   };
 
-  const handleDecision = (decision: 'APERTURA DE LEGAJO' | 'RECHAZAR CASO' | 'MPI-MPE') => async () => {
+  const handleDecision = (decision: 'APERTURA DE LEGAJO' | 'RECHAZAR CASO' | 'MPI_MPE') => async () => {
     try {
       const data = {
         justificacion: justification,
         decision: decision,
-        demanda: Number(id),      // Assuming `id` is the demanda ID from params
-        nnya: Number(selectedNNYA), // Assuming `selectedNNYA` is the selected NNYA ID
+        demanda: Number(id),
+        nnya: Number(selectedNNYA),
       };
       console.log('Decision data:', data);
-      // Call cr  eateTDecision to send the POST request
       await createTDecision(data);
-  
+
       console.log('Decision successfully created!');
+      router.push('/mesadeentrada');
+
     } catch (error) {
       alert('Error al enviar la decisión. Ya existe una decision tomada.');
     }
   };
-  
+
 
 
   useEffect(() => {
@@ -411,12 +411,11 @@ export function EvaluacionesContent() {
                 </table>
               </Box>
 
-              {/* Justificación Textarea */}
               <TextField
                 fullWidth
                 label="Justificación"
                 multiline
-                rows={4} // Number of rows for the height of the textarea
+                rows={4}
                 sx={{
                   mb: 3,
                   '& .MuiInputBase-root': {
@@ -424,10 +423,9 @@ export function EvaluacionesContent() {
                     backgroundColor: '#f5f5f5',
                   },
                 }}
-                onChange={(e) => setJustification(e.target.value)} // Assuming setJustification is used to store input value
+                onChange={(e) => setJustification(e.target.value)}
               />
 
-              {/* Buttons */}
               {!tieneLegajo ? (
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
                   <Button
@@ -460,7 +458,7 @@ export function EvaluacionesContent() {
                         borderColor: '#1976d2',
                       },
                     }}
-                    onClick={handleDecision('MPI-MPE')}
+                    onClick={handleDecision('MPI_MPE')}
                   >
                     Abrir MPI-MPE
                   </Button>
@@ -507,8 +505,6 @@ export function EvaluacionesContent() {
           ))}
         </Box>
       )}
-
-
     </Box>
   );
 }
