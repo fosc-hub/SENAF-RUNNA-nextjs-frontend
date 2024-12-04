@@ -15,7 +15,7 @@ type Vulneracion = {
 // Initial form data with all fields initialized
 const initialFormData = {
   fecha_y_hora_ingreso: new Date(), // Initialized with current date
-  origen: '',
+  origenes: [], // Initialize as an empty array
   sub_origen: '',
   institucion: '',
   nro_notificacion_102: '',
