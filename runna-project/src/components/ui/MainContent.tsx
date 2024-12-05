@@ -519,7 +519,7 @@ const getRowClassName = (params: GridRowParams) => {
                   demanda={selectedDemand} 
                   isOpen={showDemandaDetalle} 
                   onClose={handleCloseDetail} 
-                  onConstatar={handleConstatar} 
+                  fetchAllData={fetchAllData} // Pass fetchAllData as a prop
                 />
               )}
               {/* {showActividadesRegistradas && (

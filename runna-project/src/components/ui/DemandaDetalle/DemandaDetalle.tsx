@@ -43,7 +43,7 @@ import { useApiData } from './useApiData'
 import { renderStepContent } from './RenderstepContent'
 import { getTActividadTipo } from '../../../api/TableFunctions/actividadTipos';
 import { getTInstitucionActividad } from '../../../api/TableFunctions/institucionActividades';
-import { getDemand } from '../../../api/TableFunctions/demands';
+import { getDemand, updateDemand } from '../../../api/TableFunctions/demands';
 import useDemandData from './useDemandData';
 
 interface Actividad {
@@ -108,7 +108,7 @@ function CollapsibleSection({ title, children, isOpen, onToggle }: CollapsibleSe
 
 const steps = ['Ingreso', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración',  'Condiciones de Vulnerabilidad']
 
-export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
+export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAllData }) {
   const {
     origenes,
     subOrigenes,
@@ -441,30 +441,25 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
   const handleBack = () => setActiveStep((prevStep) => Math.max(prevStep - 1, 0))
   const handleEnviarAEvaluacion = async () => {
     try {
-      const updatedDemanda = {
+      const updatedData = {
         ...demanda,
         constatacion: false,
         evaluacion: true,
       };
-
-      const response = await fetch(`http://localhost:8000/api/demanda/${demanda.id}/`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedDemanda),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update demanda');
-      }
-
+  
+      await updateDemand(demanda.id, updatedData);
+  
       setDemandState('evaluacion');
       console.log('Demanda enviada a proceso de evaluación');
+      onClose(); // Close the modal
+      if (typeof fetchAllData === 'function') {
+        fetchAllData(); // Trigger data refresh if passed as prop
+      }
     } catch (error) {
       console.error('Error al enviar a evaluación:', error);
     }
   };
+  
 
   const handleEnviarADecision = async () => {
     try {
@@ -787,6 +782,17 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
         </List>
       )}
     </CollapsibleSection>
+    {demanda.constatacion && (
+        <Box mt={3} display="flex" justifyContent="flex-end">
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleEnviarAEvaluacion} // Attach your existing function
+          >
+            Enviar a Proceso de Evaluación
+          </Button>
+        </Box>
+      )}
             {/* <Dialog open={openConfirmDialog} onClose={handleCancelDelete}>
               <DialogTitle>¿Estás seguro de que deseas eliminar esta actividad?</DialogTitle>
               <DialogContent>
