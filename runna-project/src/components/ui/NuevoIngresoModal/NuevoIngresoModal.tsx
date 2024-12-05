@@ -270,7 +270,21 @@ const isFieldEmpty = (value) => value === undefined || value === null || value =
       handleNext()
       return
     }
-    
+    const missingFields = [];
+    formData.condicionesVulnerabilidad.forEach((condicion, index) => {
+      if (!condicion.persona) {
+        missingFields.push(`Persona en condiciones de vulnerabilidad [${index}]`);
+      }
+      if (!condicion.condicion_vulnerabilidad) {
+        missingFields.push(`Condición de vulnerabilidad [${index}]`);
+      }
+    });
+  
+    // If there are missing fields, alert the user and stop submission
+    if (missingFields.length > 0) {
+      alert(`Por favor, complete los siguientes campos obligatorios antes de guardar:\n\n${missingFields.join("\n")}`);
+      return;
+    }
     if (isSubmittingRef.current) return
     
     isSubmittingRef.current = true
