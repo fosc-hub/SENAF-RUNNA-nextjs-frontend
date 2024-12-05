@@ -209,7 +209,7 @@ const isFieldEmpty = (value) => value === undefined || value === null || value =
         formData.ninosAdolescentes.forEach((_, index) => {
           if (!formData.ninosAdolescentes[index].nombre) missingFields.push(`Nombre del NNyA [${index}]`);
           if (!formData.ninosAdolescentes[index].apellido) missingFields.push(`Apellido del NNyA [${index}]`);
-          if (!formData.ninosAdolescentes[index].situacionDni) missingFields.push(`Situación DNI del NNyA [${index}]`);
+          if (!formData.ninosAdolescentes[index].situacion_dni) missingFields.push(`Situación DNI del NNyA [${index}]`);
           if (!formData.ninosAdolescentes[index].genero) missingFields.push(`Género del NNyA [${index}]`);
           if (!formData.ninosAdolescentes[index].educacion?.curso) missingFields.push(`Curso del NNyA [${index}]`);
           if (!formData.ninosAdolescentes[index].educacion?.nivel) missingFields.push(`Nivel educativo del NNyA [${index}]`);
@@ -222,7 +222,7 @@ const isFieldEmpty = (value) => value === undefined || value === null || value =
         formData.adultosConvivientes.forEach((_, index) => {
           if (!formData.adultosConvivientes[index].nombre) missingFields.push(`Nombre del adulto conviviente [${index}]`);
           if (!formData.adultosConvivientes[index].apellido) missingFields.push(`Apellido del adulto conviviente [${index}]`);
-          if (!formData.adultosConvivientes[index].situacionDni) missingFields.push(`Situación DNI del adulto conviviente [${index}]`);
+          if (!formData.adultosConvivientes[index].situacion_dni) missingFields.push(`Situación DNI del adulto conviviente [${index}]`);
           if (!formData.adultosConvivientes[index].genero) missingFields.push(`Género del adulto conviviente [${index}]`);
           if (!formData.adultosConvivientes[index].vinculacion?.vinculo) missingFields.push(`Vínculo del adulto conviviente [${index}]`);
         });
