@@ -12,6 +12,8 @@ import { getTLocalidads } from '../../../api/TableFunctions/localidades';
 import { getLocalizacion } from '../../../api/TableFunctions/localizacion';
 import { getTDemandaPersonas } from '../../../api/TableFunctions/demandaPersonas';
 import { getTPersona } from '../../../api/TableFunctions/personas';
+import { getLocalizacionPersona } from '../../../api/TableFunctions/localizacionPersona';
+
 const useDemandData = (demanda) => {
   const [origenes, setOrigenes] = useState<TOrigen[]>([]);
   const [subOrigenes, setSubOrigenes] = useState<TSubOrigen[]>([]);
@@ -25,6 +27,7 @@ const useDemandData = (demanda) => {
   const [cpcs, setCpcs] = useState([]);
   const [nnyaList, setNnyaList] = useState([]); // NNYA data
   const [adultsList, setAdultsList] = useState([]); // Adultos convivientes
+  const [localizacionesPersonas, setLocalizacionesPersonas] = useState({}); // Keyed by persona ID
   const [selectedData, setSelectedData] = useState({
     origen: null,
     subOrigen: null,
@@ -46,7 +49,15 @@ const useDemandData = (demanda) => {
           const fetchedNnya = await Promise.all(
             nnyaEntries.map(async (entry) => {
               const personaData = await getTPersona(entry.persona);
-              return { ...personaData, demandaPersonaId: entry.id };
+
+              // Fetch `localizacion-persona` for the persona
+              const localizacionPersona = await getLocalizacionPersona(entry.persona).catch(() => null);
+
+              return {
+                ...personaData,
+                demandaPersonaId: entry.id,
+                localizacionPersona,
+              };
             })
           );
 
@@ -54,7 +65,15 @@ const useDemandData = (demanda) => {
           const fetchedAdults = await Promise.all(
             adultEntries.map(async (entry) => {
               const personaData = await getTPersona(entry.persona);
-              return { ...personaData, demandaPersonaId: entry.id };
+
+              // Fetch `localizacion-persona` for the persona
+              const localizacionPersona = await getLocalizacionPersona(entry.persona).catch(() => null);
+
+              return {
+                ...personaData,
+                demandaPersonaId: entry.id,
+                localizacionPersona,
+              };
             })
           );
 
@@ -129,6 +148,7 @@ const useDemandData = (demanda) => {
             setLocalizacion(localizacionData);
             
           } else {
+            
             console.log("No localizacion ID provided in demanda");
           }
           
@@ -157,6 +177,7 @@ const useDemandData = (demanda) => {
     barrios,
     localidades,
     cpcs,
+    localizacionesPersonas 
   };
 };
 

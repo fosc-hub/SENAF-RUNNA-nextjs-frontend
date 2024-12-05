@@ -220,7 +220,8 @@ export const renderStepContent = ({
   subOrigenes,
   institucionesDemanda,
   selectedInformante,
-  localizacion, // Add localizacion here
+  localizacion,
+  localizacionPersonas// Add localizacion here
 }) => {
 
   const [errors, setErrors] = useState({});
@@ -798,29 +799,51 @@ const handleBlur = (field) => {
             )}
         </FormControl>
       )}
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={nino.useDefaultLocalizacion}
-                      onChange={(e) => handleInputChange(`ninosAdolescentes[${index}].useDefaultLocalizacion`, e.target.checked)}
-                    />
-                  }
-                  label="Usar localización de la demanda"
-                />
+<FormControlLabel
+  control={
+    <Switch
+      checked={nino.useDefaultLocalizacion}
+      onChange={(e) => {
+        const isChecked = e.target.checked;
+
+        // Update the useDefaultLocalizacion in formData
+        handleInputChange(`ninosAdolescentes[${index}].useDefaultLocalizacion`, isChecked);
+
+        // Reset or clear the specific localización if using default
+        if (isChecked) {
+          handleInputChange(`ninosAdolescentes[${index}].localizacion`, {
+            calle: '',
+            tipo_calle: '',
+            piso_depto: '',
+            lote: '',
+            mza: '',
+            casa_nro: '',
+            referencia_geo: '',
+            barrio: '',
+            localidad: '',
+            cpc: '',
+          });
+        }
+      }}
+    />
+  }
+  label="Usar localización de la demanda"
+/>
     
-    {!nino.useDefaultLocalizacion && (
-        <Box sx={{ mt: 2 }}>
-          <Typography variant="subtitle1">
-            Localización específica
-          </Typography>
-          {renderLocalizacionFields(
-            `ninosAdolescentes[${index}].localizacion`,
-            nino.localizacion,
-            handleInputChange,
-            barrios,
-            localidades,
-            cpcs
-          )}
+{!nino.useDefaultLocalizacion && (
+  <Box sx={{ mt: 2 }}>
+    <Typography variant="subtitle1">Localización específica</Typography>
+    {renderLocalizacionFields(
+      `ninosAdolescentes[${index}].localizacion`,
+      nino.localizacion || {}, // Pass default empty object if not set
+      handleInputChange,
+      barrios,
+      localidades,
+      cpcs,
+      errors
+    )}
+
+
         </Box>
       )}
     

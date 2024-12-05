@@ -1,5 +1,8 @@
 import { add } from 'date-fns';
 import { useState, useEffect } from 'react'
+import { getLocalizacionPersonas } from '../../../api/TableFunctions/localizacionPersona';
+import { getLocalizacion } from '../../../api/TableFunctions/localizacion';
+import { log } from 'console';
 
 const initialFormData = (demanda) => ({
   fecha_y_hora_ingreso: demanda?.fecha_y_hora_ingreso ? new Date(demanda.fecha_y_hora_ingreso) : new Date(),
@@ -53,6 +56,132 @@ const initialFormData = (demanda) => ({
 
 export const useFormData = (demanda, apiData) => {
   const [formData, setFormData] = useState(initialFormData(demanda));
+  useEffect(() => {
+    if (apiData?.nnyaList && apiData.nnyaList.length > 0) {
+      const fetchLocalizacionForNnya = async () => {
+        const demandaLocalizacionId = demanda?.localizacion?.id || demanda?.localizacion;
+  
+        const updatedNnyaList = await Promise.all(
+          apiData.nnyaList.map(async (nnya) => {
+            // Fetch localizacion-persona data
+            const localizacionPersonaData = await getLocalizacionPersonas({ persona: nnya.id }).catch(() => null);
+            console.log('Fetched localizacionPersonaData:', localizacionPersonaData, 'For persona ID:', nnya.id);
+  
+            // Extract the localizacion ID
+            const localizacionId = Array.isArray(localizacionPersonaData) && localizacionPersonaData.length > 0
+              ? localizacionPersonaData[0].localizacion
+              : null;
+            console.log('Extracted localizacionId:', localizacionId);
+  
+            // Fetch the full localizacion data
+            let fetchedLocalizacion = null;
+            if (localizacionId) {
+              fetchedLocalizacion = await getLocalizacion(localizacionId).catch(() => null);
+              console.log('Fetched localizacion data:', fetchedLocalizacion);
+            }
+  
+            // Compare with demanda localizacion
+            const useDefault = fetchedLocalizacion?.id === Number(demandaLocalizacionId);
+            console.log('NNYA Localizacion Check:', {
+              localizacionPersonaId: localizacionId,
+              fetchedLocalizacionId: fetchedLocalizacion?.id,
+              demandaLocalizacionId: demandaLocalizacionId,
+              useDefault,
+            });
+  
+            return {
+              ...nnya,
+              localizacion: fetchedLocalizacion || {
+                calle: '',
+                tipo_calle: '',
+                piso_depto: '',
+                lote: '',
+                mza: '',
+                casa_nro: '',
+                referencia_geo: '',
+                barrio: '',
+                localidad: '',
+                cpc: '',
+              },
+              useDefaultLocalizacion: useDefault,
+            };
+          })
+        );
+  
+        setFormData((prevData) => ({
+          ...prevData,
+          ninosAdolescentes: updatedNnyaList,
+        }));
+      };
+  
+      fetchLocalizacionForNnya();
+    }
+  }, [apiData?.nnyaList, demanda?.localizacion]);
+  
+  useEffect(() => {
+    if (apiData?.adultsList && apiData.adultsList.length > 0) {
+      const fetchLocalizacionForAdults = async () => {
+        const demandaLocalizacionId = demanda?.localizacion?.id || demanda?.localizacion;
+  
+        const updatedAdultsList = await Promise.all(
+          apiData.adultsList.map(async (adult) => {
+            // Fetch localizacion-persona data
+            const localizacionPersonaData = await getLocalizacionPersonas({ persona: adult.id }).catch(() => null);
+            console.log('Fetched localizacionPersonaData for adult:', localizacionPersonaData, 'For persona ID:', adult.id);
+  
+            // Extract the localizacion ID
+            const localizacionId = Array.isArray(localizacionPersonaData) && localizacionPersonaData.length > 0
+              ? localizacionPersonaData[0].localizacion
+              : null;
+            console.log('Extracted localizacionId for adult:', localizacionId);
+  
+            // Fetch the full localizacion data
+            let fetchedLocalizacion = null;
+            if (localizacionId) {
+              fetchedLocalizacion = await getLocalizacion(localizacionId).catch(() => null);
+              console.log('Fetched localizacion data for adult:', fetchedLocalizacion);
+            }
+  
+            // Compare with demanda localizacion
+            const useDefault = fetchedLocalizacion?.id === Number(demandaLocalizacionId);
+            console.log('Adultos Localizacion Check:', {
+              localizacionPersonaId: localizacionId,
+              fetchedLocalizacionId: fetchedLocalizacion?.id,
+              demandaLocalizacionId: demandaLocalizacionId,
+              useDefault,
+            });
+  
+            return {
+              ...adult,
+              localizacion: fetchedLocalizacion || {
+                calle: '',
+                tipo_calle: '',
+                piso_depto: '',
+                lote: '',
+                mza: '',
+                casa_nro: '',
+                referencia_geo: '',
+                barrio: '',
+                localidad: '',
+                cpc: '',
+              },
+              useDefaultLocalizacion: useDefault,
+            };
+          })
+        );
+  
+        setFormData((prevData) => ({
+          ...prevData,
+          adultosConvivientes: updatedAdultsList,
+        }));
+      };
+  
+      fetchLocalizacionForAdults();
+    }
+  }, [apiData?.adultsList, demanda?.localizacion]);
+  
+  
+  
   const initialAdult = () => ({
     id: null,
     nombre: '',
@@ -68,6 +197,7 @@ export const useFormData = (demanda, apiData) => {
     observaciones: '',
     useDefaultLocalizacion: true,
     localizacion: {}, // Initialize with an empty localization object
+
   });
   useEffect(() => {
     if (apiData?.nnyaList && apiData.nnyaList.length > 0) {
@@ -107,6 +237,7 @@ export const useFormData = (demanda, apiData) => {
           conviviente: true,
           observaciones: adult.observaciones || '',
           demandaPersonaId: adult.demandaPersonaId,
+          localizacionPersonas: [],
         })),
       }));
     }

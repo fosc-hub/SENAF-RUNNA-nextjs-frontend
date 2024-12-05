@@ -614,8 +614,8 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda }) {
     barrios,
     localidades,
     cpcs,
-    nnyaList: apiData.nnyaList, // Pass fetched NNYA data
-    adultsList: apiData.adultsList, // Pass fetched adultos convivientes data
+    nnyaList: formData.ninosAdolescentes, // Updated NNYA with localizacion
+    adultsList: formData.adultosConvivientes, // Updated adultos with localizacion
   })}
 </LocalizationProvider>
 
