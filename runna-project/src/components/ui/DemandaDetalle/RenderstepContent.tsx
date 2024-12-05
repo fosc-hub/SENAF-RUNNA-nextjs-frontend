@@ -1474,12 +1474,11 @@ const handleBlur = (field) => {
     onBlur={() => handleBlur(`vulneraciones[${index}].nnya`)}
     label="NNyA"
   >
-    {/* Add a placeholder option */}
     <MenuItem value="">
       <em>Seleccione una opción</em>
     </MenuItem>
-    {formData.ninosAdolescentes.map((nnya, nnyaIndex) => (
-      <MenuItem key={nnyaIndex} value={nnyaIndex}>
+    {formData.ninosAdolescentes.map((nnya) => (
+      <MenuItem key={nnya.id} value={nnya.id}>
         {`${nnya.nombre} ${nnya.apellido}`}
       </MenuItem>
     ))}
@@ -1489,20 +1488,27 @@ const handleBlur = (field) => {
       <FormHelperText>Este campo es obligatorio</FormHelperText>
     )}
 </FormControl>
+<FormControl fullWidth margin="normal">
+  <InputLabel>Autor DV</InputLabel>
+  <Select
+    value={vulneracion.autor_dv ?? ""} // Ensure controlled value, handling null or undefined
+    onChange={(e) =>
+      handleInputChange(`vulneraciones[${index}].autor_dv`, e.target.value)
+    }
+    onBlur={() => handleBlur(`vulneraciones[${index}].autor_dv`)}
+    label="Autor DV"
+  >
+    <MenuItem value="">
+      <em>Seleccione una opción</em>
+    </MenuItem>
+    {formData.adultosConvivientes.map((adulto) => (
+      <MenuItem key={adulto.id} value={adulto.id}>
+        {`${adulto.nombre} ${adulto.apellido}`}
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>
 
-              <FormControl fullWidth margin="normal">
-                <InputLabel>Autor DV</InputLabel>
-                <Select
-                  value={vulneracion.autor_dv}
-                  onChange={(e) => handleInputChange(`vulneraciones[${index}].autor_dv`, e.target.value)}
-                >
-                  {formData.adultosConvivientes.map((adulto, adultoIndex) => (
-                    <MenuItem key={adultoIndex} value={adultoIndex}>
-                      {`${adulto.nombre} ${adulto.apellido}`}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
 
               <Box sx={{ mt: 2 }}>
                 <FormControlLabel

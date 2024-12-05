@@ -5,6 +5,7 @@ import { getLocalizacion } from '../../../api/TableFunctions/localizacion';
 import { log } from 'console';
 import { getTVinculo } from '../../../api/TableFunctions/vinculos';
 import { getTVinculoPersonaPersonas } from '../../../api/TableFunctions/vinculospersonaspersonas';
+import { getTVulneracions } from '../../../api/TableFunctions/vulneraciones';
 
 const initialFormData = (demanda) => ({
   fecha_y_hora_ingreso: demanda?.fecha_y_hora_ingreso ? new Date(demanda.fecha_y_hora_ingreso) : new Date(),
@@ -68,6 +69,44 @@ const initialFormData = (demanda) => ({
 
 export const useFormData = (demanda, apiData) => {
   const [formData, setFormData] = useState(initialFormData(demanda));
+  useEffect(() => {
+    const fetchVulneraciones = async () => {
+      if (demanda?.id) {
+        try {
+          const filteredVulneraciones = await getTVulneracions({ demanda: demanda.id });
+          console.log('Filtered vulneraciones:', filteredVulneraciones);
+  
+          setFormData((prevData) => {
+            const updatedVulneraciones = filteredVulneraciones.map((vulneracion) => {
+              const matchedNnya = prevData.ninosAdolescentes.find(
+                (nnya) => nnya.id === vulneracion.nnya
+              );
+              const matchedAdult = prevData.adultosConvivientes.find(
+                (adult) => adult.id === vulneracion.autor_dv
+              );
+  
+              return {
+                ...vulneracion,
+                nnya: matchedNnya ? matchedNnya.id : '', // Ensure preselection for nnya
+                autor_dv: matchedAdult ? matchedAdult.id : '', // Ensure preselection for autor
+              };
+            });
+  
+            return {
+              ...prevData,
+              vulneraciones: updatedVulneraciones,
+            };
+          });
+        } catch (error) {
+          console.error('Error fetching vulneraciones:', error);
+        }
+      }
+    };
+  
+    fetchVulneraciones();
+  }, [demanda, formData.ninosAdolescentes, formData.adultosConvivientes]);
+  
+  
   useEffect(() => {
     if (apiData?.nnyaList && apiData.nnyaList.length > 0) {
       const fetchDetailsForNnya = async () => {
