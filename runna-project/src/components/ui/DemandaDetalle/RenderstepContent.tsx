@@ -1548,70 +1548,86 @@ const handleBlur = (field) => {
       )
 
 
-        case 4:
-          return (
-            <Box>
-              <Typography color="primary" sx={{ mb: 2 }}>Condiciones de Vulnerabilidad</Typography>
-              {formData.condicionesVulnerabilidad.map((condicion, index) => {
-                const isAdulto = condicion.persona.startsWith('adulto-');
-                const filteredCondiciones = isAdulto ? condicionesVulnerabilidadAdultos : condicionesVulnerabilidadNNyA;
-      
-                return (
-                  <Box key={index} sx={{ mb: 4, p: 2, border: '1px solid #ccc', borderRadius: '4px' }}>
-                    <Typography variant="h6" gutterBottom>
-                      Condición de Vulnerabilidad {index + 1}
-                    </Typography>
-      
-                    <FormControl
-          fullWidth
-          margin="normal"
-          error={
-            touched[`condicionesVulnerabilidad[${index}].persona`] &&
-            !condicion.persona
-          }
-        >
-          <InputLabel>
-            Persona <span style={{ color: "red" }}>*</span>
-          </InputLabel>
-          <Select
-            value={condicion.persona || ""}
-            onChange={(e) =>
-              handleInputChange(
-                `condicionesVulnerabilidad[${index}].persona`,
-                e.target.value
-              )
-            }
-            onBlur={() => handleBlur(`condicionesVulnerabilidad[${index}].persona`)}
-            label="Persona"
+      case 4:
+  return (
+    <Box>
+      <Typography color="primary" sx={{ mb: 2 }}>
+        Condiciones de Vulnerabilidad
+      </Typography>
+      {formData.condicionesVulnerabilidad?.map((condicion, index) => {
+const isAdulto = formData.adultosConvivientes.some((adulto) => adulto.id === condicion.persona);
+const filteredCondiciones = isAdulto ? condicionesVulnerabilidadAdultos : condicionesVulnerabilidadNNyA;
+
+
+        return (
+          <Box
+            key={index}
+            sx={{
+              mb: 4,
+              p: 2,
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+            }}
           >
-            <MenuItem value="">
-              <em>Seleccione una opción</em>
-            </MenuItem>
-            {formData.ninosAdolescentes.map((nino, ninoIndex) => (
-              <MenuItem key={`nino-${ninoIndex}`} value={`nino-${ninoIndex}`}>
-                {nino.nombre} {nino.apellido} (NNyA)
-              </MenuItem>
-            ))}
-            {formData.adultosConvivientes.map((adulto, adultoIndex) => (
-              <MenuItem key={`adulto-${adultoIndex}`} value={`adulto-${adultoIndex}`}>
-                {adulto.nombre} {adulto.apellido} (Adulto)
-              </MenuItem>
-            ))}
-          </Select>
-          {touched[`condicionesVulnerabilidad[${index}].persona`] &&
-            !condicion.persona && (
-              <FormHelperText>Este campo es obligatorio</FormHelperText>
-            )}
-        </FormControl>
-        <FormControl
-          fullWidth
-          margin="normal"
-          error={
-            touched[`condicionesVulnerabilidad[${index}].condicion_vulnerabilidad`] &&
-            !condicion.condicion_vulnerabilidad
-          }
-        >
-          <InputLabel>
+            <Typography variant="h6" gutterBottom>
+              Condición de Vulnerabilidad {index + 1}
+            </Typography>
+
+            {/* Persona Selection */}
+            <FormControl
+              fullWidth
+              margin="normal"
+              error={
+                touched[`condicionesVulnerabilidad[${index}].persona`] &&
+                !condicion.persona
+              }
+            >
+              <InputLabel>
+                Persona <span style={{ color: "red" }}>*</span>
+              </InputLabel>
+              <Select
+                value={condicion.persona || ""}
+                onChange={(e) =>
+                  handleInputChange(
+                    `condicionesVulnerabilidad[${index}].persona`,
+                    e.target.value
+                  )
+                }
+                onBlur={() =>
+                  handleBlur(`condicionesVulnerabilidad[${index}].persona`)
+                }
+                label="Persona"
+              >
+                <MenuItem value="">
+                  <em>Seleccione una opción</em>
+                </MenuItem>
+                {formData.ninosAdolescentes.map((nino) => (
+                  <MenuItem key={nino.id} value={nino.id}>
+                    {nino.nombre} {nino.apellido} (NNyA)
+                  </MenuItem>
+                ))}
+                {formData.adultosConvivientes.map((adulto) => (
+                  <MenuItem key={adulto.id} value={adulto.id}>
+                    {adulto.nombre} {adulto.apellido} (Adulto)
+                  </MenuItem>
+                ))}
+              </Select>
+              {touched[`condicionesVulnerabilidad[${index}].persona`] &&
+                !condicion.persona && (
+                  <FormHelperText>Este campo es obligatorio</FormHelperText>
+                )}
+            </FormControl>
+
+            {/* Condición de Vulnerabilidad Selection */}
+            <FormControl
+  fullWidth
+  margin="normal"
+  error={
+    touched[`condicionesVulnerabilidad[${index}].condicion_vulnerabilidad`] &&
+    !condicion.condicion_vulnerabilidad
+  }
+>
+<InputLabel>
             Condición de Vulnerabilidad <span style={{ color: "red" }}>*</span>
           </InputLabel>
           <Select
@@ -1677,6 +1693,8 @@ const handleBlur = (field) => {
               </Button>
             </Box>
           )
+
+      
     default:
       return null
   }

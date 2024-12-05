@@ -6,6 +6,7 @@ import { log } from 'console';
 import { getTVinculo } from '../../../api/TableFunctions/vinculos';
 import { getTVinculoPersonaPersonas } from '../../../api/TableFunctions/vinculospersonaspersonas';
 import { getTVulneracions } from '../../../api/TableFunctions/vulneraciones';
+import { getTPersonaCondicionesVulnerabilidads } from '../../../api/TableFunctions/personaCondicionesVulnerabilidad';
 
 const initialFormData = (demanda) => ({
   fecha_y_hora_ingreso: demanda?.fecha_y_hora_ingreso ? new Date(demanda.fecha_y_hora_ingreso) : new Date(),
@@ -18,6 +19,7 @@ const initialFormData = (demanda) => ({
   nro_historia_clinica: demanda?.nro_historia_clinica || '',
   nro_oficio_web: demanda?.nro_oficio_web || '',
   descripcion: demanda?.descripcion || '',
+  condicionesVulnerabilidad: demanda?.condicionesVulnerabilidad || [],
   localizacion: demanda?.localizacion || {
     calle: '',
     tipo_calle: 'CALLE',
@@ -69,6 +71,43 @@ const initialFormData = (demanda) => ({
 
 export const useFormData = (demanda, apiData) => {
   const [formData, setFormData] = useState(initialFormData(demanda));
+  useEffect(() => {
+    const fetchCondicionesVulnerabilidad = async () => {
+      if (demanda?.id) {
+        const personaIds = [
+          ...formData.ninosAdolescentes.map((nnya) => nnya.id),
+          ...formData.adultosConvivientes.map((adulto) => adulto.id),
+        ];
+  
+        try {
+          const condicionesData = await getTPersonaCondicionesVulnerabilidads({
+            demanda: demanda.id,
+            persona: personaIds,
+          });
+  
+          console.log('Fetched Condiciones de Vulnerabilidad:', condicionesData);
+  
+          // Merge fetched data into formData
+          setFormData((prevData) => ({
+            ...prevData,
+            condicionesVulnerabilidad: condicionesData.map((condicion) => ({
+              ...condicion,
+              persona: condicion.persona,
+              condicion_vulnerabilidad: condicion.condicion_vulnerabilidad,
+              si_no: condicion.si_no,
+            })),
+          }));
+        } catch (error) {
+          console.error('Error fetching condiciones de vulnerabilidad:', error);
+        }
+      }
+    };
+  
+    fetchCondicionesVulnerabilidad();
+  }, [demanda, formData.ninosAdolescentes, formData.adultosConvivientes]);
+  
+
+  
   useEffect(() => {
     const fetchVulneraciones = async () => {
       if (demanda?.id) {

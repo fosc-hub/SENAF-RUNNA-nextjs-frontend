@@ -78,6 +78,8 @@ export const useApiData = (demandaId: number, localizacionId: number, usuarioExt
     institucionesEducativas: [],
     institucionesSanitarias: [],
     condicionesVulnerabilidad: [], // Initialize as an empty array
+    condicionesVulnerabilidadNNyA: [],
+    condicionesVulnerabilidadAdultos: [],
 
   });
 
@@ -90,7 +92,8 @@ const institucionesSanitarias = [];
 
       try {
         const fetchedVinculosPersonas = await getTVinculos();
-
+        const fetchedCondicionesNNyA = await getTCondicionesVulnerabilidads({ nnya: true });
+        const fetchedCondicionesAdultos = await getTCondicionesVulnerabilidads({ adulto: true });
         const categoriaSubmotivos = await getTCategoriaSubmotivos();
         const categoriaMotivos = await getTCategoriaMotivos();
         const fetchedMotivos = await getTMotivoIntervencions();
@@ -278,13 +281,19 @@ const institucionesSanitarias = [];
         // const cpcsData = await cpcsResponse.json();
 const fetchedVinculaciones = await getTVinculoPersonaPersonas({ demanda: demandaId });
 const condicionesVulnerabilidad = await getTCondicionesVulnerabilidads();
-const personaCondicionesVulnerabilidad = await getTPersonaCondicionesVulnerabilidads({demanda: demandaId, });
+const personaCondicionesVulnerabilidad = await getTPersonaCondicionesVulnerabilidads({ demanda: demandaId });
 const personasWithCondiciones = personas.map((persona) => {
-  const condicionesForPersona = personaCondicionesVulnerabilidad.filter(
-    (pcv) => pcv.persona === persona.id
-  );
+  const condicionesForPersona = personaCondicionesVulnerabilidad.filter((pcv) => pcv.persona === persona.id);
   return { ...persona, condicionesVulnerabilidad: condicionesForPersona };
 });
+
+// Ensure you set `condicionesVulnerabilidad` properly
+setApiData((prevData) => ({
+  ...prevData,
+  condicionesVulnerabilidad: personaCondicionesVulnerabilidad, // Correctly fetched data
+  personasWithCondiciones,
+}));
+
         // Prepare and set final API data
         setApiData((prevData) => ({
           ...prevData,
@@ -321,6 +330,8 @@ const personasWithCondiciones = personas.map((persona) => {
           adultsList,
           institucionesEducativas, // Include fetched institutions
           institucionesSanitarias, // Include fetched institutions
+          condicionesVulnerabilidadNNyA: fetchedCondicionesNNyA,
+          condicionesVulnerabilidadAdultos: fetchedCondicionesAdultos, 
         }));
         
       } catch (error) {
