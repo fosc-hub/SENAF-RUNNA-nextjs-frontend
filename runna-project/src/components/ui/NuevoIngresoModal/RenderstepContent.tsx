@@ -228,27 +228,8 @@ const handleBlur = (field) => {
   setTouched((prev) => ({ ...prev, [field]: true }));
 };
 
-  const validateFields = () => {
-    const newErrors = {};
-    if (!formData.fecha_y_hora_ingreso) newErrors.fecha_y_hora_ingreso = true;
-    if (!formData.origen) newErrors.origen = true;
-    if (!formData.sub_origen) newErrors.sub_origen = true;
-    if (!formData.institucion) newErrors.institucion = true;
-    if (!formData.presuntaVulneracion?.motivos)
-      newErrors.presuntaVulneracion = { motivos: true };
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+
   
-  const handleVulneracionChange = (field, value) => {
-    setNewVulneracion(prev => {
-      const updated = { ...prev, [field]: value }
-      if (field === 'categoria_motivo') {
-        updated.categoria_submotivo = ''
-      }
-      return updated
-    })
-  }
 
 
   switch (activeStep) {

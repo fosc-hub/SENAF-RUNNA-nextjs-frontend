@@ -125,28 +125,84 @@ const isFieldEmpty = (value) => value === undefined || value === null || value =
       formData.presuntaVulneracion.categoriaMotivos.includes(submotivo.motivo)
     )
   }, [apiData.categoriaSubmotivos, formData.presuntaVulneracion.categoriaMotivos])
-
+  const validateStep0 = () => {
+    const missingFields = [];
+  
+    // Check individual required fields
+    if (!formData.fecha_y_hora_ingreso) {
+      missingFields.push("Fecha y hora de ingreso");
+    }
+  
+    if (!formData.origen) {
+      missingFields.push("Origen");
+    }
+  
+    if (!formData.sub_origen) {
+      missingFields.push("Sub origen");
+    }
+  
+    if (!formData.institucion) {
+      missingFields.push("Institución");
+    }
+  
+    if (
+      !formData.presuntaVulneracion?.motivos || // Handles undefined, null, and falsy scalar values
+      (Array.isArray(formData.presuntaVulneracion?.motivos) && formData.presuntaVulneracion.motivos.length === 0) // Handles empty arrays
+    ) {
+      missingFields.push("Motivo de Intervención");
+    }
+    
+    
+  
+    // Validate localizacion fields
+    if (!formData.localizacion?.tipo_calle) {
+      missingFields.push("tipo_calle de Localización");
+    }
+    if (!formData.localizacion?.localidad) {
+      missingFields.push("Localidad de Localización");
+    }
+    if (!formData.localizacion?.calle) {
+      missingFields.push("calle de Localización");
+    }
+  
+    // Validate Informante fields
+    if (formData.createNewUsuarioExterno) {
+      if (!formData.usuarioExterno?.nombre) {
+        missingFields.push("Nombre del Informante");
+      }
+      if (!formData.usuarioExterno?.apellido) {
+        missingFields.push("Apellido del Informante");
+      }
+      if (!formData.usuarioExterno?.telefono) {
+        missingFields.push("Teléfono del Informante");
+      }
+      if (!formData.usuarioExterno?.mail) {
+        missingFields.push("Email del Informante");
+      }
+    } else {
+      if (!formData.usuarioExterno?.id) {
+        missingFields.push("Seleccionar un Informante");
+      }
+    }
+  
+    // If any fields are missing, return them
+    if (missingFields.length > 0) {
+      alert(`Por favor, complete los siguientes campos obligatorios antes de continuar:\n\n${missingFields.join("\n")}`);
+      return false;
+    }
+  
+    // Validation passed
+    return true;
+  };
+  
   const handleNext = () => {
     const missingFields = [];
   
-    // Helper function to check required fields dynamically
-    const checkRequiredFields = (fields, path) => {
-      fields.forEach((field, index) => {
-        Object.keys(field).forEach((key) => {
-          const fullPath = `${path}[${index}].${key}`;
-          if (touched[fullPath] && !field[key]) {
-            missingFields.push(fullPath);
-          }
-        });
-      });
-    };
-  
     switch (activeStep) {
       case 0:
-        if (!formData.fecha_y_hora_ingreso) missingFields.push("Fecha y hora de ingreso");
-        if (!formData.origen) missingFields.push("Origen");
-        if (!formData.sub_origen) missingFields.push("Sub origen");
-        if (!formData.institucion) missingFields.push("Institución");
+        if (!validateStep0()) {
+          return; // Stop if validation fails
+        }
         break;
   
       case 1:
