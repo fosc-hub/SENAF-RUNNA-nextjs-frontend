@@ -89,6 +89,7 @@ export const useApiData = (demandaId: number, localizacionId: number, usuarioExt
 const institucionesSanitarias = [];
 
       try {
+        const fetchedVinculosPersonas = await getTVinculos();
 
         const categoriaSubmotivos = await getTCategoriaSubmotivos();
         const categoriaMotivos = await getTCategoriaMotivos();
@@ -290,7 +291,7 @@ const personasWithCondiciones = personas.map((persona) => {
           condicionesVulnerabilidad,
           personasWithCondiciones,
           vinculaciones,
-          vinculoPersonas: personas,
+          vinculoPersonas: fetchedVinculosPersonas,
           categoriaSubmotivos, // Add fetched submotivos to the state
           categoriaMotivos, // Add fetched data to apiData state
           vulneraciones: detailedVulneraciones,

@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react'
 import { getLocalizacionPersonas } from '../../../api/TableFunctions/localizacionPersona';
 import { getLocalizacion } from '../../../api/TableFunctions/localizacion';
 import { log } from 'console';
+import { getTVinculo } from '../../../api/TableFunctions/vinculos';
+import { getTVinculoPersonaPersonas } from '../../../api/TableFunctions/vinculospersonaspersonas';
 
 const initialFormData = (demanda) => ({
   fecha_y_hora_ingreso: demanda?.fecha_y_hora_ingreso ? new Date(demanda.fecha_y_hora_ingreso) : new Date(),
@@ -40,12 +42,22 @@ const initialFormData = (demanda) => ({
   },
   createNewinformante: demanda?.informante ? false : true, // Set to false if an informante exists
   ninosAdolescentes: demanda?.ninosAdolescentes || [],
-  adultosConvivientes: demanda?.adultosConvivientes || [],
   vulneraciones: demanda?.vulneraciones || [],
   vinculaciones: demanda?.vinculaciones || [],
   presuntaVulneracion: demanda?.presuntaVulneracion || {
     motivos: '',
   },
+  adultosConvivientes: (demanda?.adultosConvivientes || []).map((adult) => ({
+    ...adult,
+    vinculacion: {
+      vinculo: adult.vinculacion?.vinculo || '', // Ensure `vinculo` is prefilled
+      conviven: adult.vinculacion?.conviven || false,
+      autordv: adult.vinculacion?.autordv || false,
+      garantiza_proteccion: adult.vinculacion?.garantiza_proteccion || false,
+    },
+  })),
+  
+
   calificacion: demanda?.calificacion || '',
   fechaActualizacion: demanda?.fechaActualizacion || new Date(),
   historial: demanda?.historial || [],
@@ -58,7 +70,7 @@ export const useFormData = (demanda, apiData) => {
   const [formData, setFormData] = useState(initialFormData(demanda));
   useEffect(() => {
     if (apiData?.nnyaList && apiData.nnyaList.length > 0) {
-      const fetchLocalizacionForNnya = async () => {
+      const fetchDetailsForNnya = async () => {
         const demandaLocalizacionId = demanda?.localizacion?.id || demanda?.localizacion;
   
         const updatedNnyaList = await Promise.all(
@@ -71,7 +83,6 @@ export const useFormData = (demanda, apiData) => {
             const localizacionId = Array.isArray(localizacionPersonaData) && localizacionPersonaData.length > 0
               ? localizacionPersonaData[0].localizacion
               : null;
-            console.log('Extracted localizacionId:', localizacionId);
   
             // Fetch the full localizacion data
             let fetchedLocalizacion = null;
@@ -81,13 +92,18 @@ export const useFormData = (demanda, apiData) => {
             }
   
             // Compare with demanda localizacion
-            const useDefault = fetchedLocalizacion?.id === Number(demandaLocalizacionId);
-            console.log('NNYA Localizacion Check:', {
-              localizacionPersonaId: localizacionId,
-              fetchedLocalizacionId: fetchedLocalizacion?.id,
-              demandaLocalizacionId: demandaLocalizacionId,
-              useDefault,
-            });
+            const useDefaultLocalizacion = fetchedLocalizacion?.id === Number(demandaLocalizacionId);
+  
+            // Fetch vinculo-persona-persona data
+            const vinculoPersonaData = await getTVinculoPersonaPersonas({ persona_2: nnya.id }).catch(() => null);
+            console.log('Fetched vinculoPersonaData for nnya:', vinculoPersonaData, 'For persona ID:', nnya.id);
+  
+            // Extract vinculo details
+            let fetchedVinculo = null;
+            if (vinculoPersonaData && vinculoPersonaData.length > 0) {
+              fetchedVinculo = await getTVinculo(vinculoPersonaData[0].vinculo).catch(() => null);
+              console.log('Fetched vinculo data for nnya:', fetchedVinculo);
+            }
   
             return {
               ...nnya,
@@ -103,7 +119,14 @@ export const useFormData = (demanda, apiData) => {
                 localidad: '',
                 cpc: '',
               },
-              useDefaultLocalizacion: useDefault,
+              useDefaultLocalizacion,
+              vinculo: {
+                vinculo: fetchedVinculo?.id || '', // Preselect vinculo by ID
+                conviven: vinculoPersonaData?.[0]?.conviven || false,
+                autordv: vinculoPersonaData?.[0]?.autordv || false,
+                garantiza_proteccion: vinculoPersonaData?.[0]?.garantiza_proteccion || false,
+                nombre: fetchedVinculo?.nombre || 'Sin vínculo',
+              },
             };
           })
         );
@@ -114,17 +137,30 @@ export const useFormData = (demanda, apiData) => {
         }));
       };
   
-      fetchLocalizacionForNnya();
+      fetchDetailsForNnya();
     }
   }, [apiData?.nnyaList, demanda?.localizacion]);
   
+  
+  
   useEffect(() => {
     if (apiData?.adultsList && apiData.adultsList.length > 0) {
-      const fetchLocalizacionForAdults = async () => {
+      const fetchDetailsForAdults = async () => {
         const demandaLocalizacionId = demanda?.localizacion?.id || demanda?.localizacion;
   
         const updatedAdultsList = await Promise.all(
           apiData.adultsList.map(async (adult) => {
+            // Fetch vinculo-persona-persona data
+            const vinculoPersonaData = await getTVinculoPersonaPersonas({ persona_2: adult.id }).catch(() => null);
+            console.log('Fetched vinculoPersonaData for adult:', vinculoPersonaData, 'For persona ID:', adult.id);
+  
+            // Extract vinculo details
+            let fetchedVinculo = null;
+            if (vinculoPersonaData && vinculoPersonaData.length > 0) {
+              fetchedVinculo = await getTVinculo(vinculoPersonaData[0].vinculo).catch(() => null);
+              console.log('Fetched vinculo data for adult:', fetchedVinculo);
+            }
+  
             // Fetch localizacion-persona data
             const localizacionPersonaData = await getLocalizacionPersonas({ persona: adult.id }).catch(() => null);
             console.log('Fetched localizacionPersonaData for adult:', localizacionPersonaData, 'For persona ID:', adult.id);
@@ -151,8 +187,16 @@ export const useFormData = (demanda, apiData) => {
               useDefault,
             });
   
+            // Return the updated adult object with vinculo and localizacion
             return {
               ...adult,
+              vinculacion: {
+                vinculo: fetchedVinculo?.id || '', // Set the `id` for preselection
+                conviven: vinculoPersonaData?.[0]?.conviven || false,
+                autordv: vinculoPersonaData?.[0]?.autordv || false,
+                garantiza_proteccion: vinculoPersonaData?.[0]?.garantiza_proteccion || false,
+                nombre: fetchedVinculo?.nombre || 'Sin vínculo',
+              },
               localizacion: fetchedLocalizacion || {
                 calle: '',
                 tipo_calle: '',
@@ -176,9 +220,10 @@ export const useFormData = (demanda, apiData) => {
         }));
       };
   
-      fetchLocalizacionForAdults();
+      fetchDetailsForAdults();
     }
   }, [apiData?.adultsList, demanda?.localizacion]);
+  
   
   
   
