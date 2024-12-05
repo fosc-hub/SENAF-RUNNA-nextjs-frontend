@@ -1429,34 +1429,40 @@ const handleBlur = (field) => {
       <FormControl
   fullWidth
   margin="normal"
-  error={touched[`vulneraciones[${index}].nnya`] && (vulneracion.nnya === null || vulneracion.nnya === "")}
+  error={
+    touched[`vulneraciones[${index}].nnya`] &&
+    (vulneracion.nnya === undefined || vulneracion.nnya === null || vulneracion.nnya === "")
+  }
+  
 >
   <InputLabel>
     NNyA <span style={{ color: "red" }}>*</span>
   </InputLabel>
   <Select
-    value={vulneracion.nnya ?? ""} // Ensure controlled value, handling null or undefined
-    onChange={(e) =>
-      handleInputChange(`vulneraciones[${index}].nnya`, e.target.value)
-    }
-    onBlur={() => handleBlur(`vulneraciones[${index}].nnya`)}
-    label="NNyA"
-  >
-    {/* Add a placeholder option */}
-    <MenuItem value="">
-      <em>Seleccione una opción</em>
+  value={vulneracion.nnya ?? ""} // Default to "" if null or undefined
+  onChange={(e) => {
+    console.log("Selected NNyA:", e.target.value); // Debugging the value
+    handleInputChange(`vulneraciones[${index}].nnya`, e.target.value);
+  }}
+  onBlur={() => handleBlur(`vulneraciones[${index}].nnya`)}
+  label="NNyA"
+>
+  <MenuItem value="">
+    <em>Seleccione una opción</em>
+  </MenuItem>
+  {formData.ninosAdolescentes.map((nnya, nnyaIndex) => (
+    <MenuItem key={nnyaIndex} value={nnyaIndex}>
+      {`${nnya.nombre} ${nnya.apellido}`}
     </MenuItem>
-    {formData.ninosAdolescentes.map((nnya, nnyaIndex) => (
-      <MenuItem key={nnyaIndex} value={nnyaIndex}>
-        {`${nnya.nombre} ${nnya.apellido}`}
-      </MenuItem>
-    ))}
-  </Select>
+  ))}
+</Select>
+
   {touched[`vulneraciones[${index}].nnya`] &&
-    (vulneracion.nnya === null || vulneracion.nnya === "") && (
+    (vulneracion.nnya === undefined || vulneracion.nnya === null || vulneracion.nnya === "") && (
       <FormHelperText>Este campo es obligatorio</FormHelperText>
     )}
 </FormControl>
+
 
               <FormControl fullWidth margin="normal">
                 <InputLabel>Autor DV</InputLabel>

@@ -32,6 +32,7 @@ const steps = ['Ingreso', 'Niños y Adolescentes', 'Adultos Convivientes', 'Pres
 const initialTouched = {};
 
 export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
+const isFieldEmpty = (value) => value === undefined || value === null || value === "";
   const [activeStep, setActiveStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
@@ -126,69 +127,82 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
   }, [apiData.categoriaSubmotivos, formData.presuntaVulneracion.categoriaMotivos])
 
   const handleNext = () => {
-    if (!validateStep(activeStep)) {
-      // Mark all fields in the current step as touched
-      const updatedTouched = { ...touched };
-
-      switch (activeStep) {
-        case 0:
-          updatedTouched.fecha_y_hora_ingreso = true;
-          updatedTouched.origen = true;
-          updatedTouched.sub_origen = true;
-          updatedTouched.institucion = true;
-          updatedTouched["presuntaVulneracion.motivos"] = true;
-          break;
-
-        case 1:
-          formData.ninosAdolescentes.forEach((_, index) => {
-            updatedTouched[`ninosAdolescentes[${index}].nombre`] = true;
-            updatedTouched[`ninosAdolescentes[${index}].apellido`] = true;
-            updatedTouched[`ninosAdolescentes[${index}].situacionDni`] = true;
-            updatedTouched[`ninosAdolescentes[${index}].genero`] = true;
-            updatedTouched[`ninosAdolescentes[${index}].educacion.curso`] = true;
-            updatedTouched[`ninosAdolescentes[${index}].educacion.nivel`] = true;
-            updatedTouched[`ninosAdolescentes[${index}].educacion.turno`] = true;
-            updatedTouched[`ninosAdolescentes[${index}].salud.institucion_sanitaria`] = true;
-          });
-          break;
-
-        case 2:
-          formData.adultosConvivientes.forEach((_, index) => {
-            updatedTouched[`adultosConvivientes[${index}].nombre`] = true;
-            updatedTouched[`adultosConvivientes[${index}].apellido`] = true;
-            updatedTouched[`adultosConvivientes[${index}].situacionDni`] = true;
-            updatedTouched[`adultosConvivientes[${index}].genero`] = true;
-            updatedTouched[`adultosConvivientes[${index}].vinculacion.vinculo`] = true;
-          });
-          break;
-
+    const missingFields = [];
+  
+    // Helper function to check required fields dynamically
+    const checkRequiredFields = (fields, path) => {
+      fields.forEach((field, index) => {
+        Object.keys(field).forEach((key) => {
+          const fullPath = `${path}[${index}].${key}`;
+          if (touched[fullPath] && !field[key]) {
+            missingFields.push(fullPath);
+          }
+        });
+      });
+    };
+  
+    switch (activeStep) {
+      case 0:
+        if (!formData.fecha_y_hora_ingreso) missingFields.push("Fecha y hora de ingreso");
+        if (!formData.origen) missingFields.push("Origen");
+        if (!formData.sub_origen) missingFields.push("Sub origen");
+        if (!formData.institucion) missingFields.push("Institución");
+        break;
+  
+      case 1:
+        formData.ninosAdolescentes.forEach((_, index) => {
+          if (!formData.ninosAdolescentes[index].nombre) missingFields.push(`Nombre del NNyA [${index}]`);
+          if (!formData.ninosAdolescentes[index].apellido) missingFields.push(`Apellido del NNyA [${index}]`);
+          if (!formData.ninosAdolescentes[index].situacionDni) missingFields.push(`Situación DNI del NNyA [${index}]`);
+          if (!formData.ninosAdolescentes[index].genero) missingFields.push(`Género del NNyA [${index}]`);
+          if (!formData.ninosAdolescentes[index].educacion?.curso) missingFields.push(`Curso del NNyA [${index}]`);
+          if (!formData.ninosAdolescentes[index].educacion?.nivel) missingFields.push(`Nivel educativo del NNyA [${index}]`);
+          if (!formData.ninosAdolescentes[index].educacion?.turno) missingFields.push(`Turno educativo del NNyA [${index}]`);
+          if (!formData.ninosAdolescentes[index].salud?.institucion_sanitaria) missingFields.push(`Institución sanitaria del NNyA [${index}]`);
+        });
+        break;
+  
+      case 2:
+        formData.adultosConvivientes.forEach((_, index) => {
+          if (!formData.adultosConvivientes[index].nombre) missingFields.push(`Nombre del adulto conviviente [${index}]`);
+          if (!formData.adultosConvivientes[index].apellido) missingFields.push(`Apellido del adulto conviviente [${index}]`);
+          if (!formData.adultosConvivientes[index].situacionDni) missingFields.push(`Situación DNI del adulto conviviente [${index}]`);
+          if (!formData.adultosConvivientes[index].genero) missingFields.push(`Género del adulto conviviente [${index}]`);
+          if (!formData.adultosConvivientes[index].vinculacion?.vinculo) missingFields.push(`Vínculo del adulto conviviente [${index}]`);
+        });
+        break;
+  
         case 3:
-          formData.vulneraciones.forEach((_, index) => {
-            updatedTouched[`vulneraciones[${index}].categoria_motivo`] = true;
-            updatedTouched[`vulneraciones[${index}].categoria_submotivo`] = true;
-            updatedTouched[`vulneraciones[${index}].gravedad_vulneracion`] = true;
-            updatedTouched[`vulneraciones[${index}].urgencia_vulneracion`] = true;
-            updatedTouched[`vulneraciones[${index}].nnya`] = true;
+          formData.vulneraciones.forEach((vulneracion, index) => {
+            if (isFieldEmpty(vulneracion.categoria_motivo)) missingFields.push(`Categoría de motivo [${index}]`);
+            if (isFieldEmpty(vulneracion.categoria_submotivo)) missingFields.push(`Subcategoría [${index}]`);
+            if (isFieldEmpty(vulneracion.gravedad_vulneracion)) missingFields.push(`Gravedad de la vulneración [${index}]`);
+            if (isFieldEmpty(vulneracion.urgencia_vulneracion)) missingFields.push(`Urgencia de la vulneración [${index}]`);
+            if (isFieldEmpty(vulneracion.nnya)) missingFields.push(`NNyA relacionado con la vulneración [${index}]`);
           });
           break;
-
-        case 4:
-          formData.condicionesVulnerabilidad.forEach((_, index) => {
-            updatedTouched[`condicionesVulnerabilidad[${index}].persona`] = true;
-            updatedTouched[`condicionesVulnerabilidad[${index}].condicion_vulnerabilidad`] = true;
-          });
-          break;
-
-        default:
-          break;
-      }
-
-      setTouched(updatedTouched); // Update the touched state
-      alert("Por favor, complete todos los campos obligatorios antes de continuar.");
-    } else {
-      setActiveStep((prevActiveStep) => prevActiveStep + 1);
+        
+  
+      case 4:
+        formData.condicionesVulnerabilidad.forEach((_, index) => {
+          if (!formData.condicionesVulnerabilidad[index].persona) missingFields.push(`Persona en condiciones de vulnerabilidad [${index}]`);
+          if (!formData.condicionesVulnerabilidad[index].condicion_vulnerabilidad) missingFields.push(`Condición de vulnerabilidad [${index}]`);
+        });
+        break;
+  
+      default:
+        break;
     }
+  
+    if (missingFields.length > 0) {
+      alert(`Por favor, complete los siguientes campos obligatorios antes de continuar:\n\n${missingFields.join("\n")}`);
+      return;
+    }
+  
+    setActiveStep((prevActiveStep) => prevActiveStep + 1);
   };
+  
+  
   const handleBack = () => setActiveStep((prevStep) => Math.max(prevStep - 1, 0))
 
   const addDebugInfo = (info) => setDebugInfo(prev => [...prev, info])
