@@ -116,7 +116,7 @@ const dataGroups = {
   },
   motivoActuacion: {
     title: "Motivo de las Actuaciones",
-    multiRow: false, // Single row only
+    multiRow: true, // Single row only
     fields: [{ key: "motivo", label: "Motivo" }],
   },
   antecedentes: {
@@ -163,6 +163,7 @@ export function EvaluacionesContent() {
   const [justification, setJustification] = useState('');
   const router = useRouter();
   const [loadingTableData, setLoadingTableData] = useState(true); // Add loading state
+  const { user, loading } = useAuth(); // Now wrapped by AuthProvider
 
   const [formData, setFormData] = useState({
     generalInfo: {},
@@ -186,8 +187,46 @@ export function EvaluacionesContent() {
       try {
         const demandaId = Array.isArray(id) ? parseInt(id[0]) : parseInt(id);
 
+        const currentDate = new Date().toISOString().split('T')[0];
+
         // Fetching general info
-        const generalInfo = await getDemand(demandaId); // Assume `id` is available from `useParams`
+        const demandaInfo = await getDemand(demandaId); // Assume `id` is available from `useParams`
+
+        formData.generalInfo = {
+          localidad: user.localidad || "",
+          fecha: currentDate || "",
+          cargo: user.is_superuser ? "superuser" : ( user.groups[0] || ""),
+          nombreApellido: user.first_name + ' ' + user.last_name || "",
+          refNumero: demandaInfo.nro_suac || "",
+        };
+
+        formData.mpiInfo = {
+          dia: currentDate.split('-')[2],
+          mes: currentDate.split('-')[1],
+          año: currentDate.split('-')[0],
+        };
+
+        const demandaMotivos = await getTDemandaMotivoIntervencions({ demanda: demandaId });
+        const motivosArray = [];
+        for (const motivo of demandaMotivos) {
+          const motivoData = await getTMotivoIntervencion(motivo.motivo_intervencion);
+          motivosArray.push({
+            motivo: motivoData.nombre}
+          );
+        }
+
+        const entrevistas = await getTActividades({ demanda: demandaId });
+        const entrevistasArray = [];
+        for (const entrevista of entrevistas) {
+          entrevistasArray.push({
+            propietario: "",
+            dia: entrevista.fecha_y_hora.split('-').pop().split('T')[0],
+            mes: entrevista.fecha_y_hora.split('-')[1],
+            año: entrevista.fecha_y_hora.split('-')[0],
+            conclusion: entrevista.descripcion || "",
+          });
+        }
+
         // Fetch all related personas
         const demandaPersonas = await getTDemandaPersonas({ demanda: demandaId });
 
@@ -226,16 +265,11 @@ export function EvaluacionesContent() {
           }
         }
 
-        console.log('nnyaInfoArray:', nnyaInfoArray);
-        console.log('grupoFamiliarNNyAArray:', grupoFamiliarNNyAArray);
-        console.log('grupoFamiliarProgenitorArray:', grupoFamiliarProgenitorArray);
-
-        formData.generalInfo = generalInfo;
         formData.nnyaInfo = nnyaInfoArray;
         formData.grupoFamiliarNNyA = grupoFamiliarNNyAArray;
         formData.grupoFamiliarProgrenitor = grupoFamiliarProgenitorArray;
-         
-
+        formData.motivoActuacion = motivosArray;
+        formData.entrevistas = entrevistasArray;
 
       } catch (error) {
         console.error('Error fetching data:', error);
