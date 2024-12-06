@@ -22,13 +22,22 @@ import { useParams } from 'next/navigation';
 import { createTEvaluacion } from '../../api/TableFunctions/evaluaciones';
 import { getTDemandaPersonas } from '../../api/TableFunctions/demandaPersonas';
 import { TDemandaPersona } from '../../api/interfaces';
-import { getTPersona } from '../../api/TableFunctions/personas';
 import { getTSuggestDecisions } from '../../api/TableFunctions/suggestDecision';
 import { TsuggestDecision } from '../../api/interfaces';
-import { getTLegajos } from '../../api/TableFunctions/legajos';
 import { createTDecision } from '../../api/TableFunctions/decisiones';
 import { useRouter } from 'next/navigation';
 import EditableTable from '../common/EditableTable';
+import CircularProgress from '@mui/material/CircularProgress';
+
+import { getDemand, getDemands } from '../../api/TableFunctions/demands';
+import { AuthProvider, useAuth } from '../../context/AuthContext';
+import { getTPersona, getTPersonas } from '../../api/TableFunctions/personas';
+import { getTLegajos, getTLegajo } from '../../api/TableFunctions/legajos';
+import { getTVinculoPersonaPersona, getTVinculoPersonaPersonas } from '../../api/TableFunctions/vinculospersonaspersonas';
+import { getTMotivoIntervencion, getTMotivoIntervencions } from '../../api/TableFunctions/motivoIntervencion';
+import { getTDemandaMotivoIntervencion, getTDemandaMotivoIntervencions } from '../../api/TableFunctions/demandasMotivoIntervencion';
+import { getTActividad, getTActividades } from '../../api/TableFunctions/actividades';
+
 
 const dataGroups = {
   generalInfo: {
@@ -44,7 +53,7 @@ const dataGroups = {
   },
   nnyaInfo: {
     title: "Información del NNyA",
-    multiRow: true, // Allows multiple rows
+    multiRow: false, // Allows multiple rows
     fields: [
       { key: "apellidoNombre", label: "Apellido y Nombre" },
       { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
@@ -153,6 +162,7 @@ export function EvaluacionesContent() {
   const id = params.id;
   const [justification, setJustification] = useState('');
   const router = useRouter();
+  const [loadingTableData, setLoadingTableData] = useState(true); // Add loading state
 
   const [formData, setFormData] = useState({
     generalInfo: {},
@@ -169,11 +179,80 @@ export function EvaluacionesContent() {
     entrevistas: [],
   });
 
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoadingTableData(true); // Set loading to true
+
+      try {
+        const demandaId = Array.isArray(id) ? parseInt(id[0]) : parseInt(id);
+
+        // Fetching general info
+        const generalInfo = await getDemand(demandaId); // Assume `id` is available from `useParams`
+        // Fetch all related personas
+        const demandaPersonas = await getTDemandaPersonas({ demanda: demandaId });
+
+        // Initialize arrays for categorization
+        const nnyaInfoArray = [];
+        const grupoFamiliarNNyAArray = [];
+        const grupoFamiliarProgenitorArray = [];
+
+        // Iterate over demandaPersonas
+        for (const personaData of demandaPersonas) {
+          // Fetch detailed persona data
+          const personaDetails = await getTPersona(personaData.persona);
+
+          // Categorize based on conditions
+          if (personaDetails.nnya === true && personaData.nnya_principal === true) {
+            nnyaInfoArray.push({
+              apellidoNombre: personaDetails.nombre + ' ' + personaDetails.apellido || "",
+              fechaNacimiento: personaDetails.fecha_nacimiento || "",
+              dni: personaDetails.dni || "",
+              legajoRunna: "",
+            });
+          } else if (personaDetails.nnya === true && personaData.nnya_principal === false) {
+            grupoFamiliarNNyAArray.push({
+              apellidoNombre: personaDetails.nombre + ' ' + personaDetails.apellido || "",
+              fechaNacimiento: personaDetails.fecha_nacimiento || "",
+              dni: personaDetails.dni || "",
+            });
+          } else if (personaDetails.nnya === false) {
+            grupoFamiliarProgenitorArray.push({
+              apellidoNombre: personaDetails.nombre + ' ' + personaDetails.apellido || "",
+              fechaNacimiento: personaDetails.fecha_nacimiento || "",
+              dni: personaDetails.dni || "",
+              domicilio: personaDetails.domicilio || "",
+              telefono: personaDetails.telefono || "",
+            });
+          }
+        }
+
+        console.log('nnyaInfoArray:', nnyaInfoArray);
+        console.log('grupoFamiliarNNyAArray:', grupoFamiliarNNyAArray);
+        console.log('grupoFamiliarProgenitorArray:', grupoFamiliarProgenitorArray);
+
+        formData.generalInfo = generalInfo;
+        formData.nnyaInfo = nnyaInfoArray;
+        formData.grupoFamiliarNNyA = grupoFamiliarNNyAArray;
+        formData.grupoFamiliarProgrenitor = grupoFamiliarProgenitorArray;
+         
+
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoadingTableData(false); // Set loading to false
+      }
+    };
+  
+    if (id) {
+      fetchData();
+    }
+  }, [id]);  
+
   const [activeTab, setActiveTab] = useState(Object.keys(dataGroups)[0]);
   const handleTabChange = (event, newTab) => {
     setActiveTab(newTab);
   };
-
   const handleDataChange = (groupKey, updatedData) => {
     setFormData((prev) => ({ ...prev, [groupKey]: updatedData }));
   };
@@ -392,36 +471,46 @@ export function EvaluacionesContent() {
   return (
     <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 3, overflow: 'auto' }}>
       <Box>
-      <Tabs
-        value={activeTab}
-        onChange={handleTabChange}
-        sx={{ mb: 4 }}
-        variant="scrollable"
-      >
-        {Object.entries(dataGroups).map(([key, group]) => (
-          <Tab key={key} label={group.title} value={key} />
-        ))}
-      </Tabs>
-      {Object.entries(dataGroups).map(
-        ([key, group]) =>
-          activeTab === key && (
-            <EditableTable
-              key={key}
-              groupKey={key}
-              group={group}
-              data={formData}
-              onDataChange={handleDataChange}
-            />
-          )
-      )}
-      <Button
-        variant="contained"
-        onClick={handleDownloadReport}
-        sx={{ mt: 3 }}
-      >
-        Descargar Informe
-      </Button>
-    </Box>
+        {loadingTableData ? (
+          // Show a spinner or loading message while data is being fetched
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          // Render the tabs and EditableTable when data is ready
+          <>
+            <Tabs
+              value={activeTab}
+              onChange={handleTabChange}
+              sx={{ mb: 4 }}
+              variant="scrollable"
+            >
+              {Object.entries(dataGroups).map(([key, group]) => (
+                <Tab key={key} label={group.title} value={key} />
+              ))}
+            </Tabs>
+            {Object.entries(dataGroups).map(
+              ([key, group]) =>
+                activeTab === key && (
+                  <EditableTable
+                    key={key}
+                    groupKey={key}
+                    group={group}
+                    data={formData}
+                    onDataChange={handleDataChange}
+                  />
+                )
+            )}
+            <Button
+              variant="contained"
+              onClick={handleDownloadReport}
+              sx={{ mt: 3 }}
+            >
+              Descargar Informe
+            </Button>
+          </>
+        )}
+      </Box>
 
       <Box
         sx={{

@@ -57,43 +57,51 @@ const EditableTable = ({ groupKey, group, data, onDataChange }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {group.multiRow
-              ? groupData.map((row, rowIndex) => (
-                  <TableRow key={rowIndex}>
-                    {group.fields.map((field) => (
-                      <TableCell key={field.key}>
-                        <TextField
-                          value={row[field.key] || ""}
-                          onChange={(e) =>
-                            handleInputChange(rowIndex, field.key, e.target.value)
-                          }
-                          fullWidth
-                        />
-                      </TableCell>
-                    ))}
-                    <TableCell>
-                      <IconButton onClick={() => handleDeleteRow(rowIndex)}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
-              : (
-                <TableRow>
-                  {group.fields.map((field) => (
-                    <TableCell key={field.key}>
-                      <TextField
-                        value={groupData[field.key] || ""}
-                        onChange={(e) =>
-                          handleInputChange(null, field.key, e.target.value)
-                        }
-                        fullWidth
-                      />
-                    </TableCell>
-                  ))}
-                </TableRow>
-              )}
-          </TableBody>
+    {group.multiRow
+      ? groupData.length > 0
+        ? groupData.map((row, rowIndex) => (
+            <TableRow key={rowIndex}>
+              {group.fields.map((field) => (
+                <TableCell key={field.key}>
+                  <TextField
+                    value={row[field.key] ?? ""}
+                    onChange={(e) =>
+                      handleInputChange(rowIndex, field.key, e.target.value)
+                    }
+                    fullWidth
+                  />
+                </TableCell>
+              ))}
+              <TableCell>
+                <IconButton onClick={() => handleDeleteRow(rowIndex)}>
+                  <DeleteIcon />
+                </IconButton>
+              </TableCell>
+            </TableRow>
+          ))
+        : (
+          <TableRow>
+            <TableCell colSpan={group.fields.length + 1}>
+              <Typography align="center">No hay datos disponibles</Typography>
+            </TableCell>
+          </TableRow>
+        )
+      : (
+        <TableRow>
+          {group.fields.map((field) => (
+            <TableCell key={field.key}>
+              <TextField
+                value={groupData[field.key] ?? ""}
+                onChange={(e) =>
+                  handleInputChange(null, field.key, e.target.value)
+                }
+                fullWidth
+              />
+            </TableCell>
+          ))}
+        </TableRow>
+      )}
+  </TableBody>
         </Table>
       </TableContainer>
       {group.multiRow && (
