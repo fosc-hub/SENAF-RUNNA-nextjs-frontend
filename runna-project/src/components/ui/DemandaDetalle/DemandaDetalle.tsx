@@ -45,6 +45,7 @@ import { getTActividadTipo } from '../../../api/TableFunctions/actividadTipos';
 import { getTInstitucionActividad } from '../../../api/TableFunctions/institucionActividades';
 import { getDemand, updateDemand } from '../../../api/TableFunctions/demands';
 import useDemandData from './useDemandData';
+import SearchDemands from './SearchDemands';
 
 interface Actividad {
   id: number;
@@ -461,32 +462,6 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAll
   };
   
 
-  const handleEnviarADecision = async () => {
-    try {
-      const updatedDemanda = {
-        ...demanda,
-        evaluacion: false,
-        decision: true,
-      };
-
-      const response = await fetch(`http://localhost:8000/api/demanda/${demanda.id}/`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedDemanda),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update demanda');
-      }
-
-      setDemandState('decision');
-      console.log('Demanda enviada a proceso de toma de decisión');
-    } catch (error) {
-      console.error('Error al enviar a toma de decisión:', error);
-    }
-  };
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (activeStep !== steps.length - 1) {
@@ -734,54 +709,41 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAll
   )}
 </CollapsibleSection>
 <CollapsibleSection
-      title="Conexiones de la Demanda"
-      isOpen={sections.conexiones}
-      onToggle={() => toggleSection('conexiones')}
-    >
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="subtitle1" color="primary" gutterBottom>Vincular con otro caso</Typography>
-        <Box display="flex" alignItems="center">
-          <TextField
-            select
-            label="NNYA Principal"
-            value={selectedNnya}
-            onChange={(e) => setSelectedNnya(e.target.value)}
-            sx={{ mr: 2, minWidth: 200 }}
-            error={!!vinculacionError}
-            helperText={vinculacionError}
-          >
-            {nnyaPrincipales.map((nnya) => (
-              <MenuItem key={nnya.id} value={nnya.id.toString()}>
-                {`${nnya.nombre} ${nnya.apellido} - DNI: ${nnya.dni} - Demanda ID: ${nnya.demandaId}`}
-              </MenuItem>
+        title="Conexiones de la Demanda"
+        isOpen={sections.conexiones}
+        onToggle={() => toggleSection('conexiones')}
+      >
+        <SearchDemands
+          demandaId={demanda.id}
+          conexiones={conexiones}
+          nnyaPrincipales={nnyaPrincipales}
+          selectedNnya={selectedNnya}
+          setSelectedNnya={setSelectedNnya}
+          vinculacionError={vinculacionError}
+          handleVincular={handleVincular}
+          loadingConexiones={loadingConexiones}
+        />
+        <Typography variant="subtitle1" color="primary" gutterBottom>Conexiones existentes</Typography>
+        {loadingConexiones ? (
+          <CircularProgress />
+        ) : (
+          <List>
+            {conexiones.map((conexion) => (
+              <ListItem key={conexion.id}>
+                <ListItemText 
+                  primary={`Demanda ID: ${conexion.demanda_2}`}
+                  secondary={
+                    conexion.nnyaInfo
+                      ? `${conexion.nnyaInfo.nombre} ${conexion.nnyaInfo.apellido} - DNI: ${conexion.nnyaInfo.dni}`
+                      : 'Información no disponible'
+                  }
+                />
+              </ListItem>
             ))}
-          </TextField>
-          <Button variant="contained" color="primary" onClick={handleVincular}>
-            Vincular
-          </Button>
-        </Box>
-      </Box>
-      <Divider sx={{ my: 2 }} />
-      <Typography variant="subtitle1" color="primary" gutterBottom>Conexiones existentes</Typography>
-      {loadingConexiones ? (
-        <CircularProgress />
-      ) : (
-        <List>
-          {conexiones.map((conexion) => (
-            <ListItem key={conexion.id}>
-              <ListItemText 
-                primary={`Demanda ID: ${conexion.demanda_2}`}
-                secondary={
-                  conexion.nnyaInfo
-                    ? `${conexion.nnyaInfo.nombre} ${conexion.nnyaInfo.apellido} - DNI: ${conexion.nnyaInfo.dni}`
-                    : 'Información no disponible'
-                }
-              />
-            </ListItem>
-          ))}
-        </List>
-      )}
-    </CollapsibleSection>
+          </List>
+        )}
+      </CollapsibleSection>
+
     {demanda.constatacion && (
         <Box mt={3} display="flex" justifyContent="flex-end">
           <Button
