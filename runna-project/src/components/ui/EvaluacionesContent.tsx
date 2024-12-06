@@ -37,6 +37,7 @@ import { getTVinculoPersonaPersona, getTVinculoPersonaPersonas } from '../../api
 import { getTMotivoIntervencion, getTMotivoIntervencions } from '../../api/TableFunctions/motivoIntervencion';
 import { getTDemandaMotivoIntervencion, getTDemandaMotivoIntervencions } from '../../api/TableFunctions/demandasMotivoIntervencion';
 import { getTActividad, getTActividades } from '../../api/TableFunctions/actividades';
+import { el } from 'date-fns/locale';
 
 
 const dataGroups = {
@@ -391,6 +392,11 @@ export function EvaluacionesContent() {
   };
 
   const handleDecision = (decision: 'APERTURA DE LEGAJO' | 'RECHAZAR CASO' | 'MPI_MPE') => async () => {
+    if (!justification.trim()) {
+      alert("Por favor, ingrese una justificación antes de continuar.");
+      return;
+    }
+
     try {
       const data = {
         justificacion: justification,
@@ -399,13 +405,13 @@ export function EvaluacionesContent() {
         nnya: Number(selectedNNYA),
       };
       console.log('Decision data:', data);
-      await createTDecision(data);
+      await createTDecision(data, true, 'Decision tomada con exito !');
 
-      console.log('Decision successfully created!');
-      router.push('/mesadeentrada');
+      // router.push('/mesadeentrada');
 
     } catch (error) {
-      alert('Error al enviar la decisión. Ya existe una decision tomada.');
+      console.error('Error al enviar la decisión:', error.response.data);
+      // alert('Error al enviar la decisión. Ya existe una decision tomada.');
     }
   };
 
@@ -440,16 +446,28 @@ export function EvaluacionesContent() {
 
   const fetchNNYAData = useCallback(async () => {
     try {
-      const allData = await getTDemandaPersonas({ demanda: id });
+      const allData = await getTDemandaPersonas({ 
+        demanda: id
+      });
 
-      const detailedData = await Promise.all(
-        allData.map(async (nnya) => {
-          const personaData = await getTPersona(nnya.persona);
-          return { ...nnya, nombrePersona: personaData.nombre };
-        })
+      const PersonaData = await Promise.all(
+        allData.map(async (persona) => {
+          const persona_n = await getTPersona(persona.persona);
+          return {
+            ...persona_n,
+            nnya_principal: allData.find(item => item.nnya_principal === true && item.persona === persona_n.id) ? true : false,
+          }
+        }
+        )
       );
 
-      setNnyaOptions(detailedData);
+      console.log('PersonaData:', PersonaData);
+
+      const nnyaData = PersonaData.filter((persona) => persona.nnya === true);
+
+      console.log('NNYA Data:', nnyaData);
+
+      setNnyaOptions(nnyaData);
 
       const principalData = detailedData.find(item => item.nnya_principal === true);
       if (principalData) {
@@ -487,6 +505,7 @@ export function EvaluacionesContent() {
       return;
     }
 
+    var count = 1;
     for (const indicador of indicadores) {
       const siNo = selectedOptions[indicador.id] === 'yes';
       const demanda = parseInt(id as string, 10);
@@ -498,8 +517,13 @@ export function EvaluacionesContent() {
       };
 
       try {
-        await createTEvaluacion(evaluationData);
+        if (count === indicadores.length) {
+          await createTEvaluacion(evaluationData, true, 'Valoracion registrada con éxito!');
+        } else {
+          await createTEvaluacion(evaluationData);
+        }
         console.log(`Evaluación para el indicador ${indicador.id} enviada correctamente.`);
+        count++;
       } catch (error) {
         const errorMessage = error.message || error.toString();
         if (errorMessage.includes('Failed to create data')) {
@@ -670,7 +694,7 @@ export function EvaluacionesContent() {
           >
             {nnyaOptions.map((nnya) => (
               <MenuItem key={nnya.id} value={String(nnya.id)}>
-                {nnya.nombrePersona}
+                {nnya.id} {nnya.nombre} {nnya.apellido} {nnya.nnya_principal ? '(principal) ' : ''}
               </MenuItem>
             ))}
           </Select>
@@ -757,7 +781,7 @@ export function EvaluacionesContent() {
                 onChange={(e) => setJustification(e.target.value)}
               />
 
-              {!tieneLegajo ? (
+              {tieneLegajo ? (
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
                   <Button
                     variant="outlined"

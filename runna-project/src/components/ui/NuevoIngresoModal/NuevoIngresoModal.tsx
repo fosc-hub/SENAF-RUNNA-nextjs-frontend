@@ -237,7 +237,7 @@ export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
       }
 
       addDebugInfo('Creating demanda')
-      const demandaResponse = await createDemand(demandaData)
+      const demandaResponse = await createDemand(demandaData, true, 'Demanda creada con exito')
       addDebugInfo(`Demanda created: ${JSON.stringify(demandaResponse)}`)
 
       if (!demandaResponse || !demandaResponse.id) {

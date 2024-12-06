@@ -218,7 +218,7 @@ export function MainContent({
 
   const handleSubmitNuevoIngreso = useCallback(async (formData: Partial<TDemanda>) => {
     try {
-      const newDemand = await createDemand(formData)
+      const newDemand = await createDemand(formData, true, '¡Demanda creada con éxito!')
       await fetchAllData() // Refresh all data to get updated relationships
       setIsNuevoIngresoModalOpen(false)
     } catch (error) {
@@ -243,7 +243,7 @@ export function MainContent({
   const handleConstatar = useCallback(async () => {
     if (selectedDemand) {
       try {
-        const updatedDemand = await updateDemand(selectedDemand.id!, { ...selectedDemand, estado: 'Verificada' })
+        const updatedDemand = await updateDemand(selectedDemand.id!, { ...selectedDemand, estado: 'Verificada' }, true, '¡Demanda actualizada con éxito!')
         await fetchAllData() // Refresh all data
         setShowDemandaDetalle(false)
         setShowActividadesRegistradas(false)
@@ -257,7 +257,7 @@ export function MainContent({
   const handleEvaluate = useCallback(async () => {
     if (selectedDemand) {
       try {
-        const updatedDemand = await updateDemand(selectedDemand.id!, { ...selectedDemand, estado: 'En evaluación' })
+        const updatedDemand = await updateDemand(selectedDemand.id!, { ...selectedDemand, estado: 'En evaluación' }, true, '¡Demanda actualizada con éxito')
         await fetchAllData() // Refresh all data
         setShowPostConstatacion(false)
       } catch (error) {
@@ -413,6 +413,7 @@ const columns: GridColDef[] = useMemo(() => {
         <EvaluarButton
           id={params.row.id} // Pasa el id de la fila
           onClick={onEvaluacionClick} // Asegúrate de que esta función sea pasada como prop
+          disabled={!params.row.evaluacion} // Deshabilita el botón si evaluación es false
         />
       ),
     });
