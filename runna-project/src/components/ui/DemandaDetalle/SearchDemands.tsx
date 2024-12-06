@@ -55,13 +55,17 @@ export default function SearchDemands({
 
   const handleSearch = () => {
     setIsSearching(true);
+  
+    // Filter by matching either full name or DNI
     const filteredNnya = nnyaPrincipales.filter((nnya) =>
       `${nnya.nombre} ${nnya.apellido}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (typeof nnya.dni === 'string' && nnya.dni.includes(searchQuery))
+      nnya.dni?.toString().includes(searchQuery)
     );
+  
     setSearchResults(filteredNnya);
     setIsSearching(false);
   };
+  
 
   const handleResultSelect = (nnya: NnyaPrincipalData) => {
     setSelectedNnya(nnya.id.toString());
