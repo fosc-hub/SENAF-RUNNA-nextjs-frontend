@@ -32,9 +32,12 @@ import { getTDemandaPersona } from '../../api/TableFunctions/demandaPersonas'
 import { getTPersona } from '../../api/TableFunctions/personas'
 import { getTDemandaAsignados } from '../../api/TableFunctions/DemandaAsignados'
 import { getTPrecalificacionDemanda, createTPrecalificacionDemanda, updateTPrecalificacionDemanda } from '../../api/TableFunctions/precalificacionDemanda'
+import { getTDemandaScores } from '../../api/TableFunctions/demandaScores'
+
 import { useAuth } from '../../context/AuthContext';
 import axiosInstance from '../../api/utils/axiosInstance';
 import { Slide, toast } from 'react-toastify';
+import { get } from 'axios';
 const origenOptions = [
   { value: 'todos', label: 'Todos' },
   { value: 'web', label: 'Web' },
@@ -334,6 +337,30 @@ const columns: GridColDef[] = useMemo(() => {
               <WarningIcon sx={{ color: 'warning.main', ml: 1 }} fontSize="small" />
             )}
           </Box>
+        );
+      },
+    },
+    {
+      field: 'score',
+      headerName: 'Score',
+      width: 130,
+      renderCell: (params: GridRenderCellParams<TDemanda>) => {
+        const [score, setScore] = useState<number | null>(null);
+
+        useEffect(() => {
+          const fetchScore = async () => {
+            try {
+              const scoreData = await getTDemandaScores({ demanda: params.row.id });
+              setScore(scoreData[0].score);
+            } catch (error) {
+              console.error('Error fetching score:', error);
+            }
+          };
+
+          fetchScore();
+        }, [params.row.id]);
+        return (
+          <Typography>{score}</Typography>
         );
       },
     },
