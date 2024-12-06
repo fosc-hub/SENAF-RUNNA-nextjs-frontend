@@ -53,7 +53,7 @@ const dataGroups = {
   },
   nnyaInfo: {
     title: "Información del NNyA",
-    multiRow: false, // Allows multiple rows
+    multiRow: true, // Allows multiple rows
     fields: [
       { key: "apellidoNombre", label: "Apellido y Nombre" },
       { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
@@ -292,26 +292,40 @@ export function EvaluacionesContent() {
   };
 
   const handleDownloadReport = async () => {
-    const response = await fetch("/api/generate-pdf", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
-
-    console.log('formData:', formData);
-
-    if (response.ok) {
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
+    try {
+      // Send formData to the webhook
+      const response = await fetch("https://hook.us1.make.com/4i15ke3vtipnd9m6na287lm9q5nuagx9", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData), // Form data to be sent
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to send data to webhook.");
+      }
+  
+      // Parse the response to get the download link
+      const responseData = await response.json();
+      const downloadLink = responseData.downloadUrl; // Adjust this key based on webhook response
+  
+      if (!downloadLink) {
+        throw new Error("No download link received from the webhook.");
+      }
+  
+      // Trigger the download
       const link = document.createElement("a");
-      link.href = url;
+      link.href = downloadLink;
       link.download = "Informe.pdf";
       link.click();
-      URL.revokeObjectURL(url);
-    } else {
-      console.error("Error downloading the PDF");
+  
+      // Optionally, inform the user
+      alert("Your download has started!");
+    } catch (error) {
+      console.error("Error in handleDownloadReport:", error);
+      alert("There was an error generating the report. Please try again.");
     }
   };
+  
 
 
   const fetchTIndicadoresValoracions = useCallback(async () => {
@@ -504,7 +518,18 @@ export function EvaluacionesContent() {
   }, [fetchNNYAData, id]);
   return (
     <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 3, overflow: 'auto' }}>
-      <Box>
+      <Box
+        sx={{
+          mt: 3,
+          maxHeight: 400,
+          overflowY: 'auto',
+          borderRadius: 2,
+          border: '1px solid #ddd',
+          padding: 3,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+        }}>
         {loadingTableData ? (
           // Show a spinner or loading message while data is being fetched
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
@@ -535,15 +560,21 @@ export function EvaluacionesContent() {
                   />
                 )
             )}
-            <Button
-              variant="contained"
-              onClick={handleDownloadReport}
-              sx={{ mt: 3 }}
-            >
-              Descargar Informe
-            </Button>
           </>
         )}
+      </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+      <Button
+        variant="contained"
+        color="primary"
+        sx={{
+          fontSize: '1.1rem',
+          padding: '6px 50px',
+        }}
+        onClick={handleDownloadReport}
+      >
+        Generar Informe
+      </Button>
       </Box>
 
       <Box
