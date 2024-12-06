@@ -6,6 +6,8 @@ import {
   Typography,
   FormControl,
   FormControlLabel,
+  Tabs, 
+  Tab,
   Radio,
   RadioGroup,
   IconButton, Select, MenuItem, InputLabel, SelectChangeEvent, TextField,
@@ -28,6 +30,118 @@ import { createTDecision } from '../../api/TableFunctions/decisiones';
 import { useRouter } from 'next/navigation';
 import EditableTable from '../common/EditableTable';
 
+const dataGroups = {
+  generalInfo: {
+    title: "Información General",
+    multiRow: false, // Single row only
+    fields: [
+      { key: "localidad", label: "Localidad" },
+      { key: "fecha", label: "Fecha" },
+      { key: "cargo", label: "Cargo/Función" },
+      { key: "nombreApellido", label: "Nombre y Apellido" },
+      { key: "refNumero", label: "N° de Sticker SUAC" },
+    ],
+  },
+  nnyaInfo: {
+    title: "Información del NNyA",
+    multiRow: true, // Allows multiple rows
+    fields: [
+      { key: "apellidoNombre", label: "Apellido y Nombre" },
+      { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
+      { key: "dni", label: "N° de DNI" },
+      { key: "legajoRunna", label: "N° de Legajo RUNNA" },
+    ],
+  },
+  mpiInfo:{
+    title: "Información MPI",
+    multiRow: false, // Single row only
+    fields: [
+      { key: "dia", label: "Dia" },
+      { key: "mes", label: "Mes" },
+      { key: "año", label: "Año" },
+    ],
+  },
+  grupoFamiliarNNyA: {
+    title: "Datos del Grupo Familiar Conviviente (NNyAs)",
+    multiRow: true, // Allows multiple rows
+    fields: [
+      { key: "apellidoNombre", label: "Apellido y Nombre" },
+      { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
+      { key: "dni", label: "N° de DNI" },
+    ],
+  },
+  grupoFamiliarProgrenitor:{
+    title: "Datos del Grupo Familiar Conviviente (Progenitores)",
+    multiRow: true, // Allows multiple rows
+    fields: [
+      { key: "apellidoNombre", label: "Apellido y Nombre" },
+      { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
+      { key: "dni", label: "N° de DNI" },
+      { key: "domicilio", label: "Domicilio Completo" },
+      { key: "telefono", label: "Teléfono" },
+    ],
+  },
+  familiaExtensaMaterna: {
+    title: "Datos de la Familia Extensa Materna",
+    multiRow: true, // Allows multiple rows
+    fields: [
+      { key: "vinculo", label: "Vínculo" },
+      { key: "apellidoNombre", label: "Apellido y Nombre" },
+      { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
+      { key: "dni", label: "N° de DNI" },
+      { key: "domicilio", label: "Domicilio Completo" },
+      { key: "telefono", label: "Teléfono" },
+    ],
+  },
+  familiaExtensaPaterna: {
+    title: "Datos de la Familia Extensa Paterna",
+    multiRow: true, // Allows multiple rows
+    fields: [
+      { key: "vinculo", label: "Vínculo" },
+      { key: "apellidoNombre", label: "Apellido y Nombre" },
+      { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
+      { key: "dni", label: "N° de DNI" },
+      { key: "domicilio", label: "Domicilio Completo" },
+      { key: "telefono", label: "Teléfono" },
+    ],
+  },
+  motivoActuacion: {
+    title: "Motivo de las Actuaciones",
+    multiRow: false, // Single row only
+    fields: [{ key: "motivo", label: "Motivo" }],
+  },
+  antecedentes: {
+    title: "Antecedentes de Actuación",
+    multiRow: true, // Allows multiple rows
+    fields: [{ key: "antecedentes", label: "Antecedentes" }],
+  },
+  medidasProteccion: {
+    title: "Otras Medidas de Protección",
+    multiRow: true, // Allows multiple rows
+    fields: [{ key: "medidas", label: "Medidas de Protección" }],
+  },
+  resenaActuado: {
+    title: "Reseña de lo Actuado",
+    multiRow: false, // Allows multiple rows
+    fields: [
+      { key: "intervencionPrincipal", label: "Intervención Principal" },
+      { key: "informacion", label: "informacion" },
+    ],
+  },
+  entrevistas: {
+    title: "Entrevistas",
+    multiRow: true, // Allows multiple rows
+    fields: [
+      { key: "propietario", label: "propietario" },
+      { key: "dia", label: "dia" },
+      { key: "mes", label: "mes" },
+      { key: "año", label: "año" },
+      { key: "conclusion", label: "Conclusion" },
+    ],
+  },
+};
+
+
 export function EvaluacionesContent() {
   const [indicadores, setIndicadores] = useState<TIndicadoresValoracion[]>([]);
   const [loadingData, setLoadingData] = useState(true);
@@ -39,42 +153,50 @@ export function EvaluacionesContent() {
   const id = params.id;
   const [justification, setJustification] = useState('');
   const router = useRouter();
-  const [familiares, setFamiliares] = useState([
-    { nombre: 'Jane Doe', dni: '12345678' },
-    { nombre: 'Jim Doe', dni: '87654321' },
-  ]);
 
-  const handleDataChange = (updatedFamiliares) => {
-    setFamiliares(updatedFamiliares);
+  const [formData, setFormData] = useState({
+    generalInfo: {},
+    nnyaInfo: [],
+    mpiInfo: {},
+    grupoFamiliarNNyA: [],
+    grupoFamiliarProgrenitor: [],
+    familiaExtensaMaterna: [],
+    familiaExtensaPaterna: [],
+    motivoActuacion: {},
+    antecedentes: [],
+    medidasProteccion: [],
+    resenaActuado: {},
+    entrevistas: [],
+  });
+
+  const [activeTab, setActiveTab] = useState(Object.keys(dataGroups)[0]);
+  const handleTabChange = (event, newTab) => {
+    setActiveTab(newTab);
+  };
+
+  const handleDataChange = (groupKey, updatedData) => {
+    setFormData((prev) => ({ ...prev, [groupKey]: updatedData }));
   };
 
   const handleDownloadReport = async () => {
-    const data = {
-      localidad: 'Buenos Aires',
-      fecha: '04/12/2024',
-      cargo: 'Director',
-      nombreApellido: 'John Doe',
-      familiares: familiares,
-      conclusiones: 'Caso cerrado satisfactoriamente.',
-      refNumero: '1234/2024',
-    };
-
-    const response = await fetch('/api/generate-pdf', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+    const response = await fetch("/api/generate-pdf", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
     });
+
+    console.log('formData:', formData);
 
     if (response.ok) {
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = 'Informe.pdf';
+      link.download = "Informe.pdf";
       link.click();
       URL.revokeObjectURL(url);
     } else {
-      console.error('Error downloading the PDF');
+      console.error("Error downloading the PDF");
     }
   };
 
@@ -270,19 +392,36 @@ export function EvaluacionesContent() {
   return (
     <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 3, overflow: 'auto' }}>
       <Box>
-        <Typography variant="h5" sx={{ mb: 2 }}>
-          Editar Información de Familiares
-        </Typography>
-        <EditableTable data={familiares} onDataChange={handleDataChange} />
-        <Button
-          variant="contained"
-          startIcon={<DownloadIcon />}
-          onClick={handleDownloadReport}
-          sx={{ mt: 3 }}
-        >
-          Descargar Informe
-        </Button>
-      </Box>
+      <Tabs
+        value={activeTab}
+        onChange={handleTabChange}
+        sx={{ mb: 4 }}
+        variant="scrollable"
+      >
+        {Object.entries(dataGroups).map(([key, group]) => (
+          <Tab key={key} label={group.title} value={key} />
+        ))}
+      </Tabs>
+      {Object.entries(dataGroups).map(
+        ([key, group]) =>
+          activeTab === key && (
+            <EditableTable
+              key={key}
+              groupKey={key}
+              group={group}
+              data={formData}
+              onDataChange={handleDataChange}
+            />
+          )
+      )}
+      <Button
+        variant="contained"
+        onClick={handleDownloadReport}
+        sx={{ mt: 3 }}
+      >
+        Descargar Informe
+      </Button>
+    </Box>
 
       <Box
         sx={{

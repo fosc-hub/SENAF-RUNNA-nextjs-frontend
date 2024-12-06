@@ -1091,69 +1091,56 @@
 
           <br role="presentation">
           <span role="presentation" dir="ltr" style="left: 55.51%; top: 8.08%; font-size: calc(var(--scale-factor)*10.00px); font-family: sans-serif; transform: scaleX(1.00006);">
-            {{localidad}} (localidad),
-            {{fecha}} ( Fecha)
+            {{generalInfo.localidad}},
+            {{generalInfo.fecha}}
           </span>
 
           <br role="presentation">
           <span role="presentation" dir="ltr" style="left: 5.3%; top: 14.49%; font-size: calc(var(--scale-factor)*10.00px); font-family: sans-serif; transform: scaleX(1.00007);">  
           Sr./a.
           </span>
+
           <br role="presentation">
           <span role="presentation" dir="ltr" style="left: 5.42%; top: 17.79%; font-size: calc(var(--scale-factor)*10.00px); font-family: sans-serif; transform: scaleX(1.00006);">
-            (Cargo/Función) {{cargo}}
-
+            {{generalInfo.cargo}}
           </span>
           <br role="presentation">
           <span role="presentation" dir="ltr" style="left: 5.42%; top: 21.17%; font-size: calc(var(--scale-factor)*10.00px); font-family: sans-serif; transform: scaleX(1.00006);">
-            (Nombre y Apellido ) 
-            {{nombreApellido}}
-
+            {{generalInfo.nombreApellido}}
           </span>
+
           <br role="presentation">
           <span role="presentation" dir="ltr" style="left: 5.3%; top: 24.56%; font-size: calc(var(--scale-factor)*10.00px); font-family: sans-serif; transform: scaleX(1.0001);">
           S / D
           </span>
+
           <br role="presentation">
           <span role="presentation" dir="ltr" style="left: 49.38%; top: 27.93%; font-size: calc(var(--scale-factor)*10.99px); font-family: sans-serif; transform: scaleX(0.88397);">
-            Ref. N° de Sticker SUAC: {{refNumero}}
-
+            Ref. N° de Sticker SUAC: {{generalInfo.refNumero}}
           </span>
+
           <br role="presentation">
-          <span role="presentation" dir="ltr" style="left: 67.18%; top: 30.94%; font-size: calc(var(--scale-factor)*10.99px); font-family: sans-serif; transform: scaleX(0.830175);">MEDIDA DE PROTECCIÓN INTEGRAL
-
+          <span role="presentation" dir="ltr" style="left: 67.18%; top: 30.94%; font-size: calc(var(--scale-factor)*10.99px); font-family: sans-serif; transform: scaleX(0.830175);">
+            MEDIDA DE PROTECCIÓN INTEGRAL
           </span>
+
+          {{#each nnyaInfo}} 
+            <br role="presentation">
+            <span role="presentation" dir="ltr" style="left: 7.94%; top: calc(33.96% + {{@index}} * 3%); font-size: calc(var(--scale-factor)*10.99px); font-family: sans-serif; transform: scaleX(0.903632);">
+              Apellido y Nombre del NNA {{apellidoNombre}}, fecha de nacimiento {{fechaNacimiento}}, N° de DNI {{dni}}
+            </span>
+            <span role="presentation" dir="ltr" style="left: 77.49%; top: calc(33.96% + {{@index}} * 3%); font-size: calc(var(--scale-factor)*10.99px); font-family: sans-serif; transform: scaleX(0.904107);">
+              N° de legajo: RUNNA:
+            </span>
+            <br role="presentation">
+            <span role="presentation" dir="ltr" style="left: 77.49%; top: calc(33.96% + {{@index}} * 3%); font-size: calc(var(--scale-factor)*10.99px); font-family: sans-serif; transform: scaleX(0.904107);">
+              {{legajoRunna}}
+            </span>
+          {{/each}}
+
           <br role="presentation">
-          <span role="presentation" dir="ltr" style="left: 7.94%; top: 33.96%; font-size: calc(var(--scale-factor)*10.99px); font-family: sans-serif; transform: scaleX(0.903632);">Apellido y Nombre del NNA_____________, fecha de nacimiento______, N° de DNI _______
-
-          </span>
-          <span role="presentation" dir="ltr" style="left: 77.07%; top: 33.96%; font-size: calc(var(--scale-factor)*10.99px); font-family: sans-serif;"> 
-
-          </span>
-          <span role="presentation" dir="ltr" style="left: 77.49%; top: 33.96%; font-size: calc(var(--scale-factor)*10.99px); font-family: sans-serif; transform: scaleX(0.904107);">N° de legajo: RUNNA:
-
-          </span>
-          <br role="presentation">
-          <span role="presentation" dir="ltr" style="left: 90.24%; top: 35.93%; font-size: calc(var(--scale-factor)*10.99px); font-family: sans-serif; transform: scaleX(0.895667);">____
-
-          </span>
-          <br role="presentation">
-          <span role="presentation" dir="ltr" style="left: 7.94%; top: 39.07%; font-size: calc(var(--scale-factor)*10.99px); font-family: sans-serif; transform: scaleX(0.903632);">Apellido y Nombre del NNA_____________, fecha de nacimiento______, N° de DNI _______
-
-          </span>
-          <span role="presentation" dir="ltr" style="left: 77.07%; top: 39.07%; font-size: calc(var(--scale-factor)*10.99px); font-family: sans-serif;"> 
-
-          </span>
-          <span role="presentation" dir="ltr" style="left: 77.49%; top: 39.07%; font-size: calc(var(--scale-factor)*10.99px); font-family: sans-serif; transform: scaleX(0.904107);">N° de legajo: RUNNA:
-
-          </span>
-          <br role="presentation">
-          <span role="presentation" dir="ltr" style="left: 90.24%; top: 41.1%; font-size: calc(var(--scale-factor)*10.99px); font-family: sans-serif; transform: scaleX(0.895667);">____
-
-          </span>
-          <br role="presentation">
-          <span role="presentation" dir="ltr" style="left: 51.01%; top: 44.16%; font-size: calc(var(--scale-factor)*10.99px); font-family: sans-serif; transform: scaleX(0.857838);">MPI INICIADA EL DÍA __DEL MES DE _____ DEL AÑO ____
-
+          <span role="presentation" dir="ltr" style="left: 51.01%; top: 44.16%; font-size: calc(var(--scale-factor)*10.99px); font-family: sans-serif; transform: scaleX(0.857838);">
+            MPI INICIADA EL DÍA __DEL MES DE _____ DEL AÑO ____
           </span>
           <br role="presentation">
           <span role="presentation" dir="ltr" style="left: 34.33%; top: 47.41%; font-size: calc(var(--scale-factor)*10.99px); font-family: sans-serif; transform: scaleX(0.911798);">Tenemos el agrado de dirigimos a Ud. a fin de informar sobre lo actuado en
