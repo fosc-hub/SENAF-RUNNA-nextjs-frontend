@@ -304,29 +304,31 @@ const isFieldEmpty = (value) => value === undefined || value === null || value =
       }
 
       // Handle usuario externo
-      let usuarioExternoId
+      let usuarioExternoId;
       if (formData.createNewUsuarioExterno) {
-        addDebugInfo('Creating new usuario externo')
         const newUsuarioExterno = await apiData.addUsuarioExterno({
           nombre: formData.usuarioExterno.nombre,
           apellido: formData.usuarioExterno.apellido,
-          fecha_nacimiento: formData.usuarioExterno.fecha_nacimiento,
-          genero: formData.usuarioExterno.genero,
           telefono: formData.usuarioExterno.telefono,
           mail: formData.usuarioExterno.mail,
-          vinculo: formData.usuarioExterno.vinculo,
-          institucion: formData.usuarioExterno.institucion,
-        })
-        usuarioExternoId = newUsuarioExterno.id
-        addDebugInfo(`New usuario externo created with ID: ${usuarioExternoId}`)
+        });
+      
+        if (!newUsuarioExterno?.id) {
+          throw new Error("Failed to create new Usuario Externo.");
+        }
+      
+        usuarioExternoId = newUsuarioExterno.id;
       } else {
-        usuarioExternoId = formData.usuarioExterno.id
-        addDebugInfo(`Using existing usuario externo with ID: ${usuarioExternoId}`)
+        usuarioExternoId = formData.usuarioExterno.id; // Ensure this references a valid informante ID
       }
-
+      
       if (!usuarioExternoId) {
-        throw new Error('Usuario externo ID is missing')
+        throw new Error("Usuario Externo ID is missing.");
       }
+      
+      
+      
+      addDebugInfo(`Usuario Externo ID: ${usuarioExternoId}`);
 
       // Create localizacion
       const localizacionData = {
@@ -421,9 +423,9 @@ const isFieldEmpty = (value) => value === undefined || value === null || value =
       addDebugInfo('Preparing demanda data')
       const demandaData = {
         fecha_y_hora_ingreso: formData.fecha_y_hora_ingreso.toISOString(),
-        origen: formData.origen, // Pass the ID of the origen
-        sub_origen: formData.sub_origen, // Pass the ID of the sub_origen
-        institucion: formData.institucion, // Pass the ID of the institucion
+        origen: formData.origen,
+        sub_origen: formData.sub_origen,
+        institucion: formData.institucion,
         nro_notificacion_102: Number(formData.nro_notificacion_102) || null,
         nro_sac: Number(formData.nro_sac) || null,
         nro_suac: Number(formData.nro_suac) || null,
@@ -431,13 +433,14 @@ const isFieldEmpty = (value) => value === undefined || value === null || value =
         nro_oficio_web: Number(formData.nro_oficio_web) || null,
         descripcion: formData.descripcion,
         localizacion: localizacionResponse.id,
-        usuario_externo: usuarioExternoId,
+        informante: usuarioExternoId, // Rename to match the backend expectation
         ninosAdolescentes: ninosAdolescentesPersonas.map((p) => p.id),
         adultosConvivientes: adultosConvivientesPersonas.map((p) => p.id),
         presuntaVulneracion: formData.presuntaVulneracion,
         autores: formData.autores,
         descripcionSituacion: formData.descripcionSituacion,
-      }
+      };
+      
 
       addDebugInfo('Creating demanda')
       const demandaResponse = await createDemand(demandaData)
