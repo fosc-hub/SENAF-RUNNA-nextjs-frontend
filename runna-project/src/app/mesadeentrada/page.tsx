@@ -115,8 +115,8 @@ function MesaDeEntradas() {
             asignadoProp={null}
             constatacionProp={null}
             evaluacionProp={null}
-            archivadoProp={null}
-            completadoProp={null}
+            archivadoProp={false}
+            completadoProp={false}
             recibidoProp={null}
             onEvaluacionClick={evaluacionClicked}
           />

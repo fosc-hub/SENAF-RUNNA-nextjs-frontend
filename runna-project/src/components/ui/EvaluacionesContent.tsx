@@ -6,6 +6,8 @@ import {
   Typography,
   FormControl,
   FormControlLabel,
+  Tabs, 
+  Tab,
   Radio,
   RadioGroup,
   IconButton, Select, MenuItem, InputLabel, SelectChangeEvent, TextField,
@@ -20,12 +22,135 @@ import { useParams } from 'next/navigation';
 import { createTEvaluacion } from '../../api/TableFunctions/evaluaciones';
 import { getTDemandaPersonas } from '../../api/TableFunctions/demandaPersonas';
 import { TDemandaPersona } from '../../api/interfaces';
-import { getTPersona } from '../../api/TableFunctions/personas';
 import { getTSuggestDecisions } from '../../api/TableFunctions/suggestDecision';
 import { TsuggestDecision } from '../../api/interfaces';
-import { getTLegajos } from '../../api/TableFunctions/legajos';
 import { createTDecision } from '../../api/TableFunctions/decisiones';
 import { useRouter } from 'next/navigation';
+import EditableTable from '../common/EditableTable';
+import CircularProgress from '@mui/material/CircularProgress';
+
+import { getDemand, getDemands } from '../../api/TableFunctions/demands';
+import { AuthProvider, useAuth } from '../../context/AuthContext';
+import { getTPersona, getTPersonas } from '../../api/TableFunctions/personas';
+import { getTLegajos, getTLegajo } from '../../api/TableFunctions/legajos';
+import { getTVinculoPersonaPersona, getTVinculoPersonaPersonas } from '../../api/TableFunctions/vinculospersonaspersonas';
+import { getTMotivoIntervencion, getTMotivoIntervencions } from '../../api/TableFunctions/motivoIntervencion';
+import { getTDemandaMotivoIntervencion, getTDemandaMotivoIntervencions } from '../../api/TableFunctions/demandasMotivoIntervencion';
+import { getTActividad, getTActividades } from '../../api/TableFunctions/actividades';
+import { el } from 'date-fns/locale';
+
+
+const dataGroups = {
+  generalInfo: {
+    title: "Información General",
+    multiRow: false, // Single row only
+    fields: [
+      { key: "localidad", label: "Localidad" },
+      { key: "fecha", label: "Fecha" },
+      { key: "cargo", label: "Cargo/Función" },
+      { key: "nombreApellido", label: "Nombre y Apellido" },
+      { key: "refNumero", label: "N° de Sticker SUAC" },
+    ],
+  },
+  nnyaInfo: {
+    title: "Información del NNyA",
+    multiRow: true, // Allows multiple rows
+    fields: [
+      { key: "apellidoNombre", label: "Apellido y Nombre" },
+      { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
+      { key: "dni", label: "N° de DNI" },
+      { key: "legajoRunna", label: "N° de Legajo RUNNA" },
+    ],
+  },
+  mpiInfo:{
+    title: "Información MPI",
+    multiRow: false, // Single row only
+    fields: [
+      { key: "dia", label: "Dia" },
+      { key: "mes", label: "Mes" },
+      { key: "año", label: "Año" },
+    ],
+  },
+  grupoFamiliarNNyA: {
+    title: "Datos del Grupo Familiar Conviviente (NNyAs)",
+    multiRow: true, // Allows multiple rows
+    fields: [
+      { key: "apellidoNombre", label: "Apellido y Nombre" },
+      { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
+      { key: "dni", label: "N° de DNI" },
+    ],
+  },
+  grupoFamiliarProgrenitor:{
+    title: "Datos del Grupo Familiar Conviviente (Progenitores)",
+    multiRow: true, // Allows multiple rows
+    fields: [
+      { key: "apellidoNombre", label: "Apellido y Nombre" },
+      { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
+      { key: "dni", label: "N° de DNI" },
+      { key: "domicilio", label: "Domicilio Completo" },
+      { key: "telefono", label: "Teléfono" },
+    ],
+  },
+  familiaExtensaMaterna: {
+    title: "Datos de la Familia Extensa Materna",
+    multiRow: true, // Allows multiple rows
+    fields: [
+      { key: "vinculo", label: "Vínculo" },
+      { key: "apellidoNombre", label: "Apellido y Nombre" },
+      { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
+      { key: "dni", label: "N° de DNI" },
+      { key: "domicilio", label: "Domicilio Completo" },
+      { key: "telefono", label: "Teléfono" },
+    ],
+  },
+  familiaExtensaPaterna: {
+    title: "Datos de la Familia Extensa Paterna",
+    multiRow: true, // Allows multiple rows
+    fields: [
+      { key: "vinculo", label: "Vínculo" },
+      { key: "apellidoNombre", label: "Apellido y Nombre" },
+      { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
+      { key: "dni", label: "N° de DNI" },
+      { key: "domicilio", label: "Domicilio Completo" },
+      { key: "telefono", label: "Teléfono" },
+    ],
+  },
+  motivoActuacion: {
+    title: "Motivo de las Actuaciones",
+    multiRow: true, // Single row only
+    fields: [{ key: "motivo", label: "Motivo" }],
+  },
+  antecedentes: {
+    title: "Antecedentes de Actuación",
+    multiRow: true, // Allows multiple rows
+    fields: [{ key: "antecedentes", label: "Antecedentes" }],
+  },
+  medidasProteccion: {
+    title: "Otras Medidas de Protección",
+    multiRow: true, // Allows multiple rows
+    fields: [{ key: "medidas", label: "Medidas de Protección" }],
+  },
+  resenaActuado: {
+    title: "Reseña de lo Actuado",
+    multiRow: false, // Allows multiple rows
+    fields: [
+      { key: "intervencionPrincipal", label: "Intervención Principal" },
+      { key: "informacion", label: "informacion" },
+    ],
+  },
+  entrevistas: {
+    title: "Entrevistas",
+    multiRow: true, // Allows multiple rows
+    fields: [
+      { key: "propietario", label: "propietario" },
+      { key: "dia", label: "dia" },
+      { key: "mes", label: "mes" },
+      { key: "año", label: "año" },
+      { key: "conclusion", label: "Conclusion" },
+    ],
+  },
+};
+
 
 export function EvaluacionesContent() {
   const [indicadores, setIndicadores] = useState<TIndicadoresValoracion[]>([]);
@@ -38,17 +163,171 @@ export function EvaluacionesContent() {
   const id = params.id;
   const [justification, setJustification] = useState('');
   const router = useRouter();
+  const [loadingTableData, setLoadingTableData] = useState(true); // Add loading state
+  const { user, loading } = useAuth(); // Now wrapped by AuthProvider
+
+  const [formData, setFormData] = useState({
+    generalInfo: {},
+    nnyaInfo: [],
+    mpiInfo: {},
+    grupoFamiliarNNyA: [],
+    grupoFamiliarProgrenitor: [],
+    familiaExtensaMaterna: [],
+    familiaExtensaPaterna: [],
+    motivoActuacion: {},
+    antecedentes: [],
+    medidasProteccion: [],
+    resenaActuado: {},
+    entrevistas: [],
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoadingTableData(true); // Set loading to true
+
+      try {
+        const demandaId = Array.isArray(id) ? parseInt(id[0]) : parseInt(id);
+
+        const currentDate = new Date().toISOString().split('T')[0];
+
+        // Fetching general info
+        const demandaInfo = await getDemand(demandaId); // Assume `id` is available from `useParams`
+
+        formData.generalInfo = {
+          localidad: user.localidad || "",
+          fecha: currentDate || "",
+          cargo: user.is_superuser ? "superuser" : ( user.groups[0] || ""),
+          nombreApellido: user.first_name + ' ' + user.last_name || "",
+          refNumero: demandaInfo.nro_suac || "",
+        };
+
+        formData.mpiInfo = {
+          dia: currentDate.split('-')[2],
+          mes: currentDate.split('-')[1],
+          año: currentDate.split('-')[0],
+        };
+
+        const demandaMotivos = await getTDemandaMotivoIntervencions({ demanda: demandaId });
+        const motivosArray = [];
+        for (const motivo of demandaMotivos) {
+          const motivoData = await getTMotivoIntervencion(motivo.motivo_intervencion);
+          motivosArray.push({
+            motivo: motivoData.nombre}
+          );
+        }
+
+        const entrevistas = await getTActividades({ demanda: demandaId });
+        const entrevistasArray = [];
+        for (const entrevista of entrevistas) {
+          entrevistasArray.push({
+            propietario: "",
+            dia: entrevista.fecha_y_hora.split('-').pop().split('T')[0],
+            mes: entrevista.fecha_y_hora.split('-')[1],
+            año: entrevista.fecha_y_hora.split('-')[0],
+            conclusion: entrevista.descripcion || "",
+          });
+        }
+
+        // Fetch all related personas
+        const demandaPersonas = await getTDemandaPersonas({ demanda: demandaId });
+
+        // Initialize arrays for categorization
+        const nnyaInfoArray = [];
+        const grupoFamiliarNNyAArray = [];
+        const grupoFamiliarProgenitorArray = [];
+
+        // Iterate over demandaPersonas
+        for (const personaData of demandaPersonas) {
+          // Fetch detailed persona data
+          const personaDetails = await getTPersona(personaData.persona);
+
+          // Categorize based on conditions
+          if (personaDetails.nnya === true && personaData.nnya_principal === true) {
+            nnyaInfoArray.push({
+              apellidoNombre: personaDetails.nombre + ' ' + personaDetails.apellido || "",
+              fechaNacimiento: personaDetails.fecha_nacimiento || "",
+              dni: personaDetails.dni || "",
+              legajoRunna: "",
+            });
+          } else if (personaDetails.nnya === true && personaData.nnya_principal === false) {
+            grupoFamiliarNNyAArray.push({
+              apellidoNombre: personaDetails.nombre + ' ' + personaDetails.apellido || "",
+              fechaNacimiento: personaDetails.fecha_nacimiento || "",
+              dni: personaDetails.dni || "",
+            });
+          } else if (personaDetails.nnya === false) {
+            grupoFamiliarProgenitorArray.push({
+              apellidoNombre: personaDetails.nombre + ' ' + personaDetails.apellido || "",
+              fechaNacimiento: personaDetails.fecha_nacimiento || "",
+              dni: personaDetails.dni || "",
+              domicilio: personaDetails.domicilio || "",
+              telefono: personaDetails.telefono || "",
+            });
+          }
+        }
+
+        formData.nnyaInfo = nnyaInfoArray;
+        formData.grupoFamiliarNNyA = grupoFamiliarNNyAArray;
+        formData.grupoFamiliarProgrenitor = grupoFamiliarProgenitorArray;
+        formData.motivoActuacion = motivosArray;
+        formData.entrevistas = entrevistasArray;
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoadingTableData(false); // Set loading to false
+      }
+    };
+  
+    if (id) {
+      fetchData();
+    }
+  }, [id]);  
+
+  const [activeTab, setActiveTab] = useState(Object.keys(dataGroups)[0]);
+  const handleTabChange = (event, newTab) => {
+    setActiveTab(newTab);
+  };
+  const handleDataChange = (groupKey, updatedData) => {
+    setFormData((prev) => ({ ...prev, [groupKey]: updatedData }));
+  };
 
   const handleDownloadReport = async () => {
-    const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage();
-    const pdfBytes = await pdfDoc.save();
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = '100 - MPI - INFORME TECNICO.pdf';
-    link.click();
+    try {
+      // Send formData to the webhook
+      const response = await fetch("https://hook.us1.make.com/4i15ke3vtipnd9m6na287lm9q5nuagx9", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData), // Form data to be sent
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send data to webhook.");
+      }
+  
+      // Parse the response to get the download link
+      const responseData = await response.json();
+      const downloadLink = responseData.downloadUrl; // Adjust this key based on webhook response
+  
+      if (!downloadLink) {
+        throw new Error("No download link received from the webhook.");
+      }
+  
+      // Trigger the download
+      const link = document.createElement("a");
+      link.href = downloadLink;
+      link.download = "Informe.pdf";
+      link.click();
+  
+      // Optionally, inform the user
+      alert("Your download has started!");
+    } catch (error) {
+      console.error("Error in handleDownloadReport:", error);
+      alert("There was an error generating the report. Please try again.");
+    }
   };
+  
+
 
   const fetchTIndicadoresValoracions = useCallback(async () => {
     try {
@@ -113,6 +392,11 @@ export function EvaluacionesContent() {
   };
 
   const handleDecision = (decision: 'APERTURA DE LEGAJO' | 'RECHAZAR CASO' | 'MPI_MPE') => async () => {
+    if (!justification.trim()) {
+      alert("Por favor, ingrese una justificación antes de continuar.");
+      return;
+    }
+
     try {
       const data = {
         justificacion: justification,
@@ -121,13 +405,13 @@ export function EvaluacionesContent() {
         nnya: Number(selectedNNYA),
       };
       console.log('Decision data:', data);
-      await createTDecision(data);
+      await createTDecision(data, true, 'Decision tomada con exito !');
 
-      console.log('Decision successfully created!');
-      router.push('/mesadeentrada');
+      // router.push('/mesadeentrada');
 
     } catch (error) {
-      alert('Error al enviar la decisión. Ya existe una decision tomada.');
+      console.error('Error al enviar la decisión:', error.response.data);
+      // alert('Error al enviar la decisión. Ya existe una decision tomada.');
     }
   };
 
@@ -162,16 +446,28 @@ export function EvaluacionesContent() {
 
   const fetchNNYAData = useCallback(async () => {
     try {
-      const allData = await getTDemandaPersonas({ demanda: id });
+      const allData = await getTDemandaPersonas({ 
+        demanda: id
+      });
 
-      const detailedData = await Promise.all(
-        allData.map(async (nnya) => {
-          const personaData = await getTPersona(nnya.persona);
-          return { ...nnya, nombrePersona: personaData.nombre };
-        })
+      const PersonaData = await Promise.all(
+        allData.map(async (persona) => {
+          const persona_n = await getTPersona(persona.persona);
+          return {
+            ...persona_n,
+            nnya_principal: allData.find(item => item.nnya_principal === true && item.persona === persona_n.id) ? true : false,
+          }
+        }
+        )
       );
 
-      setNnyaOptions(detailedData);
+      console.log('PersonaData:', PersonaData);
+
+      const nnyaData = PersonaData.filter((persona) => persona.nnya === true);
+
+      console.log('NNYA Data:', nnyaData);
+
+      setNnyaOptions(nnyaData);
 
       const principalData = detailedData.find(item => item.nnya_principal === true);
       if (principalData) {
@@ -209,6 +505,7 @@ export function EvaluacionesContent() {
       return;
     }
 
+    var count = 1;
     for (const indicador of indicadores) {
       const siNo = selectedOptions[indicador.id] === 'yes';
       const demanda = parseInt(id as string, 10);
@@ -220,8 +517,13 @@ export function EvaluacionesContent() {
       };
 
       try {
-        await createTEvaluacion(evaluationData);
+        if (count === indicadores.length) {
+          await createTEvaluacion(evaluationData, true, 'Valoracion registrada con éxito!');
+        } else {
+          await createTEvaluacion(evaluationData);
+        }
         console.log(`Evaluación para el indicador ${indicador.id} enviada correctamente.`);
+        count++;
       } catch (error) {
         const errorMessage = error.message || error.toString();
         if (errorMessage.includes('Failed to create data')) {
@@ -240,10 +542,63 @@ export function EvaluacionesContent() {
   }, [fetchNNYAData, id]);
   return (
     <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 3, overflow: 'auto' }}>
-      <Box sx={{ mb: 2 }}>
-        <Button variant="contained" startIcon={<DownloadIcon />} onClick={handleDownloadReport}>
-          Descargar Informe
-        </Button>
+      <Box
+        sx={{
+          mt: 3,
+          maxHeight: 400,
+          overflowY: 'auto',
+          borderRadius: 2,
+          border: '1px solid #ddd',
+          padding: 3,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+        }}>
+        {loadingTableData ? (
+          // Show a spinner or loading message while data is being fetched
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          // Render the tabs and EditableTable when data is ready
+          <>
+            <Tabs
+              value={activeTab}
+              onChange={handleTabChange}
+              sx={{ mb: 4 }}
+              variant="scrollable"
+            >
+              {Object.entries(dataGroups).map(([key, group]) => (
+                <Tab key={key} label={group.title} value={key} />
+              ))}
+            </Tabs>
+            {Object.entries(dataGroups).map(
+              ([key, group]) =>
+                activeTab === key && (
+                  <EditableTable
+                    key={key}
+                    groupKey={key}
+                    group={group}
+                    data={formData}
+                    onDataChange={handleDataChange}
+                  />
+                )
+            )}
+          </>
+        )}
+      </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+      <Button
+        variant="contained"
+        color="primary"
+        sx={{
+          fontSize: '1.1rem',
+          padding: '6px 50px',
+        }}
+        onClick={handleDownloadReport}
+      >
+        Generar Informe
+      </Button>
       </Box>
 
       <Box
@@ -339,7 +694,7 @@ export function EvaluacionesContent() {
           >
             {nnyaOptions.map((nnya) => (
               <MenuItem key={nnya.id} value={String(nnya.id)}>
-                {nnya.nombrePersona}
+                {nnya.id} {nnya.nombre} {nnya.apellido} {nnya.nnya_principal ? '(principal) ' : ''}
               </MenuItem>
             ))}
           </Select>
@@ -426,7 +781,7 @@ export function EvaluacionesContent() {
                 onChange={(e) => setJustification(e.target.value)}
               />
 
-              {!tieneLegajo ? (
+              {tieneLegajo ? (
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
                   <Button
                     variant="outlined"

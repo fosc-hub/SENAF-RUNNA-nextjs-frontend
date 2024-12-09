@@ -32,9 +32,12 @@ import { getTDemandaPersona } from '../../api/TableFunctions/demandaPersonas'
 import { getTPersona } from '../../api/TableFunctions/personas'
 import { getTDemandaAsignados } from '../../api/TableFunctions/DemandaAsignados'
 import { getTPrecalificacionDemanda, createTPrecalificacionDemanda, updateTPrecalificacionDemanda } from '../../api/TableFunctions/precalificacionDemanda'
+import { getTDemandaScores } from '../../api/TableFunctions/demandaScores'
+
 import { useAuth } from '../../context/AuthContext';
 import axiosInstance from '../../api/utils/axiosInstance';
 import { Slide, toast } from 'react-toastify';
+import { get } from 'axios';
 const origenOptions = [
   { value: 'todos', label: 'Todos' },
   { value: 'web', label: 'Web' },
@@ -218,7 +221,7 @@ export function MainContent({
 
   const handleSubmitNuevoIngreso = useCallback(async (formData: Partial<TDemanda>) => {
     try {
-      const newDemand = await createDemand(formData)
+      const newDemand = await createDemand(formData, true, '¡Demanda creada con éxito!')
       await fetchAllData() // Refresh all data to get updated relationships
       setIsNuevoIngresoModalOpen(false)
     } catch (error) {
@@ -243,7 +246,7 @@ export function MainContent({
   const handleConstatar = useCallback(async () => {
     if (selectedDemand) {
       try {
-        const updatedDemand = await updateDemand(selectedDemand.id!, { ...selectedDemand, estado: 'Verificada' })
+        const updatedDemand = await updateDemand(selectedDemand.id!, { ...selectedDemand, estado: 'Verificada' }, true, '¡Demanda actualizada con éxito!')
         await fetchAllData() // Refresh all data
         setShowDemandaDetalle(false)
         setShowActividadesRegistradas(false)
@@ -257,7 +260,7 @@ export function MainContent({
   const handleEvaluate = useCallback(async () => {
     if (selectedDemand) {
       try {
-        const updatedDemand = await updateDemand(selectedDemand.id!, { ...selectedDemand, estado: 'En evaluación' })
+        const updatedDemand = await updateDemand(selectedDemand.id!, { ...selectedDemand, estado: 'En evaluación' }, true, '¡Demanda actualizada con éxito')
         await fetchAllData() // Refresh all data
         setShowPostConstatacion(false)
       } catch (error) {
@@ -338,6 +341,30 @@ const columns: GridColDef[] = useMemo(() => {
       },
     },
     {
+      field: 'score',
+      headerName: 'Score',
+      width: 130,
+      renderCell: (params: GridRenderCellParams<TDemanda>) => {
+        const [score, setScore] = useState<number | null>(null);
+
+        useEffect(() => {
+          const fetchScore = async () => {
+            try {
+              const scoreData = await getTDemandaScores({ demanda: params.row.id });
+              setScore(scoreData[0].score);
+            } catch (error) {
+              console.error('Error fetching score:', error);
+            }
+          };
+
+          fetchScore();
+        }, [params.row.id]);
+        return (
+          <Typography>{score}</Typography>
+        );
+      },
+    },
+    {
       field: 'origen',
       headerName: 'Origen',
       width: 130,
@@ -413,6 +440,7 @@ const columns: GridColDef[] = useMemo(() => {
         <EvaluarButton
           id={params.row.id} // Pasa el id de la fila
           onClick={onEvaluacionClick} // Asegúrate de que esta función sea pasada como prop
+          disabled={!params.row.evaluacion} // Deshabilita el botón si evaluación es false
         />
       ),
     });

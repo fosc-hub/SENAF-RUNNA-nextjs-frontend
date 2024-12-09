@@ -443,7 +443,7 @@ const isFieldEmpty = (value) => value === undefined || value === null || value =
       
 
       addDebugInfo('Creating demanda')
-      const demandaResponse = await createDemand(demandaData)
+      const demandaResponse = await createDemand(demandaData, true, 'Demanda creada con exito')
       addDebugInfo(`Demanda created: ${JSON.stringify(demandaResponse)}`)
 
       if (!demandaResponse || !demandaResponse.id) {

@@ -724,7 +724,15 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAll
   const handleNextStep = () => {
     setActiveStep((prevStep) => Math.min(prevStep + 1, steps.length - 1));
   };
-  
+
+  const getDemandaColour = () => {
+    if (demanda.constatacion) return 'green';
+    if (demanda.evaluacion) return 'purple';
+    if (demanda.decision) return 'orange';
+    if (demanda.archivado || demanda.completado) return '';
+    return '';
+  };
+
   const handleBack = () => setActiveStep((prevStep) => Math.max(prevStep - 1, 0))
   const handleEnviarAEvaluacion = async () => {
     try {
@@ -808,11 +816,11 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAll
             </Box>
           </Box>
 
-          {!demanda.asociadoRegistro && (
-            <Paper sx={{ bgcolor: 'warning.light', p: 2, mb: 3 }} elevation={0}>
-              <Typography color="warning.dark">La presente demanda no está asociada a un registro ni legajo.</Typography>
-            </Paper>
-          )}
+          
+          <Paper sx={{ p: 2, mb: 3 }} elevation={0}>
+            <Typography color={getDemandaColour()}>La presente demanda {!demanda.asignado ?  (demanda.evaluacion ? 'está en proceso de evaluacion' : 'está en proceso de constatacion' ) :'aún no ha sida asignada' }.</Typography>
+          </Paper>
+          
 
           {/* <Typography variant="h6" gutterBottom>Archivos adjuntos ({formData.archivosAdjuntos?.length || 0})</Typography>
           <Box component="ul" sx={{ mb: 3, pl: 2 }}>

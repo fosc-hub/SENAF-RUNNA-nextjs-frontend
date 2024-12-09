@@ -4,9 +4,10 @@ import CreateIcon from '@mui/icons-material/Create';
 interface EvaluarButtonProps {
   id: number;
   onClick: (id: number) => void;
+  disabled?: boolean;
 }
 
-const EvaluarButton: React.FC<EvaluarButtonProps> = ({ id, onClick }) => {
+const EvaluarButton: React.FC<EvaluarButtonProps> = ({ id, onClick, disabled }) => {
   return (
     <Button
       variant="contained"
@@ -25,6 +26,7 @@ const EvaluarButton: React.FC<EvaluarButtonProps> = ({ id, onClick }) => {
         event.stopPropagation(); // Detén la propagación aquí
         onClick(id); // Pasa el id al padre
       }}
+      disabled={disabled}
     >
       Evaluar
     </Button>
