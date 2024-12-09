@@ -50,6 +50,7 @@ import { toast } from 'react-toastify';
 import { createTUsuarioExterno } from '../../../api/TableFunctions/usuarioExterno';
 import { updateLocalizacion } from '../../../api/TableFunctions/localizacion';
 import { updateTNNyAEducacion } from '../../../api/TableFunctions/nnyaeducacion';
+import { updateTNNyASalud } from '../../../api/TableFunctions/nnyaSalud';
 
 interface Actividad {
   id: number;
@@ -265,47 +266,105 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAll
       // Update ninosAdolescentes (children)
       for (const nino of formData.ninosAdolescentes) {
         if (nino.id) {
-          const updatedNino = {
-            nombre: nino.nombre,
-            apellido: nino.apellido,
-            fechaNacimiento: nino.fechaNacimiento,
-            genero: nino.genero,
-            dni: nino.dni            ? parseInt(nino.dni, 10)
-            : null,
-            situacionDni: nino.situacionDni,
-            botonAntipanico: nino.botonAntipanico,
-            observaciones: nino.observaciones,
-          };
-          console.log("Updating nino:", nino.id, updatedNino);
-  
-          try {
-            await updateTPersona(nino.id, updatedNino);
-            console.log(`Nino ID ${nino.id} updated successfully`);
-          } catch (error) {
-            console.error(`Error updating nino ID ${nino.id}:`, error);
-          }
-  
-          // Update educational information if it exists
-          if (nino.educacion && nino.educacion.id) {
-            const updatedEducacion = {
-              institucion_educativa: nino.educacion.institucion_educativa,
-              curso: nino.educacion.curso,
-              nivel: nino.educacion.nivel,
-              turno: nino.educacion.turno,
-              comentarios: nino.educacion.comentarios,
+            const updatedNino = {
+                nombre: nino.nombre,
+                apellido: nino.apellido,
+                fechaNacimiento: nino.fechaNacimiento,
+                genero: nino.genero,
+                dni: nino.dni ? parseInt(nino.dni, 10) : null,
+                situacionDni: nino.situacionDni,
+                botonAntipanico: nino.botonAntipanico,
+                observaciones: nino.observaciones,
             };
-  
-            console.log("Updating educacion for nino:", nino.id, updatedEducacion);
-  
+            console.log("Updating nino:", nino.id, updatedNino);
+
             try {
-              await updateTNNyAEducacion(nino.educacion.id, updatedEducacion);
-              console.log(`Educational information for nino ID ${nino.id} updated successfully`);
+                await updateTPersona(nino.id, updatedNino);
+                console.log(`Nino ID ${nino.id} updated successfully`);
             } catch (error) {
-              console.error(`Error updating educational information for nino ID ${nino.id}:`, error);
+                console.error(`Error updating nino ID ${nino.id}:`, error);
             }
-          }
+
+            // Update educational information if it exists
+            if (nino.educacion?.id) {
+                const updatedEducacion = {
+                    institucion_educativa: nino.educacion.institucion_educativa,
+                    curso: nino.educacion.curso,
+                    nivel: nino.educacion.nivel,
+                    turno: nino.educacion.turno,
+                    comentarios: nino.educacion.comentarios,
+                };
+
+                console.log("Updating educacion for nino:", nino.id, updatedEducacion);
+
+                try {
+                    await updateTNNyAEducacion(nino.educacion.id, updatedEducacion);
+                    console.log(`Educational information for nino ID ${nino.id} updated successfully`);
+                } catch (error) {
+                    console.error(`Error updating educational information for nino ID ${nino.id}:`, error);
+                }
+            }
+
+            // Update health information if it exists
+            if (nino.salud?.id) {
+                const updatedSalud = {
+                    institucion_sanitaria: nino.salud.institucion_sanitaria,
+                    observaciones: nino.salud.observaciones,
+                };
+
+                console.log("Updating salud for nino:", nino.id, updatedSalud);
+
+                try {
+                    await updateTNNyASalud(nino.salud.id, updatedSalud);
+                    console.log(`Health information for nino ID ${nino.id} updated successfully`);
+                } catch (error) {
+                    console.error(`Error updating health information for nino ID ${nino.id}:`, error);
+                }
+            }
         }
-      }
+    }
+
+    // Update adultosConvivientes (adults)
+    for (const adulto of formData.adultosConvivientes) {
+        if (adulto.id) {
+            const updatedAdulto = {
+                nombre: adulto.nombre,
+                apellido: adulto.apellido,
+                fechaNacimiento: adulto.fechaNacimiento,
+                genero: adulto.genero,
+                dni: adulto.dni ? parseInt(adulto.dni, 10) : null,
+                situacionDni: adulto.situacionDni,
+                botonAntipanico: adulto.botonAntipanico,
+                supuesto_autordv: adulto.supuesto_autordv,
+                observaciones: adulto.observaciones,
+            };
+            console.log("Updating adulto:", adulto.id, updatedAdulto);
+
+            try {
+                await updateTPersona(adulto.id, updatedAdulto);
+                console.log(`Adulto ID ${adulto.id} updated successfully`);
+            } catch (error) {
+                console.error(`Error updating adulto ID ${adulto.id}:`, error);
+            }
+
+            // Update health information if it exists
+            if (adulto.salud?.id) {
+                const updatedSalud = {
+                    institucion_sanitaria: adulto.salud.institucion_sanitaria,
+                    observaciones: adulto.salud.observaciones,
+                };
+
+                console.log("Updating salud for adulto:", adulto.id, updatedSalud);
+
+                try {
+                    await updateTNNyASalud(adulto.salud.id, updatedSalud);
+                    console.log(`Health information for adulto ID ${adulto.id} updated successfully`);
+                } catch (error) {
+                    console.error(`Error updating health information for adulto ID ${adulto.id}:`, error);
+                }
+            }
+        }
+    }
   
       // Update adultosConvivientes (adults)
       for (const adulto of formData.adultosConvivientes) {
