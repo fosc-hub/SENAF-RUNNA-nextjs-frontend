@@ -818,7 +818,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAll
 
           
           <Paper sx={{ p: 2, mb: 3 }} elevation={0}>
-            <Typography color={getDemandaColour()}>La presente demanda {!demanda.asignado ?  (demanda.evaluacion ? 'está en proceso de evaluacion' : 'está en proceso de constatacion' ) :'aún no ha sida asignada' }.</Typography>
+            <Typography color={getDemandaColour()}>La presente demanda {demanda.asignado ?  (demanda.evaluacion ? 'está en proceso de evaluacion' : 'está en proceso de constatacion' ) :'aún no ha sida asignada' }.</Typography>
           </Paper>
           
 
