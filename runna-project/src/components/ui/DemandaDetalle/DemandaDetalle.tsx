@@ -52,6 +52,7 @@ import { updateLocalizacion } from '../../../api/TableFunctions/localizacion';
 import { updateTNNyAEducacion } from '../../../api/TableFunctions/nnyaeducacion';
 import { updateTNNyASalud } from '../../../api/TableFunctions/nnyaSalud';
 import { updateTVinculoPersonaPersona } from '../../../api/TableFunctions/vinculospersonaspersonas';
+import { updateTVulneracion } from '../../../api/TableFunctions/vulneraciones';
 
 interface Actividad {
   id: number;
@@ -413,7 +414,33 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAll
           }
         }
       }
+      console.log("Vulneraciones to update:", formData.vulneraciones);
+
+      for (const vulneracion of formData.vulneraciones) {
+        if (vulneracion.id) {
+          const updatedVulneracion = {
+            principal_demanda: vulneracion.principal_demanda,
+            transcurre_actualidad: vulneracion.transcurre_actualidad,
+            categoria_motivo: vulneracion.categoria_motivo,
+            categoria_submotivo: vulneracion.categoria_submotivo,
+            gravedad_vulneracion: vulneracion.gravedad_vulneracion,
+            urgencia_vulneracion: vulneracion.urgencia_vulneracion,
+            nnya: vulneracion.nnya,
+            autor_dv: vulneracion.autor_dv,
+          };
   
+          console.log("Updating vulneracion:", vulneracion.id, updatedVulneracion);
+  
+          try {
+            await updateTVulneracion(vulneracion.id, updatedVulneracion);
+            console.log(`Vulneracion ID ${vulneracion.id} updated successfully`);
+          } catch (error) {
+            console.error(`Error updating vulneracion ID ${vulneracion.id}:`, error);
+          }
+        } else {
+          console.warn("Vulneracion ID is missing, skipping update.");
+        }
+      }
       // Collect the current form data for the demanda
       const updatedData = {
         fecha_y_hora_ingreso: formData.fecha_y_hora_ingreso.toISOString(),
