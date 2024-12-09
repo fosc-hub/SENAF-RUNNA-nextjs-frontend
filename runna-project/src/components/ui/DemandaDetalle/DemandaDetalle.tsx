@@ -1069,17 +1069,18 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAll
         )}
       </CollapsibleSection>
 
-    {demanda.constatacion && (
-        <Box mt={3} display="flex" justifyContent="flex-end">
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleEnviarAEvaluacion} // Attach your existing function
-          >
-            Enviar a Proceso de Evaluación
-          </Button>
-        </Box>
-      )}
+      {demanda.constatacion && !demanda.evaluacion && (
+  <Box mt={3} display="flex" justifyContent="flex-end">
+    <Button
+      variant="contained"
+      color="primary"
+      onClick={handleEnviarAEvaluacion} // Adjuntar tu función existente
+    >
+      Enviar a Proceso de Evaluación
+    </Button>
+  </Box>
+)}
+
             {/* <Dialog open={openConfirmDialog} onClose={handleCancelDelete}>
               <DialogTitle>¿Estás seguro de que deseas eliminar esta actividad?</DialogTitle>
               <DialogContent>
