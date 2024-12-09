@@ -300,7 +300,7 @@ export function EvaluacionesContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData), // Form data to be sent
       });
-  
+
       if (!response.ok) {
         throw new Error("Failed to send data to webhook.");
       }
