@@ -273,6 +273,7 @@ export function MainContent({
   
   const handleAsignarSubmit = (data: { collaborator: string; comments: string; demandaId: number | undefined }) => {
     console.log('Assignment Data:', data);
+    fetchAllData(); // Refresh all data
     // You can now use data.demandaId along with collaborator and comments
     setIsAsignarModalOpen(false);
   }; 
