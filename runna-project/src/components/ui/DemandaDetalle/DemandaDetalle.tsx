@@ -51,6 +51,7 @@ import { createTUsuarioExterno } from '../../../api/TableFunctions/usuarioExtern
 import { updateLocalizacion } from '../../../api/TableFunctions/localizacion';
 import { updateTNNyAEducacion } from '../../../api/TableFunctions/nnyaeducacion';
 import { updateTNNyASalud } from '../../../api/TableFunctions/nnyaSalud';
+import { updateTVinculoPersonaPersona } from '../../../api/TableFunctions/vinculospersonaspersonas';
 
 interface Actividad {
   id: number;
@@ -323,7 +324,28 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAll
             }
         }
     }
+    for (const vinculo of formData.vinculaciones) {
+      if (vinculo.id) {
+          const updatedVinculo = {
+              conviven: vinculo.conviven,
+              autordv: vinculo.autordv,
+              garantiza_proteccion: vinculo.garantiza_proteccion,
+              persona_1: vinculo.persona_1,
+              persona_2: vinculo.persona_2,
+              vinculo: vinculo.vinculo,
+          };
+          console.log("Updating vinculo:", vinculo.id, updatedVinculo);
 
+          try {
+              await updateTVinculoPersonaPersona(vinculo.id, updatedVinculo);
+              console.log(`Vinculo ID ${vinculo.id} updated successfully`);
+          } catch (error) {
+              console.error(`Error updating vinculo ID ${vinculo.id}:`, error);
+          }
+      } else {
+          console.warn("Vinculo ID is missing, skipping update.");
+      }
+  }
     // Update adultosConvivientes (adults)
     for (const adulto of formData.adultosConvivientes) {
         if (adulto.id) {

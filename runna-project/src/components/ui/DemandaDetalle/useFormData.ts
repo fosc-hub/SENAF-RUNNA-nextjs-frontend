@@ -377,33 +377,35 @@ export const useFormData = (demanda, apiData) => {
     }
   }, [apiData.localizacion]);
   const handleInputChange = (field, value) => {
+    console.log(`Updating field: ${field} with value:`, value);
     setFormData((prevData) => {
       const updatedData = { ...prevData };
       const fieldParts = field.split('.');
       let current = updatedData;
+      console.log('Initial formData:', updatedData);
   
       for (let i = 0; i < fieldParts.length - 1; i++) {
         const part = fieldParts[i];
+        console.log(`Accessing part: ${part} of formData`);
   
         if (part.includes('[')) {
-          // Handle array indexing
           const [arrayName, indexStr] = part.split('[');
           const index = parseInt(indexStr.replace(']', ''), 10);
   
-          // Ensure the array exists
           if (!Array.isArray(current[arrayName])) {
+            console.warn(`${arrayName} is not an array, initializing as empty array`);
             current[arrayName] = [];
           }
   
-          // Ensure the object at the array index exists
           if (!current[arrayName][index]) {
+            console.warn(`Index ${index} of ${arrayName} is not defined, initializing as object`);
             current[arrayName][index] = {};
           }
   
           current = current[arrayName][index];
         } else {
-          // Ensure the nested object exists
           if (!current[part] || typeof current[part] !== 'object') {
+            console.warn(`Part ${part} is not defined or not an object, initializing`);
             current[part] = {};
           }
   
@@ -412,8 +414,10 @@ export const useFormData = (demanda, apiData) => {
       }
   
       const lastField = fieldParts[fieldParts.length - 1];
+      console.log(`Setting value for ${lastField}:`, value);
+  
       if (current) {
-        current[lastField] = value; // Safely set the value
+        current[lastField] = value;
       } else {
         console.warn(`Unable to set value for field "${field}" as "current" is null`);
       }
@@ -422,6 +426,7 @@ export const useFormData = (demanda, apiData) => {
       return updatedData;
     });
   };
+  
   
   
   const addVinculacion = () => {
