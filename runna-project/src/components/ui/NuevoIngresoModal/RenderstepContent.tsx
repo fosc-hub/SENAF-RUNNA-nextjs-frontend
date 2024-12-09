@@ -1594,7 +1594,7 @@ const handleBlur = (field) => {
         </FormControl>
       
                     <FormControl component="fieldset" margin="normal">
-                      <Typography component="legend">¿Aplica esta condición?</Typography>
+                    <Typography variant="subtitle1" gutterBottom> ¿Aplica esta condición?</Typography>
                       <RadioGroup
                         row
                         value={condicion.si_no ? 'si' : 'no'}

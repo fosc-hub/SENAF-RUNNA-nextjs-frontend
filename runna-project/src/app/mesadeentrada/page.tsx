@@ -24,6 +24,9 @@ const theme = createTheme({
         h6: {
           color: '#333', // Color por defecto deseado para h6
         },
+        subtitle1: {
+          color: '#333', // Update this to the color you desire
+        },
       },
     },
   },
