@@ -449,12 +449,9 @@ const columns: GridColDef[] = useMemo(() => {
   return baseColumns;
 }, [user, handlePrecalificacionChange]);
 const getRowClassName = (params: GridRowParams) => {
-  const { constatacion, evaluacion, decision, archivado, completado } = params.row;
-  if (constatacion) return 'row-green';
-  if (evaluacion) return 'row-purple';
-  if (decision) return 'row-orange';
-  if (archivado || completado) return '';
-  return '';
+  const { constatacion, evaluacion, asignado, archivado, completado } = params.row;
+
+  return evaluacion ? 'row-green' : (constatacion ? 'row-purple' : ( (archivado || completado) ? '' : 'row-orange') );
 };
   return (
     <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 3, overflow: 'auto' }}>
