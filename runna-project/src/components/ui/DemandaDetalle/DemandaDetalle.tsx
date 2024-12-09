@@ -726,11 +726,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAll
   };
 
   const getDemandaColour = () => {
-    if (demanda.constatacion) return 'green';
-    if (demanda.evaluacion) return 'purple';
-    if (demanda.decision) return 'orange';
-    if (demanda.archivado || demanda.completado) return '';
-    return '';
+    return demanda.evaluacion ? 'green' : (demanda.constatacion ? 'purple' : ( (demanda.archivado || demanda.completado) ? '' : 'orange') );
   };
 
   const handleBack = () => setActiveStep((prevStep) => Math.max(prevStep - 1, 0))
@@ -817,8 +813,8 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAll
           </Box>
 
           
-          <Paper sx={{ p: 2, mb: 3 }} elevation={0}>
-            <Typography color={getDemandaColour()}>La presente demanda {demanda.asignado ?  (demanda.evaluacion ? 'está en proceso de evaluacion' : 'está en proceso de constatacion' ) :'aún no ha sida asignada' }.</Typography>
+          <Paper sx={{ p: 2, mb: 3 }} elevation={0}> 
+            <Typography color={getDemandaColour()}>La presente demanda {demanda.evaluacion ? 'está en proceso de evaluacion' : (demanda.constatacion ? 'está en proceso de constatacion' : ( (demanda.archivado || demanda.completado) ? 'ha sido archivada o completada' : 'aún no ha sida asignada') )}.</Typography>
           </Paper>
           
 
