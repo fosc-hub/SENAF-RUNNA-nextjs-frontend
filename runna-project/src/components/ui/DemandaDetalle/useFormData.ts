@@ -377,23 +377,53 @@ export const useFormData = (demanda, apiData) => {
     }
   }, [apiData.localizacion]);
   const handleInputChange = (field, value) => {
-    setFormData(prevData => {
-      const updatedData = { ...prevData }
-      const fieldParts = field.split('.')
-      let current = updatedData
+    setFormData((prevData) => {
+      const updatedData = { ...prevData };
+      const fieldParts = field.split('.');
+      let current = updatedData;
+  
       for (let i = 0; i < fieldParts.length - 1; i++) {
-        if (fieldParts[i].includes('[')) {
-          const [arrayName, indexStr] = fieldParts[i].split('[')
-          const index = parseInt(indexStr.replace(']', ''))
-          current = current[arrayName][index]
+        const part = fieldParts[i];
+  
+        if (part.includes('[')) {
+          // Handle array indexing
+          const [arrayName, indexStr] = part.split('[');
+          const index = parseInt(indexStr.replace(']', ''), 10);
+  
+          // Ensure the array exists
+          if (!Array.isArray(current[arrayName])) {
+            current[arrayName] = [];
+          }
+  
+          // Ensure the object at the array index exists
+          if (!current[arrayName][index]) {
+            current[arrayName][index] = {};
+          }
+  
+          current = current[arrayName][index];
         } else {
-          current = current[fieldParts[i]]
+          // Ensure the nested object exists
+          if (!current[part] || typeof current[part] !== 'object') {
+            current[part] = {};
+          }
+  
+          current = current[part];
         }
       }
-      current[fieldParts[fieldParts.length - 1]] = value
-      return updatedData
-    })
-  }
+  
+      const lastField = fieldParts[fieldParts.length - 1];
+      if (current) {
+        current[lastField] = value; // Safely set the value
+      } else {
+        console.warn(`Unable to set value for field "${field}" as "current" is null`);
+      }
+  
+      console.log('Updated formData:', updatedData); // Debugging log
+      return updatedData;
+    });
+  };
+  
+  
   const addVinculacion = () => {
     setFormData(prevData => ({
       ...prevData,

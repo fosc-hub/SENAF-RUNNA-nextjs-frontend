@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   Modal,
   Box,
@@ -35,7 +35,7 @@ import { EnviarRespuestaModal } from '../EnviarRespuestaModal'
 import { createTRespuesta } from '../../../api/TableFunctions/respuestas'
 import { createTDemandaVinculada, getTDemandaVinculadas } from '../../../api/TableFunctions/demandasVinculadas';
 import { getTDemandaPersonas } from '../../../api/TableFunctions/demandaPersonas';
-import { getTPersona, getTPersonas } from '../../../api/TableFunctions/personas';
+import { getTPersona, getTPersonas, updateTPersona } from '../../../api/TableFunctions/personas';
 import { createTActividad, getTActividades, updateTActividad, deleteTActividad } from '../../../api/TableFunctions/actividades';
 // Assume these are imported from their respective files
 import { useFormData } from './useFormData'
@@ -46,6 +46,10 @@ import { getTInstitucionActividad } from '../../../api/TableFunctions/institucio
 import { getDemand, updateDemand } from '../../../api/TableFunctions/demands';
 import useDemandData from './useDemandData';
 import SearchDemands from './SearchDemands';
+import { toast } from 'react-toastify';
+import { createTUsuarioExterno } from '../../../api/TableFunctions/usuarioExterno';
+import { updateLocalizacion } from '../../../api/TableFunctions/localizacion';
+import { updateTNNyAEducacion } from '../../../api/TableFunctions/nnyaeducacion';
 
 interface Actividad {
   id: number;
@@ -150,6 +154,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAll
   const [vinculacionError, setVinculacionError] = useState('');
   const [conexiones, setConexiones] = useState<ConexionData[]>([]);
   const [loadingConexiones, setLoadingConexiones] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   const fetchNnyaPrincipales = async () => {
     try {
@@ -217,7 +222,177 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAll
     fetchNnyaPrincipales();
     fetchConexiones();
   }, [demanda.id]);
-
+  const handleSaveEditDemanda = async () => {
+    if (isSubmittingRef.current) return; // Prevent duplicate submissions
+  
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
+  
+    try {
+      console.log("Starting demand update process");
+  
+      // Update the localizacion if it exists
+      if (formData.localizacion?.id) {
+        const updatedLocalizacion = {
+          calle: formData.localizacion.calle,
+          tipo_calle: formData.localizacion.tipo_calle,
+          piso_depto: formData.localizacion.piso_depto
+            ? parseInt(formData.localizacion.piso_depto, 10)
+            : null,
+          lote: formData.localizacion.lote
+            ? parseInt(formData.localizacion.lote, 10)
+            : null,
+          mza: formData.localizacion.mza
+            ? parseInt(formData.localizacion.mza, 10)
+            : null,
+          casa_nro: formData.localizacion.casa_nro
+            ? parseInt(formData.localizacion.casa_nro, 10)
+            : null,
+          referencia_geo: formData.localizacion.referencia_geo,
+          barrio: formData.localizacion.barrio,
+          localidad: formData.localizacion.localidad,
+          cpc: formData.localizacion.cpc,
+        };
+  
+        console.log("Updating localizacion:", formData.localizacion.id, updatedLocalizacion);
+  
+        await updateLocalizacion(formData.localizacion.id, updatedLocalizacion);
+        console.log("Localizacion updated successfully");
+      } else {
+        console.warn("No localizacion ID provided. Skipping localizacion update.");
+      }
+  
+      // Update ninosAdolescentes (children)
+      for (const nino of formData.ninosAdolescentes) {
+        if (nino.id) {
+          const updatedNino = {
+            nombre: nino.nombre,
+            apellido: nino.apellido,
+            fechaNacimiento: nino.fechaNacimiento,
+            genero: nino.genero,
+            dni: nino.dni            ? parseInt(nino.dni, 10)
+            : null,
+            situacionDni: nino.situacionDni,
+            botonAntipanico: nino.botonAntipanico,
+            observaciones: nino.observaciones,
+          };
+          console.log("Updating nino:", nino.id, updatedNino);
+  
+          try {
+            await updateTPersona(nino.id, updatedNino);
+            console.log(`Nino ID ${nino.id} updated successfully`);
+          } catch (error) {
+            console.error(`Error updating nino ID ${nino.id}:`, error);
+          }
+  
+          // Update educational information if it exists
+          if (nino.educacion && nino.educacion.id) {
+            const updatedEducacion = {
+              institucion_educativa: nino.educacion.institucion_educativa,
+              curso: nino.educacion.curso,
+              nivel: nino.educacion.nivel,
+              turno: nino.educacion.turno,
+              comentarios: nino.educacion.comentarios,
+            };
+  
+            console.log("Updating educacion for nino:", nino.id, updatedEducacion);
+  
+            try {
+              await updateTNNyAEducacion(nino.educacion.id, updatedEducacion);
+              console.log(`Educational information for nino ID ${nino.id} updated successfully`);
+            } catch (error) {
+              console.error(`Error updating educational information for nino ID ${nino.id}:`, error);
+            }
+          }
+        }
+      }
+  
+      // Update adultosConvivientes (adults)
+      for (const adulto of formData.adultosConvivientes) {
+        if (adulto.id) {
+          const updatedAdulto = {
+            nombre: adulto.nombre,
+            apellido: adulto.apellido,
+            fechaNacimiento: adulto.fechaNacimiento,
+            genero: adulto.genero,
+            dni: adulto.dni ? parseInt(adulto.dni, 10)
+            : null,
+            situacionDni: adulto.situacionDni,
+            botonAntipanico: adulto.botonAntipanico,
+            supuesto_autordv: adulto.supuesto_autordv,
+            observaciones: adulto.observaciones,
+          };
+          console.log("Updating adulto:", adulto.id, updatedAdulto);
+  
+          try {
+            await updateTPersona(adulto.id, updatedAdulto);
+            console.log(`Adulto ID ${adulto.id} updated successfully`);
+          } catch (error) {
+            console.error(`Error updating adulto ID ${adulto.id}:`, error);
+          }
+        }
+      }
+  
+      // Collect the current form data for the demanda
+      const updatedData = {
+        fecha_y_hora_ingreso: formData.fecha_y_hora_ingreso.toISOString(),
+        origen: formData.origen,
+        sub_origen: formData.sub_origen,
+        institucion: formData.institucion,
+        nro_notificacion_102: Number(formData.nro_notificacion_102) || null,
+        nro_sac: Number(formData.nro_sac) || null,
+        nro_suac: Number(formData.nro_suac) || null,
+        nro_historia_clinica: Number(formData.nro_historia_clinica) || null,
+        nro_oficio_web: Number(formData.nro_oficio_web) || null,
+        descripcion: formData.descripcion,
+        localizacion: formData.localizacion?.id || null, // Ensure you pass the localizacion ID
+        informante: formData.createNewinformante
+          ? await createInformante(formData.informante) // Handle new informante creation
+          : formData.informante?.id,
+      };
+  
+      // Update the demand with the collected data
+      await updateDemand(demanda.id, updatedData);
+      console.log("Demand updated successfully");
+  
+      // Show success notification
+      toast.success("Demanda actualizada con éxito", {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+      });
+  
+      // Optional: Refresh parent data if necessary
+      if (typeof fetchAllData === "function") {
+        fetchAllData();
+      }
+  
+      // Close the modal
+      onClose();
+    } catch (error) {
+      console.error("Error updating demand or localizacion:", error);
+      toast.error("Error al actualizar la demanda o la localización", {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+      });
+    } finally {
+      setIsSubmitting(false);
+      isSubmittingRef.current = false; // Reset submission state
+    }
+  };
+  
+  
+  
+  
 
   useEffect(() => {
     const fetchActividades = async () => {
@@ -438,7 +613,10 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAll
   const handleCloseEnviarRespuesta = () => setIsEnviarRespuestaOpen(false)
 
 
-
+  const handleNextStep = () => {
+    setActiveStep((prevStep) => Math.min(prevStep + 1, steps.length - 1));
+  };
+  
   const handleBack = () => setActiveStep((prevStep) => Math.max(prevStep - 1, 0))
   const handleEnviarAEvaluacion = async () => {
     try {
@@ -475,7 +653,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAll
 
 
 
-
+  
       console.log('Form submitted successfully');
       onClose();
     } catch (error) {
@@ -483,7 +661,8 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAll
     } finally {
       setIsSubmitting(false);
     }
-  }
+  };
+  
 
   return (
     <>
@@ -593,9 +772,39 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAll
                   <Button onClick={handleBack} disabled={activeStep === 0}>
                     Anterior
                   </Button>
-                  <Button type="submit" variant="contained" color="primary" disabled={isSubmitting}>
-                    {isSubmitting ? <CircularProgress size={24} /> : (activeStep === steps.length - 1 ? 'Guardar' : 'Siguiente')}
-                  </Button>
+                  <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
+
+  <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
+  {/* Back Button */}
+
+
+  {/* Conditional Buttons */}
+  {activeStep === steps.length - 1 ? (
+    // Guardar Button
+    <Button
+      type="button"
+      variant="contained"
+      color="primary"
+      onClick={handleSaveEditDemanda} // Call handleSaveEditDemanda here
+      disabled={isSubmitting} // Disable during submission
+    >
+      Guardar
+    </Button>
+  ) : (
+    // Siguiente Button
+    <Button
+      type="button"
+      variant="contained"
+      color="primary"
+      onClick={handleNextStep} // Call handleNextStep for navigation
+    >
+      Siguiente
+    </Button>
+  )}
+</Box>
+
+</Box>
+
                 </Box>
               </form>
             </CollapsibleSection>
@@ -796,5 +1005,9 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAll
         />
     </>
   )
+}
+
+function createInformante(informante: any) {
+  throw new Error('Function not implemented.');
 }
 
