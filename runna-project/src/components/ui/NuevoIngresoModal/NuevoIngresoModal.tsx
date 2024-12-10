@@ -31,8 +31,14 @@ import {createTVinculoPersonaPersona} from '../../../api/TableFunctions/vinculos
 const steps = ['Ingreso', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Condiciones de Vulnerabilidad']
 const initialTouched = {};
 
-export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
-const isFieldEmpty = (value) => value === undefined || value === null || value === "";
+interface NuevoIngresoModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: () => void;
+}
+
+export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }: NuevoIngresoModalProps) {
+const isFieldEmpty = (value: string | number | null | undefined) => value === undefined || value === null || value === "";
   const [activeStep, setActiveStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
@@ -50,9 +56,29 @@ const isFieldEmpty = (value) => value === undefined || value === null || value =
     nnya: '',
     autor_dv: '',
   })
-  const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext, addVinculacion, removeVinculacion, addCondicionVulnerabilidad, removeCondicionVulnerabilidad } = useFormData()
+  interface NinoAdolescente {
+    nombre: string;
+    apellido: string;
+    situacionDni: string;
+    genero: string;
+    educacion: {
+      curso: string;
+      nivel: string;
+      turno: string;
+    };
+    salud: {
+      institucion_sanitaria: string;
+    };
+  }
+  
+  interface FormData {
+    ninosAdolescentes: NinoAdolescente[];
+    // Add other fields as necessary
+  }
+  
+  const { formData, handleInputChange, addNinoAdolescente, addAdultoConviviente, addVulneraciontext, addVinculacion, removeVinculacion, addCondicionVulnerabilidad, removeCondicionVulnerabilidad } = useFormData<FormData>()
   const apiData = useApiData()
-  const validateStep = (activeStep) => {
+  const validateStep = (activeStep: any) => {
     switch (activeStep) {
       case 0: // Validation for Step 0
         return (

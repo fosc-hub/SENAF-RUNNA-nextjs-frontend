@@ -18,6 +18,10 @@ import {
   RadioGroup,
   FormGroup,
   FormHelperText,
+  FilledTextFieldProps,
+  OutlinedTextFieldProps,
+  StandardTextFieldProps,
+  TextFieldVariants,
 } from '@mui/material'
 
 import { ImportIcon as AddIcon } from 'lucide-react'
@@ -25,7 +29,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3'
 import { LocalizationProvider, DateTimePicker, DatePicker } from '@mui/x-date-pickers'
 import { es } from 'date-fns/locale'
 import { getTCategoriaMotivo } from '../../../api/TableFunctions/categoriasMotivos'
-const formatDate = (date) => date ? date.toISOString().split('T')[0] : null
+const formatDate = (date: Date) => date ? date.toISOString().split('T')[0] : null
 const getCategoriaMotivosNombre = (motivoId: number, categoriaMotivos: any[]) => {
   const categoria = categoriaMotivos.find(cat => cat.id === motivoId)
   return categoria ? categoria.nombre : 'Desconocido'
@@ -34,7 +38,11 @@ const getCategoriaMotivosNombre = (motivoId: number, categoriaMotivos: any[]) =>
 
 
 
-const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, localidades, cpcs,   errors = {}) => (
+interface Errors {
+  [key: string]: string;
+}
+
+const renderLocalizacionFields = (prefix: string, data: { calle: unknown; tipo_calle: any; piso_depto: unknown; lote: unknown; mza: unknown; casa_nro: unknown; referencia_geo: unknown; barrio: any; localidad: any; cpc: any }, handleInputChange: (arg0: string, arg1: string) => void, barrios: any[], localidades: any[], cpcs: any[], errors: Errors = {}) => (
   <>
     <Grid item xs={6}>
     <TextField
@@ -188,6 +196,36 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
     </Grid>
   </>
 )
+interface FormData {
+  fecha_y_hora_ingreso: Date | null;
+  origen: string;
+  sub_origen: string;
+  institucion: string;
+  nro_notificacion_102: string;
+  nro_sac: string;
+  nro_suac: string;
+  nro_historia_clinica: string;
+  nro_oficio_web: string;
+  descripcion: string;
+  presuntaVulneracion: {
+    motivos: string;
+  };
+  localizacion: any;
+  createNewUsuarioExterno: boolean;
+  usuarioExterno: {
+    nombre: string;
+    apellido: string;
+    telefono: string;
+    mail: string;
+    id?: string;
+  };
+  ninosAdolescentes: any[];
+  adultosConvivientes: any[];
+  vulneraciones: any[];
+  condicionesVulnerabilidad: any[];
+}
+const [errors, setErrors] = useState({});
+const [touched, setTouched] = useState({});
 export const renderStepContent = ({
   activeStep,
   formData,
@@ -220,11 +258,42 @@ export const renderStepContent = ({
   origenes,
   subOrigenes,
   institucionesDemanda,
+}: {
+  activeStep: number;
+  formData: FormData;
+  handleInputChange: (field: string, value: any) => void;
+  addNinoAdolescente: () => void;
+  addVulneraciontext: () => void;
+  addAdultoConviviente: () => void;
+  addAutor: () => void;
+  usuariosExternos: any[];
+  barrios: any[];
+  localidades: any[];
+  cpcs: any[];
+  motivosIntervencion: any[];
+  categoriaMotivos: any[];
+  categoriaSubmotivos: any[];
+  gravedadVulneraciones: any[];
+  urgenciaVulneraciones: any[];
+  condicionesVulnerabilidadNNyA: any[];
+  condicionesVulnerabilidadAdultos: any[];
+  addVulneracionApi: () => void;
+  institucionesEducativas: any[];
+  institucionesSanitarias: any[];
+  institucionesUsuarioExterno: any[];
+  vinculosUsuarioExterno: any[];
+  addVinculacion: () => void;
+  removeVinculacion: (index: number) => void;
+  vinculoPersonas: any[];
+  addCondicionVulnerabilidad: () => void;
+  removeCondicionVulnerabilidad: (index: number) => void;
+  origenes: any[];
+  subOrigenes: any[];
+  institucionesDemanda: any[];
 }) => {
-  const [errors, setErrors] = useState({});
-  const [touched, setTouched] = useState({});
 
-const handleBlur = (field) => {
+
+const handleBlur = (field: string) => {
   setTouched((prev) => ({ ...prev, [field]: true }));
 };
 
@@ -248,7 +317,7 @@ const handleBlur = (field) => {
               onChange={(newValue) =>
                 handleInputChange("fecha_y_hora_ingreso", newValue)
               }
-              renderInput={(params) => (
+              renderInput={(params: React.JSX.IntrinsicAttributes & { variant?: TextFieldVariants | undefined } & Omit<FilledTextFieldProps | OutlinedTextFieldProps | StandardTextFieldProps, "variant">) => (
                 <TextField
                   {...params}
                   fullWidth

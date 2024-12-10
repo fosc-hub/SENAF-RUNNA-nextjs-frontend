@@ -270,6 +270,7 @@ export function MainContent({
   }, [selectedDemand, fetchAllData])
 
   const [isAsignarModalOpen, setIsAsignarModalOpen] = useState(false)
+  const [score, setScore] = useState<number | null>(null);
   
   const handleAsignarSubmit = (data: { collaborator: string; comments: string; demandaId: number | undefined }) => {
     console.log('Assignment Data:', data);
@@ -346,7 +347,6 @@ const columns: GridColDef[] = useMemo(() => {
       headerName: 'Score',
       width: 130,
       renderCell: (params: GridRenderCellParams<TDemanda>) => {
-        const [score, setScore] = useState<number | null>(null);
 
         useEffect(() => {
           const fetchScore = async () => {

@@ -224,8 +224,7 @@ export const renderStepContent = ({
   localizacionPersonas// Add localizacion here
 }) => {
 
-  const [errors, setErrors] = useState({});
-  const [touched, setTouched] = useState({});
+
 
 const handleBlur = (field) => {
   setTouched((prev) => ({ ...prev, [field]: true }));
@@ -1698,5 +1697,17 @@ const filteredCondiciones = isAdulto ? condicionesVulnerabilidadAdultos : condic
     default:
       return null
   }
+}
+
+function setTouched(arg0: (prev: any) => any) {
+  throw new Error('Function not implemented.')
+}
+
+function setErrors(newErrors: {}) {
+  throw new Error('Function not implemented.')
+}
+
+function setNewVulneracion(arg0: (prev: any) => any) {
+  throw new Error('Function not implemented.')
 }
 
