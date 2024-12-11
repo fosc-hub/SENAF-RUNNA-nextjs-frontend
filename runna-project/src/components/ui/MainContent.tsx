@@ -24,6 +24,7 @@ import {
   ListItemIcon,
   ListItemText,
   IconButton,
+  Skeleton,
 } from '@mui/material'
 import { DataGrid, GridRowParams, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { Search, FilterList } from '@mui/icons-material'
@@ -43,11 +44,12 @@ import { getTDemandaScores } from '../../api/TableFunctions/demandaScores'
 import { useAuth } from '../../context/AuthContext';
 import axiosInstance from '../../api/utils/axiosInstance';
 import { Slide, toast } from 'react-toastify';
-import { get } from 'axios';
-import { format } from 'date-fns';
+import { format, set } from 'date-fns';
 import { getOrigens } from '../../api/TableFunctions/origenDemanda';
 import { TOrigen } from '../../api/interfaces';
 import { Check, Archive, ImageOffIcon as PersonOffIcon, UserCheckIcon as PersonCheckIcon, ClipboardCheck, Star, FileCheck, Mail, MailOpen } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
+
 
 const origenOptions = [
   { value: 'todos', label: 'Todos' },
@@ -108,7 +110,7 @@ export function MainContent({
   const [allDemands, setAllDemands] = useState<TDemanda[]>([])
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [origins, setOrigins] = useState<Record<string, TOrigen>>({});
-
+  const [isLoading, setIsLoading] = useState(true);
   const handleFilterClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget)
   }
@@ -140,6 +142,7 @@ export function MainContent({
   }
 
   const fetchAllData = useCallback(async () => {
+    setIsLoading(true);
     try {
       // Fetch origins first
       const originsData = await getOrigens();
@@ -216,6 +219,8 @@ export function MainContent({
 
     } catch (error) {
       console.error('Error fetching data:', error);
+    }finally {
+      setIsLoading(false);
     }
   }, [user]);
   useEffect(() => {
@@ -431,10 +436,30 @@ const columns: GridColDef[] = useMemo(() => {
       renderCell: (params: GridRenderCellParams<TDemanda>) => {
         const isUrgent = params.row.precalificacion === 'URGENTE';
         return (
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center',
+            width: '100%',
+            position: 'relative'
+          }}>
             <Typography>{params.value}</Typography>
             {isUrgent && (
-              <WarningIcon sx={{ color: 'warning.main', ml: 1 }} fontSize="small" />
+              <Box sx={{
+                position: 'absolute',
+                right: 0,
+                left: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                pl: 4 
+              }}>
+                <AlertCircle 
+                  className="h-4 w-4" 
+                  style={{ 
+                    color: 'var(--joy-palette-error-500, #DC2626)'
+                  }} 
+                />
+              </Box>
             )}
           </Box>
         );
@@ -567,33 +592,43 @@ const getRowClassName = (params: GridRowParams) => {
   return (
     <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 3, overflow: 'auto' }}>
 <Box sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', mb: 3, gap: 2 }}>
-        {(user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tdemanda')) && (
-          <Button
-            variant="contained"
-            onClick={handleNuevoRegistro}
-            sx={{ bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' } }}
-          >
-            + Nuevo Registro
-          </Button>
-        )}
+  
+{isLoading ? (
+        <>
+          <Skeleton variant="rectangular" width={150} height={40} />
+          <Skeleton variant="rectangular" width={100} height={40} />
+        </>
+      ) : (
+        <>
+          {(user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tdemanda')) && (
+            <Button
+              variant="contained"
+              onClick={handleNuevoRegistro}
+              sx={{ bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' } }}
+            >
+              + Nuevo Registro
+            </Button>
+          )}
 
-        <Button
-          onClick={handleFilterClick}
-          variant="outlined"
-          size="sm"
-          className="flex items-center gap-2 px-4 py-2 bg-white"
-          sx={{ 
-            border: '1px solid rgba(0, 0, 0, 0.12)',
-            boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)',
-            borderRadius: '4px',
-            '&:hover': {
-              boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
-            }
-          }}
-        >
-          <FilterList className="h-4 w-4" />
-          <span>Filtros</span>
-        </Button>
+          <Button
+            onClick={handleFilterClick}
+            variant="outlined"
+            size="sm"
+            className="flex items-center gap-2 px-4 py-2 bg-white"
+            sx={{ 
+              border: '1px solid rgba(0, 0, 0, 0.12)',
+              boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)',
+              borderRadius: '4px',
+              '&:hover': {
+                boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+              }
+            }}
+          >
+            <FilterList className="h-4 w-4" />
+            <span>Filtros</span>
+          </Button>
+        </>
+      )}
 
         <Popover
           open={Boolean(anchorEl)}
@@ -824,7 +859,22 @@ const getRowClassName = (params: GridRowParams) => {
       </Box>
 
       <Box sx={{ height: 400, width: '100%' }}>
-        {filteredDemands.length > 0 ? (
+      {isLoading ? (
+          <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {[...Array(5)].map((_, index) => (
+              <Box key={index} sx={{ display: 'flex', gap: 2 }}>
+                <Skeleton variant="rectangular" width={100} height={40} />
+                <Skeleton variant="rectangular" width={130} height={40} />
+                <Skeleton variant="rectangular" width={130} height={40} />
+                <Skeleton variant="rectangular" width={200} height={40} />
+                <Skeleton variant="rectangular" width={130} height={40} />
+                <Skeleton variant="rectangular" width={180} height={40} />
+                <Skeleton variant="rectangular" width={180} height={40} />
+              </Box>
+            ))}
+          </Box>
+        ) : 
+        filteredDemands.length > 0 ? (
       <DataGrid
       rows={enrichedDemands} 
       columns={columns}
@@ -881,6 +931,7 @@ const getRowClassName = (params: GridRowParams) => {
             <Typography color="text.secondary">Nada por aquí...</Typography>
           </Box>
         )}
+        
       </Box>
 
       <Modal 
@@ -931,14 +982,14 @@ const getRowClassName = (params: GridRowParams) => {
       </Modal>
 
       <AsignarDemandaModal
-          demandaId={assignDemandId} 
-          isOpen={isAsignarModalOpen}
-          onClose={() => {
-            setIsAsignarModalOpen(false);
-            setAssignDemandId(null); 
-          }}
-          onAssign={handleAsignarSubmit}
-        />
+        demandaId={assignDemandId} 
+        isOpen={isAsignarModalOpen}
+        onClose={() => {
+          setIsAsignarModalOpen(false);
+          setAssignDemandId(null); 
+        }}
+        onAssign={handleAsignarSubmit}
+      />
 
       <NuevoIngresoModal
         isOpen={isNuevoIngresoModalOpen}
