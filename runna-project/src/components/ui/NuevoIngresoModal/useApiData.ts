@@ -50,77 +50,77 @@ export const useApiData = () => {
   
     useEffect(() => {
       const fetchData = async () => {
-        try {
-          const [
-            fetchedUsuarios,
-            fetchedBarrios,
-            fetchedLocalidades,
-            fetchedProvincias,
-            fetchedCPCs,
-            fetchedMotivos,
-            fetchedCategoriaMotivos,
-            fetchedCategoriaSubmotivos,
-            fetchedGravedades,
-            fetchedUrgencias,
-            fetchedCondicionesNNyA,
-            fetchedCondicionesAdultos,
-            fetchedVulneraciones,
-            fetchedInstitucionesEducativas,
-            fetchedInstitucionesSanitarias,
-            fetchedVinculosPersonas,
-            fetchedOrigens,
-            fetchedSubOrigens,
-            fetchedInstitucionesDemands
-          ] = await Promise.all([
-            getTUsuariosExternos(),
-            getTBarrios(),
-            getTLocalidads(),
-            getTProvincias(),
-            getTCPCs(),
-            getTMotivoIntervencions(),
-            getTCategoriaMotivos(),
-            getTCategoriaSubmotivos(),
-            getTGravedadVulneracions(),
-            getTUrgenciaVulneracions(),
-            getTCondicionesVulnerabilidads({ nnya: true }),
-            getTCondicionesVulnerabilidads({ adulto: true }),
-            getTVulneracions(),
-            getTInstitucionEducativas(),
-            getTInstitucionSanitarias(),
-            getTVinculos(),
-            getOrigens(),
-            getSubOrigens(),
-            getTInstitucionDemands()
+          try {
+              const [
+                  fetchedUsuariosExternos,
+                  fetchedBarrios,
+                  fetchedLocalidades,
+                  fetchedProvincias,
+                  fetchedCpcs,
+                  fetchedMotivos,
+                  fetchedCategoriaMotivos,
+                  fetchedCategoriaSubmotivos,
+                  fetchedGravedades,
+                  fetchedUrgencias,
+                  fetchedCondicionesNNyA,
+                  fetchedCondicionesAdultos,
+                  fetchedVulneraciones,
+                  fetchedInstitucionesEducativas,
+                  fetchedInstitucionesSanitarias,
+                  fetchedVinculosPersonas,
+                  fetchedOrigenes,
+                  fetchedSubOrigenes,
+                  fetchedInstitucionesDemanda,
+              ] = await Promise.all([
+                  getTUsuariosExternos(),
+                  getTBarrios(),
+                  getTLocalidads(),
+                  getTProvincias(),
+                  getTCPCs(),
+                  getTMotivoIntervencions(),
+                  getTCategoriaMotivos(),
+                  getTCategoriaSubmotivos(),
+                  getTGravedadVulneracions(),
+                  getTUrgenciaVulneracions(),
+                  getTCondicionesVulnerabilidads({ nnya: true }),
+                  getTCondicionesVulnerabilidads({ adulto: true }),
+                  getTVulneracions(),
+                  getTInstitucionEducativas(),
+                  getTInstitucionSanitarias(),
+                  getTVinculos(),
+                  getOrigens(),
+                  getSubOrigens(),
+                  getTInstitucionDemands(),
+              ]);
 
-          ])
-  
-          setApiData({
-            usuariosExternos: fetchedUsuarios,
-            barrios: fetchedBarrios,
-            localidades: fetchedLocalidades,
-            provincias: fetchedProvincias,
-            cpcs: fetchedCPCs,
-            motivosIntervencion: fetchedMotivos,
-            categoriaMotivos: fetchedCategoriaMotivos,
-            categoriaSubmotivos: fetchedCategoriaSubmotivos,
-            gravedadVulneraciones: fetchedGravedades,
-            urgenciaVulneraciones: fetchedUrgencias,
-            condicionesVulnerabilidadNNyA: fetchedCondicionesNNyA,
-            condicionesVulnerabilidadAdultos: fetchedCondicionesAdultos,            vulneraciones: fetchedVulneraciones,
-            institucionesEducativas: fetchedInstitucionesEducativas,
-            institucionesSanitarias: fetchedInstitucionesSanitarias,
-            vinculoPersonas: fetchedVinculosPersonas,
-            origenes: fetchedOrigens,
-            subOrigenes: fetchedSubOrigens,
-            institucionesDemanda: fetchedInstitucionesDemands
-          })
-        } catch (error) {
-          console.error('Error fetching data:', error)
-        }
-      }
-  
-      fetchData()
-    }, [])
+              setApiData({
+                  usuariosExternos: fetchedUsuariosExternos,
+                  barrios: fetchedBarrios,
+                  localidades: fetchedLocalidades,
+                  provincias: fetchedProvincias,
+                  cpcs: fetchedCpcs,
+                  motivosIntervencion: fetchedMotivos,
+                  categoriaMotivos: fetchedCategoriaMotivos,
+                  categoriaSubmotivos: fetchedCategoriaSubmotivos,
+                  gravedadVulneraciones: fetchedGravedades,
+                  urgenciaVulneraciones: fetchedUrgencias,
+                  condicionesVulnerabilidadNNyA: fetchedCondicionesNNyA,
+                  condicionesVulnerabilidadAdultos: fetchedCondicionesAdultos,
+                  vulneraciones: fetchedVulneraciones,
+                  institucionesEducativas: fetchedInstitucionesEducativas,
+                  institucionesSanitarias: fetchedInstitucionesSanitarias,
+                  vinculoPersonas: fetchedVinculosPersonas,
+                  origenes: fetchedOrigenes,
+                  subOrigenes: fetchedSubOrigenes,
+                  institucionesDemanda: fetchedInstitucionesDemanda,
+              });
+          } catch (error) {
+              console.error('Error fetching API data:', error);
+          }
+      };
+
+      fetchData();
+  }, []);
     const addVulneracion = async (vulneracionData) => {
         try {
           // Create a new object with only the necessary data

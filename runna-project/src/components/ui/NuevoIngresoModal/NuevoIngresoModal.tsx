@@ -28,12 +28,16 @@ import { createLocalizacionPersona } from '../../../api/TableFunctions/localizac
 import { createTPersonaCondicionesVulnerabilidad } from '../../../api/TableFunctions/personaCondicionesVulnerabilidad'
 import { toast } from 'react-toastify'
 import {createTVinculoPersonaPersona} from '../../../api/TableFunctions/vinculospersonaspersonas'
+import { renderFormFields } from '../Form/renderFormFields'
+import { formFields } from '../Form/FormFields'
 const steps = ['Ingreso', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Condiciones de Vulnerabilidad']
 const initialTouched = {};
 
 export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
 const isFieldEmpty = (value) => value === undefined || value === null || value === "";
   const [activeStep, setActiveStep] = useState(0)
+  const [errors, setErrors] = useState({});
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
   const [debugInfo, setDebugInfo] = useState([])
@@ -125,6 +129,10 @@ const isFieldEmpty = (value) => value === undefined || value === null || value =
       formData.presuntaVulneracion.categoriaMotivos.includes(submotivo.motivo)
     )
   }, [apiData.categoriaSubmotivos, formData.presuntaVulneracion.categoriaMotivos])
+  const handleBlur = (fieldName: any) => {
+    setTouched((prev) => ({ ...prev, [fieldName]: true }));
+  };
+  
   const validateStep0 = () => {
     const missingFields = [];
   
@@ -642,21 +650,8 @@ addDebugInfo(`Created ${demandaPersonaResponses.length} demanda-persona entries`
         </Stepper>
         <form onSubmit={handleSubmit}>
           <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-            {renderStepContent({
-              activeStep,
-              formData,
-              handleInputChange,
-              addNinoAdolescente,
-              addAdultoConviviente,
-              addVinculacion,
-              removeVinculacion,
-              addVulneraciontext,
-              addCondicionVulnerabilidad,
-              removeCondicionVulnerabilidad,
-              ...apiData,
-              addVulneracionApi: apiData.addVulneracion,
+          {renderFormFields(formFields.step_0, formData, handleInputChange, errors, handleBlur, apiData)}
 
-            })}
           </LocalizationProvider>
           <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
             <Button onClick={handleBack} disabled={activeStep === 0}>
