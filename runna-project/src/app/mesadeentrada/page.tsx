@@ -113,7 +113,6 @@ function MesaDeEntradas() {
 
       {/* Layout principal con Sidebar y el contenido */}
       <div className="flex-1 flex">
-        <Sidebar />
       <MainContent
             asignadoProp={null}
             constatacionProp={null}

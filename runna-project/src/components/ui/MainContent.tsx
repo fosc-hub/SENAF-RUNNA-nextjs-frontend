@@ -1,4 +1,3 @@
-
 'use client'
 import axios from 'axios';
 import WarningIcon from '@mui/icons-material/Warning';
@@ -17,10 +16,17 @@ import {
   InputLabel, 
   Select, 
   MenuItem,
-  SelectChangeEvent 
+  SelectChangeEvent,
+  Popover,
+  Checkbox,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  IconButton,
 } from '@mui/material'
 import { DataGrid, GridRowParams, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
-import { Search } from '@mui/icons-material'
+import { Search, FilterList } from '@mui/icons-material'
 import DemandaDetalle from '../ui/DemandaDetalle/DemandaDetalle'
 import ActividadesRegistradas from '../ui/ActividadesRegistradas/ActividadesRegistradas'
 import PostConstatacionModal from './PostConstatacionModal'
@@ -38,6 +44,11 @@ import { useAuth } from '../../context/AuthContext';
 import axiosInstance from '../../api/utils/axiosInstance';
 import { Slide, toast } from 'react-toastify';
 import { get } from 'axios';
+import { format } from 'date-fns';
+import { getOrigens } from '../../api/TableFunctions/origenDemanda';
+import { TOrigen } from '../../api/interfaces';
+import { Check, Archive, ImageOffIcon as PersonOffIcon, UserCheckIcon as PersonCheckIcon, ClipboardCheck, Star, FileCheck, Mail, MailOpen } from 'lucide-react'
+
 const origenOptions = [
   { value: 'todos', label: 'Todos' },
   { value: 'web', label: 'Web' },
@@ -58,7 +69,7 @@ interface MainContentProps {
   archivadoProp?: boolean;
   completadoProp?: boolean;
   recibidoProp?: boolean;
-  onEvaluacionClick?: (id: number) => void; // Add this line
+  onEvaluacionClick?: (id: number) => void; 
 }
 
 export function MainContent({
@@ -69,7 +80,7 @@ export function MainContent({
   completadoProp = false,
   recibidoProp = false,
   onEvaluacionClick,
-  }: MainContentProps) {
+}: MainContentProps) {
     const [filterState, setFilterState] = useState({
       todos: true,
       sinAsignar: false,
@@ -78,6 +89,8 @@ export function MainContent({
       completados: false,
       sinLeer: false,
       leidos: false,
+      constatados: false,
+      evaluados: false,
     })
     const [leidoState, setLeidoState] = useState<Record<number, boolean>>({});
   const [demands, setDemands] = useState<TDemanda[]>([])
@@ -91,17 +104,51 @@ export function MainContent({
   const [showActividadesRegistradas, setShowActividadesRegistradas] = useState(false)
   const [origen, setOrigen] = useState('todos')
   const { user, loading } = useAuth();
-  const [assignDemandId, setAssignDemandId] = useState<number | null>(null); // State for Assign Demand
+  const [assignDemandId, setAssignDemandId] = useState<number | null>(null); 
   const [allDemands, setAllDemands] = useState<TDemanda[]>([])
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const [origins, setOrigins] = useState<Record<string, TOrigen>>({});
 
-  const handleFilterChange = useCallback((filter: string) => {
+  const handleFilterClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget)
+  }
+
+  const handleFilterClose = () => {
+    setAnchorEl(null)
+  }
+
+  const handleFilterChange = (filter: string) => {
     setFilterState(prevState => ({
-      ...Object.fromEntries(Object.keys(prevState).map(key => [key, false])),
-      [filter]: true,
-    }));
-  }, []);
+      ...prevState,
+      [filter]: !prevState[filter],
+      todos: false, 
+    }))
+  }
+
+  const handleTodosChange = () => {
+    setFilterState({
+      todos: true,
+      sinAsignar: false,
+      asignados: false,
+      archivados: false,
+      completados: false,
+      sinLeer: false,
+      leidos: false,
+      constatados: false,
+      evaluados: false,
+    })
+  }
+
   const fetchAllData = useCallback(async () => {
     try {
+      // Fetch origins first
+      const originsData = await getOrigens();
+      const originsMap = originsData.reduce((acc, origin) => {
+        acc[origin.id] = origin;
+        return acc;
+      }, {} as Record<string, TOrigen>);
+      setOrigins(originsMap);
+
       let demandsData: TDemanda[] = [];
 
       if (user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tdemandaasignado')) {
@@ -117,9 +164,9 @@ export function MainContent({
       const personaPromises = demandsData.map(async (demand) => {
         try {
           const demandaPersonas = await getTDemandaPersonas({ demanda: demand.id });
-          const principalNNYA = demandaPersonas.find((dp) => dp.nnya_principal); // Filter for nnyaprincipal=true
+          const principalNNYA = demandaPersonas.find((dp) => dp.nnya_principal); 
           if (principalNNYA && principalNNYA.persona) {
-            const persona = await getTPersona(principalNNYA.persona); // Fetch related persona
+            const persona = await getTPersona(principalNNYA.persona); 
             return { id: demand.id!, persona };
           }
         } catch (error) {
@@ -133,7 +180,7 @@ export function MainContent({
             const precalificaciones = await getTPrecalificacionDemandas({ demanda: demand.id });
             const latestPrecalificacion = precalificaciones?.sort(
                 (a, b) => new Date(b.ultima_actualizacion).getTime() - new Date(a.ultima_actualizacion).getTime()
-            )[0]; // Get the latest precalificacion based on ultima_actualizacion
+            )[0]; 
     
             if (latestPrecalificacion) {
                 return { id: demand.id!, precalificacion: latestPrecalificacion };
@@ -156,7 +203,7 @@ export function MainContent({
           newPersonaData[result.id] = result.persona
         }
       })
-      // console.log('New persona data:', newPersonaData)
+      
       setPersonaData(newPersonaData)
 
       const newPrecalificacionData: Record<number, TPrecalificacionDemanda> = {}
@@ -177,7 +224,7 @@ export function MainContent({
   useEffect(() => {
     if (allDemands.length > 0) {
       const initialLeidoState = allDemands.reduce((acc, demand) => {
-        acc[demand.id] = false; // Initially, all demands are "no leido"
+        acc[demand.id] = false; 
         return acc;
       }, {} as Record<number, boolean>);
       setLeidoState(initialLeidoState);
@@ -186,7 +233,7 @@ export function MainContent({
   const toggleLeido = (demandId: number) => {
     setLeidoState((prevState) => ({
       ...prevState,
-      [demandId]: !prevState[demandId], // Toggle the current state
+      [demandId]: !prevState[demandId], 
     }));
   };
   
@@ -204,15 +251,25 @@ export function MainContent({
 
 
   const filteredDemands = useMemo(() => {
+    if (filterState.todos) return allDemands;
+
     return allDemands.filter((demand) => {
-      if (filterState.todos) return true;
-      if (filterState.sinAsignar) return !demand.asignado;
-      if (filterState.asignados) return demand.asignado;
-      if (filterState.archivados) return demand.archivado;
-      if (filterState.completados) return demand.completado;
-      if (filterState.sinLeer) return !leidoState[demand.id!]; // Show only "no leídos"
-      if (filterState.leidos) return leidoState[demand.id!];   // Show only "leídos"
-      return true;
+      const conditions = [];
+
+      if (filterState.sinAsignar) conditions.push(!demand.asignado);
+      if (filterState.asignados) conditions.push(demand.asignado);
+      if (filterState.archivados) conditions.push(demand.archivado);
+      if (filterState.completados) conditions.push(demand.completado);
+      if (filterState.sinLeer) conditions.push(!leidoState[demand.id!]);
+      if (filterState.leidos) conditions.push(leidoState[demand.id!]);
+      if (filterState.constatados) conditions.push(demand.constatacion);
+      if (filterState.evaluados) conditions.push(demand.evaluacion);
+
+      // If no filters are active, show all demands
+      if (conditions.length === 0) return true;
+
+      // Return true only if ALL conditions are met (AND logic)
+      return conditions.every(condition => condition);
     });
   }, [allDemands, filterState, leidoState]);
   
@@ -224,14 +281,14 @@ export function MainContent({
       const precalificacion = precalificacionData[demand.id!];
       return {
         ...demand,
-        nombre: persona ? `${persona.nombre} ${persona.apellido}` : 'N/A', // Combine nombre and apellido
+        nombre: persona ? `${persona.nombre} ${persona.apellido}` : 'N/A', 
         dni: persona?.dni?.toString() || 'N/A',
         precalificacion: precalificacion?.estado_demanda || '',
       };
 
     });
   }, [filteredDemands, personaData, precalificacionData]);
-  console.log("Enriched Demands:", enrichedDemands);
+  
 
   const handleNuevoRegistro = useCallback(() => {
     setIsNuevoIngresoModalOpen(true)
@@ -244,16 +301,16 @@ export function MainContent({
   const handleSubmitNuevoIngreso = useCallback(async (formData: Partial<TDemanda>) => {
     try {
       const newDemand = await createDemand(formData, true, '¡Demanda creada con éxito!')
-      await fetchAllData() // Refresh all data to get updated relationships
+      await fetchAllData() 
       setIsNuevoIngresoModalOpen(false)
     } catch (error) {
-      // console.error('Error creating new demand:', error)
+      
     }
   }, [fetchAllData])
 
   const handleDemandClick = useCallback((params: GridRowParams<TDemanda>) => {
     const demandId = params.row.id!;
-    toggleLeido(demandId); // Toggle the "leido" state
+    toggleLeido(demandId); 
     setSelectedDemand(params.row);
     setShowDemandaDetalle(true);
     setShowActividadesRegistradas(true);
@@ -271,12 +328,12 @@ export function MainContent({
     if (selectedDemand) {
       try {
         const updatedDemand = await updateDemand(selectedDemand.id!, { ...selectedDemand, estado: 'Verificada' }, true, '¡Demanda actualizada con éxito!')
-        await fetchAllData() // Refresh all data
+        await fetchAllData() 
         setShowDemandaDetalle(false)
         setShowActividadesRegistradas(false)
         setShowPostConstatacion(true)
       } catch (error) {
-        // console.error('Error updating demand:', error)
+        
       }
     }
   }, [selectedDemand, fetchAllData])
@@ -285,10 +342,10 @@ export function MainContent({
     if (selectedDemand) {
       try {
         const updatedDemand = await updateDemand(selectedDemand.id!, { ...selectedDemand, estado: 'En evaluación' }, true, '¡Demanda actualizada con éxito')
-        await fetchAllData() // Refresh all data
+        await fetchAllData() 
         setShowPostConstatacion(false)
       } catch (error) {
-        // console.error('Error updating demand:', error)
+        
       }
     }
   }, [selectedDemand, fetchAllData])
@@ -297,8 +354,7 @@ export function MainContent({
   
   const handleAsignarSubmit = (data: { collaborator: string; comments: string; demandaId: number | undefined }) => {
     console.log('Assignment Data:', data);
-    fetchAllData(); // Refresh all data
-    // You can now use data.demandaId along with collaborator and comments
+    fetchAllData(); 
     setIsAsignarModalOpen(false);
   }; 
 
@@ -310,7 +366,7 @@ export function MainContent({
         const existingPrecalificacion = precalificacionData[demandId];
   
         if (existingPrecalificacion && existingPrecalificacion.id) {
-          // Update existing precalificación
+          
           const updatedPrecalificacion = {
             estado_demanda: newValue,
             descripcion: `Cambio de precalificación de ${existingPrecalificacion.estado_demanda} a ${newValue}`,
@@ -325,13 +381,13 @@ export function MainContent({
             '¡Precalificación actualizada con éxito!'
           );
   
-          // Update state with updated precalificación
+          
           setPrecalificacionData((prev) => ({
             ...prev,
             [demandId]: { ...existingPrecalificacion, ...updatedPrecalificacion },
           }));
         } else {
-          // Create a new precalificación
+          
           const newPrecalificacion = await createTPrecalificacionDemanda(
             {
               demanda: demandId,
@@ -344,7 +400,7 @@ export function MainContent({
             '¡Precalificación creada con éxito!'
           );
   
-          // Update state with the new precalificación
+          
           setPrecalificacionData((prev) => ({
             ...prev,
             [demandId]: newPrecalificacion,
@@ -353,7 +409,7 @@ export function MainContent({
       } catch (error) {
         console.error('Error updating precalificación:', error);
   
-        // Debugging details
+        
         console.error('Demand ID:', demandId);
         console.error('Precalificación Data:', precalificacionData[demandId]);
         console.error('New Value:', newValue);
@@ -412,6 +468,10 @@ const columns: GridColDef[] = useMemo(() => {
       field: 'origen',
       headerName: 'Origen',
       width: 130,
+      renderCell: (params: GridRenderCellParams<TDemanda>) => {
+          const origin = origins[params.value];
+          return <Typography>{origin?.nombre || 'N/A'}</Typography>;
+        },
     },
     {
       field: 'nombre',
@@ -434,7 +494,7 @@ const columns: GridColDef[] = useMemo(() => {
             <Select
               value={params.value || ''}
               onChange={(e: SelectChangeEvent) => handlePrecalificacionChange(params.row.id!, e.target.value as string)}
-              disabled={!isEditable} // Disable dropdown if permission is missing
+              disabled={!isEditable} 
             >
               {precalificacionOptions.map((option) => (
                 <MenuItem key={option.value} value={option.value}>
@@ -447,13 +507,20 @@ const columns: GridColDef[] = useMemo(() => {
       },
     },
     {
-      field: 'ultima_actualizacion',
-      headerName: 'Última Actualización',
-      width: 180,
-    },
+        field: 'ultima_actualizacion',
+        headerName: 'Última Actualización',
+        width: 180,
+        renderCell: (params: GridRenderCellParams<TDemanda>) => {
+          if (!params.value) return <Typography>N/A</Typography>;
+          
+          const date = new Date(params.value);
+          const formattedDate = format(date, 'dd/MM/yyyy HH:mm');
+          return <Typography>{formattedDate}</Typography>;
+        },
+      },
   ];
 
-  // Add "Asignar" column only if the user has the permission
+  
   if (user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tdemandaasignado')) {
     baseColumns.push({
       field: 'Asignar',
@@ -464,9 +531,9 @@ const columns: GridColDef[] = useMemo(() => {
           variant="outlined"
           startIcon={<PersonIcon />}
           onClick={(event) => {
-            event.stopPropagation(); // Prevent row click event
-            setAssignDemandId(params.row.id); // Set the demand ID for assignment
-            setIsAsignarModalOpen(true); // Open Assign Demand modal
+            event.stopPropagation(); 
+            setAssignDemandId(params.row.id); 
+            setIsAsignarModalOpen(true); 
           }}
         >
           Asignar
@@ -482,16 +549,16 @@ const columns: GridColDef[] = useMemo(() => {
       width: 160,
       renderCell: (params: GridRenderCellParams) => (
         <EvaluarButton
-          id={params.row.id} // Pasa el id de la fila
-          onClick={onEvaluacionClick} // Asegúrate de que esta función sea pasada como prop
-          disabled={!params.row.evaluacion} // Deshabilita el botón si evaluación es false
+          id={params.row.id} 
+          onClick={onEvaluacionClick} 
+          disabled={!params.row.evaluacion} 
         />
       ),
     });
   }
 
   return baseColumns;
-}, [user, handlePrecalificacionChange]);
+}, [user, handlePrecalificacionChange, origins]);
 const getRowClassName = (params: GridRowParams) => {
   const { constatacion, evaluacion, asignado, archivado, completado } = params.row;
 
@@ -509,61 +576,257 @@ const getRowClassName = (params: GridRowParams) => {
             + Nuevo Registro
           </Button>
         )}
+
         <Button
-          variant={filterState.todos ? "contained" : "outlined"}
-          onClick={() => handleFilterChange('todos')}
+          onClick={handleFilterClick}
+          variant="outlined"
+          size="sm"
+          className="flex items-center gap-2 px-4 py-2 bg-white"
+          sx={{ 
+            border: '1px solid rgba(0, 0, 0, 0.12)',
+            boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)',
+            borderRadius: '4px',
+            '&:hover': {
+              boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+            }
+          }}
         >
-          Todos
+          <FilterList className="h-4 w-4" />
+          <span>Filtros</span>
         </Button>
-        {user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tdemandaasignado') ? (
-          <>
-            <Button
-              variant={filterState.sinAsignar ? "contained" : "outlined"}
-              onClick={() => handleFilterChange('sinAsignar')}
-            >
-              Sin Asignar
-            </Button>
-            <Button
-              variant={filterState.asignados ? "contained" : "outlined"}
-              onClick={() => handleFilterChange('asignados')}
-            >
-              Asignados
-            </Button>
-          </>
-        ) : (
-          <>
-            <Button
-              variant={filterState.sinLeer ? "contained" : "outlined"}
-              onClick={() => handleFilterChange('sinLeer')}
-            >
-              Sin Leer
-            </Button>
-            <Button
-              variant={filterState.leidos ? "contained" : "outlined"}
-              onClick={() => handleFilterChange('leidos')}
-            >
-              Leidos
-            </Button>
-          </>
-        )}
-        <Button
-          variant={filterState.archivados ? "contained" : "outlined"}
-          onClick={() => handleFilterChange('archivados')}
+
+        <Popover
+          open={Boolean(anchorEl)}
+          anchorEl={anchorEl}
+          onClose={handleFilterClose}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'left',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'left',
+          }}
+          PaperProps={{
+            sx: {
+              width: 280,
+              maxHeight: 400,
+              boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)',
+              borderRadius: '8px',
+              mt: 1,
+            }
+          }}
         >
-          Archivados
-        </Button>
-        <Button
-          variant={filterState.completados ? "contained" : "outlined"}
-          onClick={() => handleFilterChange('completados')}
-        >
-          Completados
-        </Button>
+          <Box 
+            sx={{ 
+              maxHeight: 400,
+              overflowY: 'auto',
+              '&::-webkit-scrollbar': {
+                display: 'none'
+              },
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+            }}
+          >
+            <List disablePadding>
+              <ListItem sx={{ py: 1.5, px: 2 }}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Estado
+                </Typography>
+              </ListItem>
+              
+              <ListItem
+                button
+                onClick={handleTodosChange}
+                sx={{
+                  py: 1,
+                  px: 2,
+                  '&:hover': { bgcolor: 'action.hover' }
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 36 }}>
+                  <Star className="h-4 w-4" />
+                </ListItemIcon>
+                <ListItemText primary="Todos" />
+                {filterState.todos && (
+                  <Check className="h-4 w-4 text-primary" />
+                )}
+              </ListItem>
+
+              <ListItem
+                button
+                onClick={() => handleFilterChange('sinAsignar')}
+                sx={{
+                  py: 1,
+                  px: 2,
+                  '&:hover': { bgcolor: 'action.hover' }
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 36 }}>
+                  <PersonOffIcon className="h-4 w-4" />
+                </ListItemIcon>
+                <ListItemText primary="Sin Asignar" />
+                {filterState.sinAsignar && (
+                  <Check className="h-4 w-4 text-primary" />
+                )}
+              </ListItem>
+
+              <ListItem
+                button
+                onClick={() => handleFilterChange('asignados')}
+                sx={{
+                  py: 1,
+                  px: 2,
+                  '&:hover': { bgcolor: 'action.hover' }
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 36 }}>
+                  <PersonCheckIcon className="h-4 w-4" />
+                </ListItemIcon>
+                <ListItemText primary="Asignados" />
+                {filterState.asignados && (
+                  <Check className="h-4 w-4 text-primary" />
+                )}
+              </ListItem>
+
+              <ListItem sx={{ py: 1.5, px: 2 }}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Proceso
+                </Typography>
+              </ListItem>
+
+              <ListItem
+                button
+                onClick={() => handleFilterChange('constatados')}
+                sx={{
+                  py: 1,
+                  px: 2,
+                  '&:hover': { bgcolor: 'action.hover' }
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 36 }}>
+                  <ClipboardCheck className="h-4 w-4" />
+                </ListItemIcon>
+                <ListItemText primary="Constatados" />
+                {filterState.constatados && (
+                  <Check className="h-4 w-4 text-primary" />
+                )}
+              </ListItem>
+
+              <ListItem
+                button
+                onClick={() => handleFilterChange('evaluados')}
+                sx={{
+                  py: 1,
+                  px: 2,
+                  '&:hover': { bgcolor: 'action.hover' }
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 36 }}>
+                  <FileCheck className="h-4 w-4" />
+                </ListItemIcon>
+                <ListItemText primary="Evaluados" />
+                {filterState.evaluados && (
+                  <Check className="h-4 w-4 text-primary" />
+                )}
+              </ListItem>
+
+              <ListItem sx={{ py: 1.5, px: 2 }}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Archivo
+                </Typography>
+              </ListItem>
+
+              <ListItem
+                button
+                onClick={() => handleFilterChange('archivados')}
+                sx={{
+                  py: 1,
+                  px: 2,
+                  '&:hover': { bgcolor: 'action.hover' }
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 36 }}>
+                  <Archive className="h-4 w-4" />
+                </ListItemIcon>
+                <ListItemText primary="Archivados" />
+                {filterState.archivados && (
+                  <Check className="h-4 w-4 text-primary" />
+                )}
+              </ListItem>
+
+              <ListItem
+                button
+                onClick={() => handleFilterChange('completados')}
+                sx={{
+                  py: 1,
+                  px: 2,
+                  '&:hover': { bgcolor: 'action.hover' }
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 36 }}>
+                  <FileCheck className="h-4 w-4" />
+                </ListItemIcon>
+                <ListItemText primary="Completados" />
+                {filterState.completados && (
+                  <Check className="h-4 w-4 text-primary" />
+                )}
+              </ListItem>
+
+              {!user?.is_superuser && !user?.all_permissions.some((p) => p.codename === 'add_tdemandaasignado') && (
+                <>
+                  <ListItem sx={{ py: 1.5, px: 2 }}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Lectura
+                    </Typography>
+                  </ListItem>
+
+                  <ListItem
+                    button
+                    onClick={() => handleFilterChange('sinLeer')}
+                    sx={{
+                      py: 1,
+                      px: 2,
+                      '&:hover': { bgcolor: 'action.hover' }
+                    }}
+                  >
+                    <ListItemIcon sx={{ minWidth: 36 }}>
+                      <Mail className="h-4 w-4" />
+                    </ListItemIcon>
+                    <ListItemText primary="Sin Leer" />
+                    {filterState.sinLeer && (
+                      <Check className="h-4 w-4 text-primary" />
+                    )}
+                  </ListItem>
+
+                  <ListItem
+                    button
+                    onClick={() => handleFilterChange('leidos')}
+                    sx={{
+                      py: 1,
+                      px: 2,
+                      '&:hover': { bgcolor: 'action.hover' }
+                    }}
+                  >
+                    <ListItemIcon sx={{ minWidth: 36 }}>
+                      <MailOpen className="h-4 w-4" />
+                    </ListItemIcon>
+                    <ListItemText primary="Leídos" />
+                    {filterState.leidos && (
+                      <Check className="h-4 w-4 text-primary" />
+                    )}
+                  </ListItem>
+                </>
+              )}
+            </List>
+          </Box>
+        </Popover>
       </Box>
 
       <Box sx={{ height: 400, width: '100%' }}>
         {filteredDemands.length > 0 ? (
       <DataGrid
-      rows={enrichedDemands} // Use enrichedDemands here
+      rows={enrichedDemands} 
       columns={columns}
       onRowClick={handleDemandClick}
       disableRowSelectionOnClick
@@ -576,21 +839,21 @@ const getRowClassName = (params: GridRowParams) => {
       getRowClassName={getRowClassName}
       sx={{
         '& .row-green': {
-          backgroundColor: 'rgba(0, 255, 0, 0.1)',
+          borderLeft: '6px solid rgba(0, 255, 0, 0.5)',
           '&:hover': {
-            backgroundColor: 'rgba(0, 255, 0, 0.2)',
+            backgroundColor: 'rgba(0, 255, 0, 0.05)',
           },
         },
         '& .row-purple': {
-          backgroundColor: 'rgba(128, 0, 128, 0.1)',
+          borderLeft: '6px solid rgba(128, 0, 128, 0.5)',
           '&:hover': {
-            backgroundColor: 'rgba(128, 0, 128, 0.2)',
+            backgroundColor: 'rgba(128, 0, 128, 0.05)',
           },
         },
         '& .row-orange': {
-          backgroundColor: 'rgba(255, 165, 0, 0.1)',
+          borderLeft: '6px solid rgba(255, 165, 0, 0.5)',
           '&:hover': {
-            backgroundColor: 'rgba(255, 165, 0, 0.2)',
+            backgroundColor: 'rgba(255, 165, 0, 0.05)',
           },
         },
       }}
@@ -633,17 +896,9 @@ const getRowClassName = (params: GridRowParams) => {
                   demanda={selectedDemand} 
                   isOpen={showDemandaDetalle} 
                   onClose={handleCloseDetail} 
-                  fetchAllData={fetchAllData} // Pass fetchAllData as a prop
+                  fetchAllData={fetchAllData} 
                 />
               )}
-              {/* {showActividadesRegistradas && (
-                <ActividadesRegistradas 
-                  demanda={selectedDemand} 
-                  isOpen={showActividadesRegistradas} 
-                  onClose={handleCloseDetail} 
-                  onConstatar={handleConstatar} 
-                />
-              )} */}
             </>
           )}
         </Box>
@@ -676,11 +931,11 @@ const getRowClassName = (params: GridRowParams) => {
       </Modal>
 
       <AsignarDemandaModal
-          demandaId={assignDemandId} // Pass the demand ID for assignment
+          demandaId={assignDemandId} 
           isOpen={isAsignarModalOpen}
           onClose={() => {
             setIsAsignarModalOpen(false);
-            setAssignDemandId(null); // Reset assignDemandId when modal closes
+            setAssignDemandId(null); 
           }}
           onAssign={handleAsignarSubmit}
         />
@@ -693,3 +948,4 @@ const getRowClassName = (params: GridRowParams) => {
     </Box>
   )
 }
+
