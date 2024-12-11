@@ -28,10 +28,10 @@ import NuevoIngresoModal from './NuevoIngresoModal/NuevoIngresoModal'
 import EvaluacionModal from './EvaluacionModal'
 import { getDemands, createDemand, updateDemand, getDemand } from '../../api/TableFunctions/demands'
 import { TDemanda, TDemandaPersona, TPersona, TPrecalificacionDemanda, TDemandaAsignado } from '../../api/interfaces'
-import { getTDemandaPersona } from '../../api/TableFunctions/demandaPersonas'
-import { getTPersona } from '../../api/TableFunctions/personas'
+import { getTDemandaPersona, getTDemandaPersonas } from '../../api/TableFunctions/demandaPersonas'
+import { getTPersona, getTPersonas } from '../../api/TableFunctions/personas'
 import { getTDemandaAsignados } from '../../api/TableFunctions/DemandaAsignados'
-import { getTPrecalificacionDemanda, createTPrecalificacionDemanda, updateTPrecalificacionDemanda } from '../../api/TableFunctions/precalificacionDemanda'
+import { getTPrecalificacionDemanda, createTPrecalificacionDemanda, updateTPrecalificacionDemanda, getTPrecalificacionDemandas } from '../../api/TableFunctions/precalificacionDemanda'
 import { getTDemandaScores } from '../../api/TableFunctions/demandaScores'
 
 import { useAuth } from '../../context/AuthContext';
@@ -70,6 +70,16 @@ export function MainContent({
   recibidoProp = false,
   onEvaluacionClick,
   }: MainContentProps) {
+    const [filterState, setFilterState] = useState({
+      todos: true,
+      sinAsignar: false,
+      asignados: false,
+      archivados: false,
+      completados: false,
+      sinLeer: false,
+      leidos: false,
+    })
+    const [leidoState, setLeidoState] = useState<Record<number, boolean>>({});
   const [demands, setDemands] = useState<TDemanda[]>([])
   const [personaData, setPersonaData] = useState<Record<number, TPersona>>({})
   const [precalificacionData, setPrecalificacionData] = useState<Record<number, TPrecalificacionDemanda>>({})
@@ -82,65 +92,63 @@ export function MainContent({
   const [origen, setOrigen] = useState('todos')
   const { user, loading } = useAuth();
   const [assignDemandId, setAssignDemandId] = useState<number | null>(null); // State for Assign Demand
+  const [allDemands, setAllDemands] = useState<TDemanda[]>([])
 
-
+  const handleFilterChange = useCallback((filter: string) => {
+    setFilterState(prevState => ({
+      ...Object.fromEntries(Object.keys(prevState).map(key => [key, false])),
+      [filter]: true,
+    }));
+  }, []);
   const fetchAllData = useCallback(async () => {
     try {
-      let demandsData = [];
+      let demandsData: TDemanda[] = [];
 
       if (user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tdemandaasignado')) {
-        demandsData = await getDemands({
-          asignado: asignadoProp,
-          constatacion: constatacionProp,
-          evaluacion: evaluacionProp,
-          archivado: archivadoProp,
-          completado: completadoProp,
-        });
+        demandsData = await getDemands({});
       } else {
-        const assignedDemands = await getTDemandaAsignados({ 
-          user: user.id,
-          recibido: recibidoProp,
-        });
-        demandsData = await getDemands({
-          asignado: asignadoProp,
-          constatacion: constatacionProp,
-          evaluacion: evaluacionProp,
-          archivado: archivadoProp,
-          completado: completadoProp,
-        })
+        const assignedDemands = await getTDemandaAsignados({ user: user.id });
+        demandsData = await getDemands({});
         demandsData = demandsData.filter((demand) => assignedDemands.some((a) => a.demanda === demand.id));
       }
-      setDemands(demandsData);
+
+      setAllDemands(demandsData);
+
       const personaPromises = demandsData.map(async (demand) => {
         try {
-          const demandaPersona = await getTDemandaPersona(demand.id!)
-          // console.log(`Fetched demandaPersona for demand ${demand.id}:`, demandaPersona)
-          if (demandaPersona && demandaPersona.persona) {
-            const persona = await getTPersona(demandaPersona.persona)
-            // console.log(`Fetched persona for demand ${demand.id}:`, persona)
-            return { id: demand.id!, persona }
+          const demandaPersonas = await getTDemandaPersonas({ demanda: demand.id });
+          const principalNNYA = demandaPersonas.find((dp) => dp.nnya_principal); // Filter for nnyaprincipal=true
+          if (principalNNYA && principalNNYA.persona) {
+            const persona = await getTPersona(principalNNYA.persona); // Fetch related persona
+            return { id: demand.id!, persona };
           }
         } catch (error) {
-          console.error(`Error fetching data for demand ${demand.id}:`, error)
+          console.error(`Error fetching persona for demand ${demand.id}:`, error);
         }
-        return null
-      })
+        return null;
+      });
 
       const precalificacionPromises = demandsData.map(async (demand) => {
         try {
-          const precalificacion = await getTPrecalificacionDemanda(demand.id!)
-          // console.log(`Fetched precalificacion for demand ${demand.id}:`, precalificacion)
-          return { id: demand.id!, precalificacion }
+            const precalificaciones = await getTPrecalificacionDemandas({ demanda: demand.id });
+            const latestPrecalificacion = precalificaciones?.sort(
+                (a, b) => new Date(b.ultima_actualizacion).getTime() - new Date(a.ultima_actualizacion).getTime()
+            )[0]; // Get the latest precalificacion based on ultima_actualizacion
+    
+            if (latestPrecalificacion) {
+                return { id: demand.id!, precalificacion: latestPrecalificacion };
+            }
         } catch (error) {
-          console.error(`Error fetching precalificacion for demand ${demand.id}:`, error)
+            console.error(`Error fetching precalificacion for demand ${demand.id}:`, error);
         }
-        return null
-      })
+        return null;
+    });
+    
 
       const [personaResults, precalificacionResults] = await Promise.all([
         Promise.all(personaPromises),
         Promise.all(precalificacionPromises)
-      ])
+      ]);
 
       const newPersonaData: Record<number, TPersona> = {}
       personaResults.forEach((result) => {
@@ -157,17 +165,31 @@ export function MainContent({
           newPrecalificacionData[result.id] = result.precalificacion
         }
       })
-      // console.log('New precalificacion data:', newPrecalificacionData)
-      setPrecalificacionData(newPrecalificacionData)
-    } catch (error) {
-      console.error('Error fetching data:', error)
-    }
-  }, [user])
+      setPrecalificacionData(newPrecalificacionData);
 
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  }, [user]);
   useEffect(() => {
     fetchAllData()
   }, [fetchAllData])
-
+  useEffect(() => {
+    if (allDemands.length > 0) {
+      const initialLeidoState = allDemands.reduce((acc, demand) => {
+        acc[demand.id] = false; // Initially, all demands are "no leido"
+        return acc;
+      }, {} as Record<number, boolean>);
+      setLeidoState(initialLeidoState);
+    }
+  }, [allDemands]);
+  const toggleLeido = (demandId: number) => {
+    setLeidoState((prevState) => ({
+      ...prevState,
+      [demandId]: !prevState[demandId], // Toggle the current state
+    }));
+  };
+  
   const getPersonaData = useCallback((demandId: number | undefined) => {
     if (demandId === undefined) return undefined;
     return personaData[demandId];
@@ -178,38 +200,38 @@ export function MainContent({
     return precalificacionData[demandId];
   }, [precalificacionData])
 
-  const enrichedDemands = useMemo(() => {
-    // console.log('Enriching demands with persona and precalificacion data:', demands, personaData, precalificacionData)
-    return demands.map(demand => {
-      const persona = personaData[demand.id!];
-      const precalificacion = precalificacionData[demand.id!];
-      const enrichedDemand = {
-        ...demand,
-        nombre: persona?.nombre || '',
-        dni: persona?.dni?.toString() || '',
-        precalificacion: precalificacion?.estado_demanda || '',
-      }
-      // console.log(`Enriched demand ${demand.id}:`, enrichedDemand)
-      return enrichedDemand
-    })
-  }, [demands, personaData, precalificacionData])
+
+
 
   const filteredDemands = useMemo(() => {
-    return enrichedDemands.filter(demand => {
-      // Prioritization order: decision > evaluacion > constatacion
-      if (demand.decision) {
-        return true; // Include if decision is true, regardless of other fields
-      } else if (demand.evaluacion) {
-        return true; // Include if evaluacion is true and decision is false
-      } else if (demand.constatacion) {
-        return true; // Include if constatacion is true and higher priorities are false
-      }
-  
-      // Exclude demands where archivado or completado are true
-      return !demand.archivado && !demand.completado;
+    return allDemands.filter((demand) => {
+      if (filterState.todos) return true;
+      if (filterState.sinAsignar) return !demand.asignado;
+      if (filterState.asignados) return demand.asignado;
+      if (filterState.archivados) return demand.archivado;
+      if (filterState.completados) return demand.completado;
+      if (filterState.sinLeer) return !leidoState[demand.id!]; // Show only "no leídos"
+      if (filterState.leidos) return leidoState[demand.id!];   // Show only "leídos"
+      return true;
     });
-  }, [enrichedDemands]);
+  }, [allDemands, filterState, leidoState]);
   
+  
+
+  const enrichedDemands = useMemo(() => {
+    return filteredDemands.map((demand) => {
+      const persona = personaData[demand.id!];
+      const precalificacion = precalificacionData[demand.id!];
+      return {
+        ...demand,
+        nombre: persona ? `${persona.nombre} ${persona.apellido}` : 'N/A', // Combine nombre and apellido
+        dni: persona?.dni?.toString() || 'N/A',
+        precalificacion: precalificacion?.estado_demanda || '',
+      };
+
+    });
+  }, [filteredDemands, personaData, precalificacionData]);
+  console.log("Enriched Demands:", enrichedDemands);
 
   const handleNuevoRegistro = useCallback(() => {
     setIsNuevoIngresoModalOpen(true)
@@ -230,11 +252,13 @@ export function MainContent({
   }, [fetchAllData])
 
   const handleDemandClick = useCallback((params: GridRowParams<TDemanda>) => {
-    setSelectedDemand(params.row)
-    setShowDemandaDetalle(true)
-    setShowActividadesRegistradas(true)
-  }, [])
-
+    const demandId = params.row.id!;
+    toggleLeido(demandId); // Toggle the "leido" state
+    setSelectedDemand(params.row);
+    setShowDemandaDetalle(true);
+    setShowActividadesRegistradas(true);
+  }, []);
+  
   const handleCloseDetail = useCallback(() => {
     setSelectedDemand(null)
     setShowDemandaDetalle(false)
@@ -279,47 +303,66 @@ export function MainContent({
   }; 
 
 
-const handlePrecalificacionChange = useCallback(
-  async (demandId: number, newValue: string) => {
-    try {
-      const currentDate = new Date().toISOString();
-      let updatedPrecalificacion;
-
-      if (precalificacionData[demandId]) {
-        // Update existing precalificacion
-        updatedPrecalificacion = {
-          estado_demanda: newValue,
-          descripcion: `Cambio de precalificación de ${precalificacionData[demandId].estado_demanda} a ${newValue}`,
-          ultima_actualizacion: currentDate,
-        };
-
-        await updateTPrecalificacionDemanda(precalificacionData[demandId].id!, updatedPrecalificacion, true, '¡Precalificación actualizada con éxito!');
-
-      } else {
-        // Create a new precalificacion
-        updatedPrecalificacion = await createTPrecalificacionDemanda({
-          demanda: demandId,
-          estado_demanda: newValue,
-          descripcion: `Nueva precalificación: ${newValue}`,
-          fecha_y_hora: currentDate,
-          ultima_actualizacion: currentDate,
-        },
-        true,
-        '¡Precalificación creada con éxito!');
+  const handlePrecalificacionChange = useCallback(
+    async (demandId: number, newValue: string) => {
+      try {
+        const currentDate = new Date().toISOString();
+        const existingPrecalificacion = precalificacionData[demandId];
+  
+        if (existingPrecalificacion && existingPrecalificacion.id) {
+          // Update existing precalificación
+          const updatedPrecalificacion = {
+            estado_demanda: newValue,
+            descripcion: `Cambio de precalificación de ${existingPrecalificacion.estado_demanda} a ${newValue}`,
+            ultima_actualizacion: currentDate,
+          };
+  
+          console.log('Updating Precalificación:', updatedPrecalificacion);
+          await updateTPrecalificacionDemanda(
+            existingPrecalificacion.id,
+            updatedPrecalificacion,
+            true,
+            '¡Precalificación actualizada con éxito!'
+          );
+  
+          // Update state with updated precalificación
+          setPrecalificacionData((prev) => ({
+            ...prev,
+            [demandId]: { ...existingPrecalificacion, ...updatedPrecalificacion },
+          }));
+        } else {
+          // Create a new precalificación
+          const newPrecalificacion = await createTPrecalificacionDemanda(
+            {
+              demanda: demandId,
+              estado_demanda: newValue,
+              descripcion: `Nueva precalificación: ${newValue}`,
+              fecha_y_hora: currentDate,
+              ultima_actualizacion: currentDate,
+            },
+            true,
+            '¡Precalificación creada con éxito!'
+          );
+  
+          // Update state with the new precalificación
+          setPrecalificacionData((prev) => ({
+            ...prev,
+            [demandId]: newPrecalificacion,
+          }));
+        }
+      } catch (error) {
+        console.error('Error updating precalificación:', error);
+  
+        // Debugging details
+        console.error('Demand ID:', demandId);
+        console.error('Precalificación Data:', precalificacionData[demandId]);
+        console.error('New Value:', newValue);
       }
-
-      // Update the state locally
-      setPrecalificacionData((prev) => ({
-        ...prev,
-        [demandId]: updatedPrecalificacion,
-      }));
-
-    } catch (error) {
-      console.error('Error updating precalificacion:', error);
-    }
-  },
-  [precalificacionData]
-);
+    },
+    [precalificacionData]
+  );
+  
+  
 
   
 
@@ -456,26 +499,71 @@ const getRowClassName = (params: GridRowParams) => {
 };
   return (
     <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 3, overflow: 'auto' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-        {
-            (user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tdemanda')) && (
-              <Button
-                variant="contained"
-                onClick={handleNuevoRegistro}
-                sx={{ bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' } }}
-              >
-                + Nuevo Registro
-              </Button>
-            )
-          }
-        </Box>
+<Box sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', mb: 3, gap: 2 }}>
+        {(user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tdemanda')) && (
+          <Button
+            variant="contained"
+            onClick={handleNuevoRegistro}
+            sx={{ bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' } }}
+          >
+            + Nuevo Registro
+          </Button>
+        )}
+        <Button
+          variant={filterState.todos ? "contained" : "outlined"}
+          onClick={() => handleFilterChange('todos')}
+        >
+          Todos
+        </Button>
+        {user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tdemandaasignado') ? (
+          <>
+            <Button
+              variant={filterState.sinAsignar ? "contained" : "outlined"}
+              onClick={() => handleFilterChange('sinAsignar')}
+            >
+              Sin Asignar
+            </Button>
+            <Button
+              variant={filterState.asignados ? "contained" : "outlined"}
+              onClick={() => handleFilterChange('asignados')}
+            >
+              Asignados
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button
+              variant={filterState.sinLeer ? "contained" : "outlined"}
+              onClick={() => handleFilterChange('sinLeer')}
+            >
+              Sin Leer
+            </Button>
+            <Button
+              variant={filterState.leidos ? "contained" : "outlined"}
+              onClick={() => handleFilterChange('leidos')}
+            >
+              Leidos
+            </Button>
+          </>
+        )}
+        <Button
+          variant={filterState.archivados ? "contained" : "outlined"}
+          onClick={() => handleFilterChange('archivados')}
+        >
+          Archivados
+        </Button>
+        <Button
+          variant={filterState.completados ? "contained" : "outlined"}
+          onClick={() => handleFilterChange('completados')}
+        >
+          Completados
+        </Button>
       </Box>
 
       <Box sx={{ height: 400, width: '100%' }}>
         {filteredDemands.length > 0 ? (
       <DataGrid
-      rows={filteredDemands}
+      rows={enrichedDemands} // Use enrichedDemands here
       columns={columns}
       onRowClick={handleDemandClick}
       disableRowSelectionOnClick
