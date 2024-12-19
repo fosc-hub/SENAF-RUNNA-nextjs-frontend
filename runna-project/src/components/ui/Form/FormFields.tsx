@@ -5,21 +5,21 @@ export const formFields = {
         name: "origen",
         label: "Origen",
         type: "select",
-        options: (apiData) => apiData.origenes.map((origen) => ({ id: origen.id, label: origen.nombre })), // Dynamic options
+        options: (apiData: { origenes: any[]; }) => apiData.origenes.map((origen) => ({ id: origen.id, label: origen.nombre })), // Dynamic options
         required: true,
       },
       sub_origen: {
         name: "sub_origen",
         label: "Sub Origen",
         type: "select",
-        options: (apiData) => apiData.subOrigenes.map((subOrigen) => ({ id: subOrigen.id, label: subOrigen.nombre })), // Dynamic options
+        options: (apiData: { subOrigenes: any[]; }) => apiData.subOrigenes.map((subOrigen) => ({ id: subOrigen.id, label: subOrigen.nombre })), // Dynamic options
         required: true,
       },
       institucion: {
         name: "institucion",
         label: "Institución",
         type: "select",
-        options: (apiData) => apiData.institucionesDemanda.map((institucion) => ({ id: institucion.id, label: institucion.nombre })), // Dynamic options
+        options: (apiData: { institucionesDemanda: any[]; }) => apiData.institucionesDemanda.map((institucion) => ({ id: institucion.id, label: institucion.nombre })), // Dynamic options
         required: true,
       },
       nro_notificacion_102: {
@@ -53,7 +53,7 @@ export const formFields = {
         name: "presuntaVulneracion.motivos",
         label: "Motivo de Intervención",
         type: "select",
-        options: (apiData) => apiData.motivosIntervencion.map((motivo) => ({ id: motivo.id, label: motivo.nombre })), // Dynamic options
+        options: (apiData: { motivosIntervencion: any[]; }) => apiData.motivosIntervencion.map((motivo) => ({ id: motivo.id, label: motivo.nombre })), // Dynamic options
         required: true,
       },
 informante: {
@@ -74,7 +74,7 @@ informante: {
         name: "usuarioExterno.id",
         label: "Informante",
         type: "select",
-        options: (apiData) => apiData.usuariosExternos.map((usuario) => ({ id: usuario.id, label: `${usuario.nombre} ${usuario.apellido}` })), // Dynamic options
+        options: (apiData: { usuariosExternos: any[]; }) => apiData.usuariosExternos.map((usuario) => ({ id: usuario.id, label: `${usuario.nombre} ${usuario.apellido}` })), // Dynamic options
         required: true,
       },
     },
@@ -107,21 +107,21 @@ informante: {
       name: "barrio",
       label: "Barrio",
       type: "select",
-      options: (apiData) => apiData.barrios.map((barrio) => ({ id: barrio.id, label: barrio.nombre })), // Dynamic options
+      options: (apiData: { barrios: any[]; }) => apiData.barrios.map((barrio) => ({ id: barrio.id, label: barrio.nombre })), // Dynamic options
       required: false,
     },
     localidad: {
       name: "localidad",
       label: "Localidad",
       type: "select",
-      options: (apiData) => apiData.localidades.map((localidad) => ({ id: localidad.id, label: localidad.nombre })), // Dynamic options
+      options: (apiData: { localidades: any[]; }) => apiData.localidades.map((localidad) => ({ id: localidad.id, label: localidad.nombre })), // Dynamic options
       required: true,
     },
     cpc: {
       name: "cpc",
       label: "CPC",
       type: "select",
-      options: (apiData) => apiData.cpcs.map((cpc) => ({ id: cpc.id, label: cpc.nombre })), // Dynamic options
+      options: (apiData: { cpcs: any[]; }) => apiData.cpcs.map((cpc) => ({ id: cpc.id, label: cpc.nombre })), // Dynamic options
       required: false,
     },
   },
