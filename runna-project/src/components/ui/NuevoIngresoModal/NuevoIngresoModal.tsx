@@ -30,6 +30,7 @@ import { toast } from 'react-toastify'
 import {createTVinculoPersonaPersona} from '../../../api/TableFunctions/vinculospersonaspersonas'
 import { renderFormFields } from '../Form/renderFormFields'
 import { formFields } from '../Form/FormFields'
+import { Step0Form } from '../Form/step0Form'
 const steps = ['Ingreso', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Condiciones de Vulnerabilidad']
 const initialTouched = {};
 
@@ -650,7 +651,7 @@ addDebugInfo(`Created ${demandaPersonaResponses.length} demanda-persona entries`
         </Stepper>
         <form onSubmit={handleSubmit}>
           <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-          {renderFormFields(formFields.step_0, formData, handleInputChange, errors, handleBlur, apiData)}
+          {activeStep === 0 && <Step0Form onSubmit={handleSubmit} apiData={apiData} />}
 
           </LocalizationProvider>
           <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
