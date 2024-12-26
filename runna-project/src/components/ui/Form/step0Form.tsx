@@ -51,12 +51,13 @@ type Step0FormData = z.infer<typeof step0Schema>;
 interface Step0FormProps {
   onSubmit: (data: Step0FormData) => void;
   apiData: any;
+  initialData?: Step0FormData;
 }
 
-export const Step0Form: React.FC<Step0FormProps> = ({ onSubmit, apiData }) => {
+export const Step0Form: React.FC<Step0FormProps> = ({ onSubmit, apiData, initialData }) => {
   const { control, handleSubmit, watch, formState: { errors } } = useForm<Step0FormData>({
     resolver: zodResolver(step0Schema),
-    defaultValues: {
+    defaultValues: initialData || {
       fecha_y_hora_ingreso: null,
       origen: '',
       sub_origen: '',

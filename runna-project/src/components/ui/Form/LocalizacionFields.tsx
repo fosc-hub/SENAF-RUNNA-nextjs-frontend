@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, TextField, FormControl, InputLabel, Select, MenuItem, FormHelperText } from '@mui/material';
+import { Grid } from '@mui/material';
 import { Control } from 'react-hook-form';
 import { FormField } from './FormField';
 
@@ -7,10 +7,15 @@ interface LocalizacionFieldsProps {
   control: Control<any>;
   prefix: string;
   apiData: any;
-  errors: Record<string, any>;
+  errors?: Record<string, any>;
 }
 
-export const LocalizacionFields: React.FC<LocalizacionFieldsProps> = ({ control, prefix, apiData, errors }) => {
+export const LocalizacionFields: React.FC<LocalizacionFieldsProps> = ({ control, prefix, apiData, errors = {} }) => {
+  const getError = (field: string) => {
+    const errorPath = `${prefix}.${field}`;
+    return errors[errorPath] ? { error: true, helperText: errors[errorPath].message } : {};
+  };
+
   return (
     <>
       <Grid item xs={6}>
@@ -20,8 +25,7 @@ export const LocalizacionFields: React.FC<LocalizacionFieldsProps> = ({ control,
           label="Calle"
           type="text"
           required
-          error={!!errors[`${prefix}.calle`]}
-          helperText={errors[`${prefix}.calle`]?.message}
+          {...getError('calle')}
         />
       </Grid>
       <Grid item xs={6}>
@@ -36,8 +40,7 @@ export const LocalizacionFields: React.FC<LocalizacionFieldsProps> = ({ control,
             { id: "PASAJE", label: "PASAJE" },
           ]}
           required
-          error={!!errors[`${prefix}.tipo_calle`]}
-          helperText={errors[`${prefix}.tipo_calle`]?.message}
+          {...getError('tipo_calle')}
         />
       </Grid>
       <Grid item xs={6}>
@@ -81,8 +84,7 @@ export const LocalizacionFields: React.FC<LocalizacionFieldsProps> = ({ control,
           multiline
           rows={2}
           required
-          error={!!errors[`${prefix}.referencia_geo`]}
-          helperText={errors[`${prefix}.referencia_geo`]?.message}
+          {...getError('referencia_geo')}
         />
       </Grid>
       <Grid item xs={6}>
@@ -104,8 +106,7 @@ export const LocalizacionFields: React.FC<LocalizacionFieldsProps> = ({ control,
           options={(apiData) => apiData.localidades.map((localidad) => ({ id: localidad.id, label: localidad.nombre }))}
           required
           apiData={apiData}
-          error={!!errors[`${prefix}.localidad`]}
-          helperText={errors[`${prefix}.localidad`]?.message}
+          {...getError('localidad')}
         />
       </Grid>
       <Grid item xs={6}>
