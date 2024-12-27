@@ -51,7 +51,7 @@ type Step0FormData = z.infer<typeof step0Schema>;
 interface Step0FormProps {
   onSubmit: (data: Step0FormData) => void;
   apiData: any;
-  initialData?: Step0FormData;
+  initialData?: Partial<Step0FormData>;
 }
 
 export const Step0Form: React.FC<Step0FormProps> = ({ onSubmit, apiData, initialData }) => {

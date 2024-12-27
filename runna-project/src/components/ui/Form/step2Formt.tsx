@@ -40,13 +40,14 @@ type AdultosConvivientesFormData = z.infer<typeof adultosConvivientesSchema>;
 interface AdultosConvivientesFormProps {
   onSubmit: (data: AdultosConvivientesFormData) => void;
   apiData: any;
+  initialData?: AdultosConvivientesFormData;
 }
 
-export const AdultosConvivientesForm: React.FC<AdultosConvivientesFormProps> = ({ onSubmit, apiData }) => {
+export const AdultosConvivientesForm: React.FC<AdultosConvivientesFormProps> = ({ onSubmit, apiData, initialData }) => {
   const { control, handleSubmit, watch, setValue } = useForm<{ adultosConvivientes: AdultosConvivientesFormData }>({
     resolver: zodResolver(z.object({ adultosConvivientes: adultosConvivientesSchema })),
     defaultValues: {
-      adultosConvivientes: [{}],
+      adultosConvivientes: initialData || [{}],
     },
   });
 

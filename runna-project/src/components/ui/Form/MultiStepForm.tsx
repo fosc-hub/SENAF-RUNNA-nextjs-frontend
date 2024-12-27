@@ -5,24 +5,23 @@ import { ChildAdolescentForm } from './step1Form';
 import { useApiData } from '../NuevoIngresoModal/useApiData';
 import { AdultosConvivientesForm } from './step2Formt';
 
+
 const steps = ['Ingreso', 'Adultos Convivientes', 'Niños y Adolescentes', 'Presunta Vulneración', 'Condiciones de Vulnerabilidad'];
 
 export const MultiStepForm: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState<{
-    ingreso?: any;
-    adultosConvivientes?: any[];
-    ninosAdolescentes?: any[];
-  }>({});
+    ingreso: any;
+    adultosConvivientes: any[];
+    ninosAdolescentes: any[];
+  }>({
+    ingreso: {},
+    adultosConvivientes: [],
+    ninosAdolescentes: [],
+  });
   const apiData = useApiData();
 
   const handleNext = () => {
-    // Save current step data without validation
-    const currentStepData = getCurrentStepData();
-    setFormData((prevData) => ({
-      ...prevData,
-      ...currentStepData,
-    }));
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
   };
 
@@ -31,46 +30,13 @@ export const MultiStepForm: React.FC = () => {
   };
 
   const handleStepSubmit = (stepData: any) => {
-    setFormData((prevData) => {
-      const newData = { ...prevData };
-      switch (activeStep) {
-        case 0:
-          newData.ingreso = stepData;
-          break;
-        case 1:
-          newData.adultosConvivientes = stepData;
-          break;
-        case 2:
-          newData.ninosAdolescentes = stepData;
-          break;
-        // Add cases for other steps as needed
-      }
-      return newData;
-    });
-    // Move to the next step after successful submission
+    setFormData((prevData) => ({
+      ...prevData,
+      [steps[activeStep].toLowerCase().replace(/ /g, '')]: stepData,
+    }));
     handleNext();
   };
 
-  const getCurrentStepData = () => {
-    // This function should return the current form data without validation
-    // You may need to implement this based on your form structure
-    switch (activeStep) {
-      case 0:
-        return { ingreso: formData.ingreso };
-      case 1:
-        return { adultosConvivientes: formData.adultosConvivientes };
-      case 2:
-        return { ninosAdolescentes: formData.ninosAdolescentes };
-      // Add cases for other steps as needed
-      default:
-        return {};
-    }
-  };
-
-  const handleFinalSubmit = () => {
-    // Here you would submit the entire formData to your backend
-    console.log('Final form data:', formData);
-  };
 
   const getStepContent = (step: number) => {
     switch (step) {
@@ -90,6 +56,11 @@ export const MultiStepForm: React.FC = () => {
       default:
         return <div>Unknown step</div>;
     }
+  };
+
+  const handleFinalSubmit = () => {
+    // Here you would submit the entire formData to your backend
+    console.log('Final form data:', formData);
   };
 
   return (
