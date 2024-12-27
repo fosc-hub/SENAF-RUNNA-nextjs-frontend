@@ -734,8 +734,8 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAll
     try {
       const updatedData = {
         ...demanda,
-        constatacion: false,
-        evaluacion: true,
+        estado_demanda: "EVALUACION", // Update estado_demanda
+
       };
   
       await updateDemand(demanda.id, updatedData);
@@ -961,7 +961,9 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAll
                       select
                       size="small"
                     >
-                      {Object.entries(tipoNames).map(([key, value]) => (
+                      {Object.entries(tipoNames).map(([key, value]
+                        
+                      ) => (
                         <MenuItem key={key} value={key}>
                           {value}
                         </MenuItem>
@@ -1065,17 +1067,20 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAll
         )}
       </CollapsibleSection>
 
-      {demanda.constatacion && !demanda.evaluacion && (
+      {
+      demanda.estado_demanda === "ASIGNADA" && (
+        
   <Box mt={3} display="flex" justifyContent="flex-end">
     <Button
       variant="contained"
       color="primary"
-      onClick={handleEnviarAEvaluacion} // Adjuntar tu función existente
+      onClick={handleEnviarAEvaluacion} // Attach your existing function here
     >
       Enviar a Proceso de Evaluación
     </Button>
   </Box>
 )}
+
 
             {/* <Dialog open={openConfirmDialog} onClose={handleCancelDelete}>
               <DialogTitle>¿Estás seguro de que deseas eliminar esta actividad?</DialogTitle>

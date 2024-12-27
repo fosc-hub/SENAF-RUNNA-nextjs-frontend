@@ -572,15 +572,16 @@ const columns: GridColDef[] = useMemo(() => {
       field: 'Evaluar',
       headerName: 'Evaluar',
       width: 160,
-      renderCell: (params: GridRenderCellParams) => (
+      renderCell: (params: GridRenderCellParams<TDemanda>) => (
         <EvaluarButton
           id={params.row.id} 
           onClick={onEvaluacionClick} 
-          disabled={!params.row.evaluacion} 
+          disabled={params.row.estado_demanda !== "EVALUACION"} // Enable only if estado_demanda is "EVALUACION"
         />
       ),
     });
   }
+  
 
   return baseColumns;
 }, [user, handlePrecalificacionChange, origins]);
