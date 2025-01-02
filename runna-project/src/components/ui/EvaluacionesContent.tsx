@@ -50,6 +50,28 @@ const dataGroups = {
       { key: "cargo", label: "Cargo/Función" },
       { key: "nombreApellido", label: "Nombre y Apellido" },
       { key: "refNumero", label: "N° de Sticker SUAC" },
+      { key: "sac", label: "N° de Sticker sac" },
+      { key: "oficio", label: "N° de Oficio Web" },
+      { key: "origen", label: "Origen" },
+      { key: "subOrigen", label: "Suborigen" },
+      { key: "Institucion", label: "Institucion" },
+      { key: "descripcion", label: "Descripcion de la situación inicial" },
+    ],
+  },
+  Domicilio: {
+    title: "Datos de Localización",
+    multiRow: true, // Allows multiple rows
+    fields: [
+      { key: "callePrincipal", label: "Calle *" },
+      { key: "tipoCalle", label: "Tipo de Calle" },
+      { key: "pisoDepto", label: "Piso/Depto" },
+      { key: "lote", label: "Lote" },
+      { key: "manzana", label: "Manzana" },
+      { key: "numeroCasa", label: "Número de Casa" },
+      { key: "referenciaGeografica", label: "Referencia Geográfica *" },
+      { key: "barrio", label: "Barrio" },
+      { key: "localidad", label: "Localidad *" },
+      { key: "cpc", label: "CPC" },
     ],
   },
   nnyaInfo: {
@@ -59,76 +81,36 @@ const dataGroups = {
       { key: "apellidoNombre", label: "Apellido y Nombre" },
       { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
       { key: "dni", label: "N° de DNI" },
+      { key: "vinculo", label: "Vinculo con NNYA principal" },
       { key: "legajoRunna", label: "N° de Legajo RUNNA" },
     ],
   },
-  mpiInfo:{
-    title: "Información MPI",
-    multiRow: false, // Single row only
-    fields: [
-      { key: "dia", label: "Dia" },
-      { key: "mes", label: "Mes" },
-      { key: "año", label: "Año" },
-    ],
-  },
-  grupoFamiliarNNyA: {
-    title: "Datos del Grupo Familiar Conviviente (NNyAs)",
+
+  AdultosInfo: {
+    title: "Datos de los Adultos",
     multiRow: true, // Allows multiple rows
     fields: [
       { key: "apellidoNombre", label: "Apellido y Nombre" },
       { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
       { key: "dni", label: "N° de DNI" },
+      { key: "vinculo", label: "Vinculo con NNYA principal" },
     ],
   },
-  grupoFamiliarProgrenitor:{
-    title: "Datos del Grupo Familiar Conviviente (Progenitores)",
-    multiRow: true, // Allows multiple rows
-    fields: [
-      { key: "apellidoNombre", label: "Apellido y Nombre" },
-      { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
-      { key: "dni", label: "N° de DNI" },
-      { key: "domicilio", label: "Domicilio Completo" },
-      { key: "telefono", label: "Teléfono" },
-    ],
-  },
-  familiaExtensaMaterna: {
-    title: "Datos de la Familia Extensa Materna",
-    multiRow: true, // Allows multiple rows
-    fields: [
-      { key: "vinculo", label: "Vínculo" },
-      { key: "apellidoNombre", label: "Apellido y Nombre" },
-      { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
-      { key: "dni", label: "N° de DNI" },
-      { key: "domicilio", label: "Domicilio Completo" },
-      { key: "telefono", label: "Teléfono" },
-    ],
-  },
-  familiaExtensaPaterna: {
-    title: "Datos de la Familia Extensa Paterna",
-    multiRow: true, // Allows multiple rows
-    fields: [
-      { key: "vinculo", label: "Vínculo" },
-      { key: "apellidoNombre", label: "Apellido y Nombre" },
-      { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
-      { key: "dni", label: "N° de DNI" },
-      { key: "domicilio", label: "Domicilio Completo" },
-      { key: "telefono", label: "Teléfono" },
-    ],
-  },
+
   motivoActuacion: {
     title: "Motivo de las Actuaciones",
     multiRow: true, // Single row only
-    fields: [{ key: "motivo", label: "Motivo" }],
+    fields: [
+      { key: "motivo", label: "Motivo" },
+      { key: "subMotivo", label: "Submotivo" },
+
+    ],
+    
   },
   antecedentes: {
     title: "Antecedentes de Actuación",
     multiRow: true, // Allows multiple rows
     fields: [{ key: "antecedentes", label: "Antecedentes" }],
-  },
-  medidasProteccion: {
-    title: "Otras Medidas de Protección",
-    multiRow: true, // Allows multiple rows
-    fields: [{ key: "medidas", label: "Medidas de Protección" }],
   },
   resenaActuado: {
     title: "Reseña de lo Actuado",
@@ -139,14 +121,13 @@ const dataGroups = {
     ],
   },
   entrevistas: {
-    title: "Entrevistas",
+    title: "Actividades",
     multiRow: true, // Allows multiple rows
     fields: [
-      { key: "propietario", label: "propietario" },
-      { key: "dia", label: "dia" },
-      { key: "mes", label: "mes" },
-      { key: "año", label: "año" },
-      { key: "conclusion", label: "Conclusion" },
+      { key: "actividad", label: "Actividad" },
+      { key: "fecha", label: "Fecha" },
+      { key: "institucion", label: "Institucion" },
+      { key: "observacion", label: "Observaciones" },
     ],
   },
 };
@@ -171,9 +152,7 @@ export function EvaluacionesContent() {
     nnyaInfo: [],
     mpiInfo: {},
     grupoFamiliarNNyA: [],
-    grupoFamiliarProgrenitor: [],
-    familiaExtensaMaterna: [],
-    familiaExtensaPaterna: [],
+
     motivoActuacion: {},
     antecedentes: [],
     medidasProteccion: [],
