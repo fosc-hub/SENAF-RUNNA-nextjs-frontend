@@ -173,7 +173,7 @@ export function EvaluacionesContent() {
     Domicilio: {},
     Actividades: {},
     nnyaInfo: [],
-    mpiInfo: {},
+    AdultosInfo: {},
     grupoFamiliarNNyA: [],
 
     motivoActuacion: {},
@@ -294,8 +294,7 @@ export function EvaluacionesContent() {
         }
 
         formData.nnyaInfo = nnyaInfoArray;
-        formData.grupoFamiliarNNyA = grupoFamiliarNNyAArray;
-        formData.grupoFamiliarProgrenitor = grupoFamiliarProgenitorArray;
+        formData.AdultosInfo = grupoFamiliarProgenitorArray;
         formData.motivoActuacion = motivosArray;
         formData.entrevistas = entrevistasArray;
 
