@@ -38,6 +38,7 @@ import { getTMotivoIntervencion, getTMotivoIntervencions } from '../../api/Table
 import { getTDemandaMotivoIntervencion, getTDemandaMotivoIntervencions } from '../../api/TableFunctions/demandasMotivoIntervencion';
 import { getTActividad, getTActividades } from '../../api/TableFunctions/actividades';
 import { el } from 'date-fns/locale';
+import { getLocalizacion } from '../../api/TableFunctions/localizacion';
 
 
 const dataGroups = {
@@ -59,7 +60,7 @@ const dataGroups = {
   },
   Domicilio: {
     title: "Datos de Localización",
-    multiRow: true, // Allows multiple rows
+    multiRow: false, // Allows multiple rows
     fields: [
       { key: "callePrincipal", label: "Calle *" },
       { key: "tipoCalle", label: "Tipo de Calle" },
@@ -168,6 +169,7 @@ export function EvaluacionesContent() {
 
   const [formData, setFormData] = useState({
     generalInfo: {},
+    Domicilio: {},
     nnyaInfo: [],
     mpiInfo: {},
     grupoFamiliarNNyA: [],
@@ -197,8 +199,29 @@ export function EvaluacionesContent() {
           cargo: user.is_superuser ? "superuser" : ( user.groups[0] || ""),
           nombreApellido: user.first_name + ' ' + user.last_name || "",
           refNumero: demandaInfo.nro_suac || "",
+          sac: demandaInfo.nro_sac || "",
+          oficio: demandaInfo.nro_oficio_web || "",
+          origen: demandaInfo.origen || "",
+          subOrigen: demandaInfo.sub_origen || "",
+          Institucion: demandaInfo.institucion || "",
         };
-
+        const localizacionInfo = await getLocalizacion(demandaInfo.localizacion);
+        console.log('Localizacion:', demandaInfo.localizacion);
+        console.log('LocalizacionInfo:', localizacionInfo);
+        formData.Domicilio = {
+          callePrincipal: localizacionInfo.calle || "",
+          tipoCalle: localizacionInfo.tipo_calle || "",
+          pisoDepto: localizacionInfo.piso_depto || "",
+          lote: localizacionInfo.lote || "",
+          manzana: localizacionInfo.mza || "",
+          numeroCasa: localizacionInfo.casa_nro || "",
+          referenciaGeografica: localizacionInfo.referencia_geo || "",
+          barrio: localizacionInfo.barrio || "",
+          localidad: localizacionInfo.localidad || "",
+          cpc: localizacionInfo.cpc || "",
+        }; 
+        console.log('General Info:', formData.generalInfo);
+        console.log('Domicilio:', formData.Domicilio);
         formData.mpiInfo = {
           dia: currentDate.split('-')[2],
           mes: currentDate.split('-')[1],
@@ -861,3 +884,5 @@ export function EvaluacionesContent() {
     </Box>
   );
 }
+
+
