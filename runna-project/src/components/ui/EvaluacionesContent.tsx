@@ -39,6 +39,7 @@ import { getTDemandaMotivoIntervencion, getTDemandaMotivoIntervencions } from '.
 import { getTActividad, getTActividades } from '../../api/TableFunctions/actividades';
 import { el } from 'date-fns/locale';
 import { getLocalizacion } from '../../api/TableFunctions/localizacion';
+import { getTActividadTipo } from '../../api/TableFunctions/actividadTipos';
 
 
 const dataGroups = {
@@ -81,11 +82,11 @@ const dataGroups = {
       { key: "descripcion", label: "Descripción de la situación inicial" },
     ],
   },
-  entrevistas: {
+  Actividades: {
     title: "Actividades",
     multiRow: true, // Allows multiple rows
     fields: [
-      { key: "actividad", label: "Actividad" },
+      { key: "actividadTipo", label: "Actividad" },
       { key: "fecha", label: "Fecha" },
       { key: "institucion", label: "Institucion" },
       { key: "observacion", label: "Observaciones" },
@@ -170,6 +171,7 @@ export function EvaluacionesContent() {
   const [formData, setFormData] = useState({
     generalInfo: {},
     Domicilio: {},
+    Actividades: {},
     nnyaInfo: [],
     mpiInfo: {},
     grupoFamiliarNNyA: [],
@@ -178,7 +180,6 @@ export function EvaluacionesContent() {
     antecedentes: [],
     medidasProteccion: [],
     resenaActuado: {},
-    entrevistas: [],
   });
 
   useEffect(() => {
@@ -227,6 +228,22 @@ export function EvaluacionesContent() {
           mes: currentDate.split('-')[1],
           año: currentDate.split('-')[0],
         };
+        const actividades = await getTActividades({ demanda: id });
+        const actividadesArray = [];
+        for (const actividad of actividades) {
+          const actividadTipo = await getTActividadTipo(actividad.tipo); // Fetch activity type name
+          actividadesArray.push({
+            actividadTipo: actividadTipo?.nombre || "N/A", // Map activity type name
+            fecha: actividad.fecha_y_hora?.split('T')[0] || "", // Format the date
+            institucion: actividad.institucion, // Replace with institution name if needed
+            observacion: actividad.descripcion || "",
+          });
+        }
+        formData.Actividades = actividadesArray;
+        
+        console.log("Final Actividades Data:", formData.Actividades);
+        
+
 
         const demandaMotivos = await getTDemandaMotivoIntervencions({ demanda: demandaId });
         const motivosArray = [];
@@ -237,17 +254,6 @@ export function EvaluacionesContent() {
           );
         }
 
-        const entrevistas = await getTActividades({ demanda: demandaId });
-        const entrevistasArray = [];
-        for (const entrevista of entrevistas) {
-          entrevistasArray.push({
-            propietario: "",
-            dia: entrevista.fecha_y_hora.split('-').pop().split('T')[0],
-            mes: entrevista.fecha_y_hora.split('-')[1],
-            año: entrevista.fecha_y_hora.split('-')[0],
-            conclusion: entrevista.descripcion || "",
-          });
-        }
 
         // Fetch all related personas
         const demandaPersonas = await getTDemandaPersonas({ demanda: demandaId });
