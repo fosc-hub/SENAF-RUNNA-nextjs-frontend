@@ -55,7 +55,6 @@ const dataGroups = {
       { key: "origen", label: "Origen" },
       { key: "subOrigen", label: "Suborigen" },
       { key: "Institucion", label: "Institucion" },
-      { key: "descripcion", label: "Descripcion de la situación inicial" },
     ],
   },
   Domicilio: {
@@ -74,50 +73,11 @@ const dataGroups = {
       { key: "cpc", label: "CPC" },
     ],
   },
-  nnyaInfo: {
-    title: "Información del NNyA",
-    multiRow: true, // Allows multiple rows
+  descripcionSituacion: {
+    title: "Descripción de la Situación Inicial",
+    multiRow: false, // Single row only
     fields: [
-      { key: "apellidoNombre", label: "Apellido y Nombre" },
-      { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
-      { key: "dni", label: "N° de DNI" },
-      { key: "vinculo", label: "Vinculo con NNYA principal" },
-      { key: "legajoRunna", label: "N° de Legajo RUNNA" },
-    ],
-  },
-
-  AdultosInfo: {
-    title: "Datos de los Adultos",
-    multiRow: true, // Allows multiple rows
-    fields: [
-      { key: "apellidoNombre", label: "Apellido y Nombre" },
-      { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
-      { key: "dni", label: "N° de DNI" },
-      { key: "vinculo", label: "Vinculo con NNYA principal" },
-    ],
-  },
-
-  motivoActuacion: {
-    title: "Motivo de las Actuaciones",
-    multiRow: true, // Single row only
-    fields: [
-      { key: "motivo", label: "Motivo" },
-      { key: "subMotivo", label: "Submotivo" },
-
-    ],
-    
-  },
-  antecedentes: {
-    title: "Antecedentes de Actuación",
-    multiRow: true, // Allows multiple rows
-    fields: [{ key: "antecedentes", label: "Antecedentes" }],
-  },
-  resenaActuado: {
-    title: "Reseña de lo Actuado",
-    multiRow: false, // Allows multiple rows
-    fields: [
-      { key: "intervencionPrincipal", label: "Intervención Principal" },
-      { key: "informacion", label: "informacion" },
+      { key: "descripcion", label: "Descripción de la situación inicial" },
     ],
   },
   entrevistas: {
@@ -130,6 +90,65 @@ const dataGroups = {
       { key: "observacion", label: "Observaciones" },
     ],
   },
+  nnyaInfo: {
+    title: "Información del NNyA",
+    multiRow: true, // Allows multiple rows
+    fields: [
+      { key: "apellidoNombre", label: "Apellido y Nombre" },
+      { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
+      { key: "dni", label: "N° de DNI" },
+      { key: "vinculo", label: "Vinculo con NNYA principal" },
+      { key: "legajoRunna", label: "N° de Legajo RUNNA" },
+    ],
+  },
+  AdultosInfo: {
+    title: "Datos de los Adultos",
+    multiRow: true, // Allows multiple rows
+    fields: [
+      { key: "apellidoNombre", label: "Apellido y Nombre" },
+      { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
+      { key: "dni", label: "N° de DNI" },
+      { key: "vinculo", label: "Vinculo con NNYA principal" },
+    ],
+  },
+  Antecedentes: {
+    title: "Antecedentes de la demanda",
+    multiRow: false, // Single row only
+    fields: [
+      { key: "IdDemanda", label: "Id de la demanda vinculada" },
+      { key: "refNumero", label: "N° de Sticker SUAC" },
+      { key: "sac", label: "N° de Sticker sac" },
+      { key: "oficio", label: "N° de Oficio Web" },
+    ],
+  },
+  Motivos: {
+    title: "Motivos de la actuacion",
+    multiRow: false, // Single row only
+    fields: [
+      { key: "Nombre y Apellido", label: "Nombre y Apellido del niño" },
+      { key: "Motivo", label: "Motivo de la actuacion" },
+      { key: "subMotivo", label: "subMotivo de la actuacion" },
+    ],
+  },
+
+
+
+
+
+  indicadores: {
+    title: "Indicadores de vulneracion de la evaluacion",
+    multiRow: true, // Allows multiple rows
+    fields: [{ key: "indicador", label: "Indicadores" }],
+  },
+  valoracionProfesional: {
+    title: "Valoración Profesional/ Conclusiones",
+    multiRow: false, // Allows multiple rows
+    fields: [
+      { key: "decisionSugerida", label: "Decision sugerida" },
+      { key: "razon", label: "Razon" },
+    ],
+  },
+
 };
 
 
