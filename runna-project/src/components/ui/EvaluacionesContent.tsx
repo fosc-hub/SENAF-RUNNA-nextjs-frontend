@@ -40,6 +40,7 @@ import { getTActividad, getTActividades } from '../../api/TableFunctions/activid
 import { el } from 'date-fns/locale';
 import { getLocalizacion } from '../../api/TableFunctions/localizacion';
 import { getTActividadTipo } from '../../api/TableFunctions/actividadTipos';
+import { getLocalizacionPersonas } from '../../api/TableFunctions/localizacionPersona';
 
 
 const dataGroups = {
@@ -92,25 +93,49 @@ const dataGroups = {
       { key: "observacion", label: "Observaciones" },
     ],
   },
-  nnyaInfo: {
-    title: "Información del NNyA",
-    multiRow: true, // Allows multiple rows
+  NNyAConvivientes: {
+    title: "NNyA Convivientes",
+    multiRow: true,
     fields: [
       { key: "apellidoNombre", label: "Apellido y Nombre" },
       { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
       { key: "dni", label: "N° de DNI" },
-      { key: "vinculo", label: "Vinculo con NNYA principal" },
+      { key: "vinculo", label: "Vinculo con NNyA principal" },
       { key: "legajoRunna", label: "N° de Legajo RUNNA" },
     ],
   },
-  AdultosInfo: {
-    title: "Datos de los Adultos",
-    multiRow: true, // Allows multiple rows
+  NNyANoConvivientes: {
+    title: "NNyA No Convivientes",
+    multiRow: true,
     fields: [
       { key: "apellidoNombre", label: "Apellido y Nombre" },
       { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
       { key: "dni", label: "N° de DNI" },
-      { key: "vinculo", label: "Vinculo con NNYA principal" },
+      { key: "vinculo", label: "Vinculo con NNyA principal" },
+      { key: "legajoRunna", label: "N° de Legajo RUNNA" },
+      { key: "domicilio", label: "Domicilio relacionado" },
+    ],
+  },
+  AdultosConvivientes: {
+    title: "Adultos Convivientes",
+    multiRow: true,
+    fields: [
+      { key: "apellidoNombre", label: "Apellido y Nombre" },
+      { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
+      { key: "dni", label: "N° de DNI" },
+      { key: "vinculo", label: "Vinculo con NNyA principal" },
+      { key: "domicilio", label: "Domicilio" },
+    ],
+  },
+  AdultosNoConvivientes: {
+    title: "Adultos No Convivientes",
+    multiRow: true,
+    fields: [
+      { key: "apellidoNombre", label: "Apellido y Nombre" },
+      { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
+      { key: "dni", label: "N° de DNI" },
+      { key: "vinculo", label: "Vinculo con NNyA principal" },
+      { key: "domicilio", label: "Domicilio relacionado" },
     ],
   },
   Antecedentes: {
@@ -174,8 +199,10 @@ export function EvaluacionesContent() {
     Actividades: {},
     nnyaInfo: [],
     AdultosInfo: {},
-    grupoFamiliarNNyA: [],
-
+    NNyAConvivientes: {},
+    NNyANoConvivientes: {},
+    AdultosConvivientes: {},
+    AdultosNoConvivientes: {},
     motivoActuacion: {},
     antecedentes: [],
     medidasProteccion: [],
@@ -193,7 +220,85 @@ export function EvaluacionesContent() {
 
         // Fetching general info
         const demandaInfo = await getDemand(demandaId); // Assume `id` is available from `useParams`
-
+        const mainLocalizacion = demandaInfo.localizacion;
+        const demandaPersonas = await getTDemandaPersonas({ demanda: demandaId });
+        const nnyaConvivientes = [];
+        const nnyaNoConvivientes = [];
+  
+        for (const personaData of demandaPersonas) {
+          const personaDetails = await getTPersona(personaData.persona);
+          if (personaDetails.nnya) {
+            // Fetch NNyA localization
+            const localizacionPersona = await getLocalizacionPersonas({ persona: personaDetails.id });
+            const hasMatchingLocalization = localizacionPersona.some(
+              (loc) => loc.localizacion === mainLocalizacion
+            );
+  
+            // Categorize based on localization match
+            if (hasMatchingLocalization) {
+              nnyaConvivientes.push({
+                apellidoNombre: `${personaDetails.nombre} ${personaDetails.apellido}`,
+                fechaNacimiento: personaDetails.fecha_nacimiento || "",
+                dni: personaDetails.dni || "",
+                vinculo: personaData.vinculo || "N/A",
+                legajoRunna: "", // Add RUNNA data if available
+                domicilio: "Principal", // Default main location
+              });
+            } else {
+              nnyaNoConvivientes.push({
+                apellidoNombre: `${personaDetails.nombre} ${personaDetails.apellido}`,
+                fechaNacimiento: personaDetails.fecha_nacimiento || "",
+                dni: personaDetails.dni || "",
+                vinculo: personaData.vinculo || "N/A",
+                legajoRunna: "", // Add RUNNA data if available
+                domicilio: localizacionPersona[0]?.localizacion || "Otro",
+              });
+            }
+          }
+        }
+        console.log('NNyA Convivientes:', nnyaConvivientes);
+        console.log('NNyA No Convivientes:', nnyaNoConvivientes);
+        formData.NNyAConvivientes = nnyaConvivientes;
+        formData.NNyANoConvivientes = nnyaNoConvivientes;
+        const adultosConvivientes = [];
+        const adultosNoConvivientes = [];
+  
+        for (const personaData of demandaPersonas) {
+          const personaDetails = await getTPersona(personaData.persona);
+  
+          if (!personaDetails.nnya) {
+            // Fetch Adult's localization
+            const localizacionPersona = await getLocalizacionPersonas({ persona: personaDetails.id });
+            const hasMatchingLocalization = localizacionPersona.some(
+              (loc) => loc.localizacion === mainLocalizacion
+            );
+  
+            // Categorize based on localization match
+            if (hasMatchingLocalization) {
+              adultosConvivientes.push({
+                apellidoNombre: `${personaDetails.nombre} ${personaDetails.apellido}`,
+                fechaNacimiento: personaDetails.fecha_nacimiento || "",
+                dni: personaDetails.dni || "",
+                vinculo: personaData.vinculo || "N/A",
+                domicilio: "Principal", // Default main location
+              });
+            } else {
+              adultosNoConvivientes.push({
+                apellidoNombre: `${personaDetails.nombre} ${personaDetails.apellido}`,
+                fechaNacimiento: personaDetails.fecha_nacimiento || "",
+                dni: personaDetails.dni || "",
+                vinculo: personaData.vinculo || "N/A",
+                domicilio: localizacionPersona[0]?.localizacion || "Otro",
+              });
+            }
+          }
+        }
+  
+        console.log("Adultos Convivientes:", adultosConvivientes);
+        console.log("Adultos No Convivientes:", adultosNoConvivientes);
+        
+        formData.AdultosConvivientes = adultosConvivientes;
+        formData.AdultosNoConvivientes = adultosNoConvivientes;
         formData.generalInfo = {
           localidad: user.localidad || "",
           fecha: currentDate || "",
@@ -223,11 +328,7 @@ export function EvaluacionesContent() {
         }; 
         console.log('General Info:', formData.generalInfo);
         console.log('Domicilio:', formData.Domicilio);
-        formData.mpiInfo = {
-          dia: currentDate.split('-')[2],
-          mes: currentDate.split('-')[1],
-          año: currentDate.split('-')[0],
-        };
+
         const actividades = await getTActividades({ demanda: id });
         const actividadesArray = [];
         for (const actividad of actividades) {
@@ -256,7 +357,6 @@ export function EvaluacionesContent() {
 
 
         // Fetch all related personas
-        const demandaPersonas = await getTDemandaPersonas({ demanda: demandaId });
 
         // Initialize arrays for categorization
         const nnyaInfoArray = [];
@@ -293,7 +393,6 @@ export function EvaluacionesContent() {
           }
         }
 
-        formData.nnyaInfo = nnyaInfoArray;
         formData.AdultosInfo = grupoFamiliarProgenitorArray;
         formData.motivoActuacion = motivosArray;
         formData.entrevistas = entrevistasArray;
