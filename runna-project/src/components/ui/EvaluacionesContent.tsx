@@ -46,6 +46,8 @@ import { RectangleHorizontal } from 'lucide-react';
 import { getTBarrios } from '../../api/TableFunctions/barrios';
 import { getTLocalidads } from '../../api/TableFunctions/localidades';
 import { getTCPCs } from '../../api/TableFunctions/cpcs';
+import { getOrigens } from '../../api/TableFunctions/origenDemanda';
+import { getSubOrigens } from '../../api/TableFunctions/subOrigen';
 
 
 const dataGroups = {
@@ -369,6 +371,19 @@ export function EvaluacionesContent() {
         
         formData.AdultosConvivientes = adultosConvivientes;
         formData.AdultosNoConvivientes = adultosNoConvivientes;
+
+        const origens = await getOrigens();
+        const subOrigens = await getSubOrigens();
+        const origenMap = origens.reduce((acc: { [key: number]: string }, origen) => {
+          acc[origen.id] = origen.nombre;
+          return acc;
+        }, {});
+  
+        const subOrigenMap = subOrigens.reduce((acc: { [key: number]: string }, subOrigen) => {
+          acc[subOrigen.id] = subOrigen.nombre;
+          return acc;
+        }, {});
+  
         formData.generalInfo = {
           localidad: user.localidad || "",
           fecha: currentDate || "",
@@ -377,8 +392,8 @@ export function EvaluacionesContent() {
           refNumero: demandaInfo.nro_suac || "",
           sac: demandaInfo.nro_sac || "",
           oficio: demandaInfo.nro_oficio_web || "",
-          origen: demandaInfo.origen || "",
-          subOrigen: demandaInfo.sub_origen || "",
+          origen: origenMap[Number(demandaInfo.origen)] || "N/A", // Get name from map
+          subOrigen: subOrigenMap[Number(demandaInfo.sub_origen)] || "N/A", // Get name from map
           Institucion: demandaInfo.institucion || "",
         };
 
