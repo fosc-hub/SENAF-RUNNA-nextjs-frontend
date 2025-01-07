@@ -62,7 +62,7 @@ export const MultiStepForm: React.FC = () => {
         {activeStep === steps.length ? (
           // If all steps completed
           <Box>
-            <p>All steps completed - you&apos;re finished</p>
+            <p style={{ color: 'black' }}>All steps completed - you&apos;re finished</p>
             <Button onClick={handleFinalSubmit}>Submit</Button>
           </Box>
         ) : (
