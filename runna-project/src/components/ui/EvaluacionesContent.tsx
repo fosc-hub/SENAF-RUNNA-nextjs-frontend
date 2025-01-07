@@ -297,38 +297,55 @@ export function EvaluacionesContent() {
         const demandaPersonas = await getTDemandaPersonas({ demanda: demandaId });
         const nnyaConvivientes = [];
         const nnyaNoConvivientes = [];
-  
+        const vinculos = await getTVinculos();
+        const vinculoMap = vinculos.reduce((acc, vinculo) => {
+          acc[vinculo.id] = vinculo.nombre;
+          return acc;
+        }, {});
+        const vinculoPersonaPersonas = await getTVinculoPersonaPersonas();
+
+
+        
         for (const personaData of demandaPersonas) {
           const personaDetails = await getTPersona(personaData.persona);
+  
           if (personaDetails.nnya) {
-            // Fetch NNyA localization
+            // Find vinculo related to the current persona
+            const vinculoData = vinculoPersonaPersonas.find(
+              (vp) =>
+                vp.persona_2 === personaDetails.id 
+            );
+  
+            // If persona_1, vinculo is N/A
+            const vinculoName = vinculoData
+              ? vinculoMap[vinculoData.vinculo] || "N/A"
+              : "N/A";
+  
             const localizacionPersona = await getLocalizacionPersonas({ persona: personaDetails.id });
             const hasMatchingLocalization = localizacionPersona.some(
               (loc) => loc.localizacion === mainLocalizacion
             );
   
-            // Categorize based on localization match
             if (hasMatchingLocalization) {
               nnyaConvivientes.push({
                 apellidoNombre: `${personaDetails.nombre} ${personaDetails.apellido}`,
                 fechaNacimiento: personaDetails.fecha_nacimiento || "",
                 dni: personaDetails.dni || "",
-                vinculo: personaData.vinculo || "N/A",
-                legajoRunna: "", // Add RUNNA data if available
-                domicilio: "Principal", // Default main location
+                vinculo: vinculoName,
+                domicilio: "Principal",
               });
             } else {
               nnyaNoConvivientes.push({
                 apellidoNombre: `${personaDetails.nombre} ${personaDetails.apellido}`,
                 fechaNacimiento: personaDetails.fecha_nacimiento || "",
                 dni: personaDetails.dni || "",
-                vinculo: personaData.vinculo || "N/A",
-                legajoRunna: "", // Add RUNNA data if available
+                vinculo: vinculoName,
                 domicilio: localizacionPersona[0]?.localizacion || "Otro",
               });
             }
           }
         }
+  
         console.log('NNyA Convivientes:', nnyaConvivientes);
         console.log('NNyA No Convivientes:', nnyaNoConvivientes);
         formData.NNyAConvivientes = nnyaConvivientes;
@@ -336,12 +353,7 @@ export function EvaluacionesContent() {
         
         const adultosConvivientes = [];
         const adultosNoConvivientes = [];
-        const vinculos = await getTVinculos();
-      const vinculoMap = vinculos.reduce((acc, vinculo) => {
-        acc[vinculo.id] = vinculo.nombre;
-        return acc;
-      }, {});
-      const vinculoPersonaPersonas = await getTVinculoPersonaPersonas();
+
 
       for (const personaData of demandaPersonas) {
         const personaDetails = await getTPersona(personaData.persona);
