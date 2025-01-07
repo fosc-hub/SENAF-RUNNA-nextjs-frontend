@@ -132,7 +132,6 @@ const dataGroups = {
       { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
       { key: "dni", label: "N° de DNI" },
       { key: "vinculo", label: "Vinculo con NNyA principal" },
-      { key: "domicilio", label: "Domicilio" },
     ],
   },
   AdultosNoConvivientes: {
@@ -377,7 +376,6 @@ export function EvaluacionesContent() {
               fechaNacimiento: personaDetails.fecha_nacimiento || "",
               dni: personaDetails.dni || "",
               vinculo: vinculoName,
-              domicilio: "Principal",
             });
           } else {
             adultosNoConvivientes.push({
