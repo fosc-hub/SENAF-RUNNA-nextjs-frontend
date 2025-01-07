@@ -48,6 +48,7 @@ import { getTLocalidads } from '../../api/TableFunctions/localidades';
 import { getTCPCs } from '../../api/TableFunctions/cpcs';
 import { getOrigens } from '../../api/TableFunctions/origenDemanda';
 import { getSubOrigens } from '../../api/TableFunctions/subOrigen';
+import { getTVinculos } from '../../api/TableFunctions/vinculos';
 
 
 const dataGroups = {
@@ -332,39 +333,51 @@ export function EvaluacionesContent() {
         console.log('NNyA No Convivientes:', nnyaNoConvivientes);
         formData.NNyAConvivientes = nnyaConvivientes;
         formData.NNyANoConvivientes = nnyaNoConvivientes;
+        
         const adultosConvivientes = [];
         const adultosNoConvivientes = [];
-  
-        for (const personaData of demandaPersonas) {
-          const personaDetails = await getTPersona(personaData.persona);
-  
-          if (!personaDetails.nnya) {
-            // Fetch Adult's localization
-            const localizacionPersona = await getLocalizacionPersonas({ persona: personaDetails.id });
-            const hasMatchingLocalization = localizacionPersona.some(
-              (loc) => loc.localizacion === mainLocalizacion
-            );
-  
-            // Categorize based on localization match
-            if (hasMatchingLocalization) {
-              adultosConvivientes.push({
-                apellidoNombre: `${personaDetails.nombre} ${personaDetails.apellido}`,
-                fechaNacimiento: personaDetails.fecha_nacimiento || "",
-                dni: personaDetails.dni || "",
-                vinculo: personaData.vinculo || "N/A",
-                domicilio: "Principal", // Default main location
-              });
-            } else {
-              adultosNoConvivientes.push({
-                apellidoNombre: `${personaDetails.nombre} ${personaDetails.apellido}`,
-                fechaNacimiento: personaDetails.fecha_nacimiento || "",
-                dni: personaDetails.dni || "",
-                vinculo: personaData.vinculo || "N/A",
-                domicilio: localizacionPersona[0]?.localizacion || "Otro",
-              });
-            }
+        const vinculos = await getTVinculos();
+      const vinculoMap = vinculos.reduce((acc, vinculo) => {
+        acc[vinculo.id] = vinculo.nombre;
+        return acc;
+      }, {});
+      const vinculoPersonaPersonas = await getTVinculoPersonaPersonas();
+
+      for (const personaData of demandaPersonas) {
+        const personaDetails = await getTPersona(personaData.persona);
+
+        if (!personaDetails.nnya) {
+          const vinculoData = vinculoPersonaPersonas.find(
+            (vp) =>
+              (vp.persona_1 === personaDetails.id || vp.persona_2 === personaDetails.id)
+          );
+
+          const vinculoName = vinculoMap[vinculoData?.vinculo] || "N/A";
+
+          const localizacionPersona = await getLocalizacionPersonas({ persona: personaDetails.id });
+          const hasMatchingLocalization = localizacionPersona.some(
+            (loc) => loc.localizacion === mainLocalizacion
+          );
+
+          if (hasMatchingLocalization) {
+            adultosConvivientes.push({
+              apellidoNombre: `${personaDetails.nombre} ${personaDetails.apellido}`,
+              fechaNacimiento: personaDetails.fecha_nacimiento || "",
+              dni: personaDetails.dni || "",
+              vinculo: vinculoName,
+              domicilio: "Principal",
+            });
+          } else {
+            adultosNoConvivientes.push({
+              apellidoNombre: `${personaDetails.nombre} ${personaDetails.apellido}`,
+              fechaNacimiento: personaDetails.fecha_nacimiento || "",
+              dni: personaDetails.dni || "",
+              vinculo: vinculoName,
+              domicilio: localizacionPersona[0]?.localizacion || "Otro",
+            });
           }
         }
+      }
   
         console.log("Adultos Convivientes:", adultosConvivientes);
         console.log("Adultos No Convivientes:", adultosNoConvivientes);
