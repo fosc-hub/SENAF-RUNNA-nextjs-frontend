@@ -24,7 +24,7 @@ import { getTDemandaPersonas } from '../../api/TableFunctions/demandaPersonas';
 import { TDemandaPersona } from '../../api/interfaces';
 import { getTSuggestDecisions } from '../../api/TableFunctions/suggestDecision';
 import { TsuggestDecision } from '../../api/interfaces';
-import { createTDecision } from '../../api/TableFunctions/decisiones';
+import { createTDecision, getTDecision, getTDecisiones } from '../../api/TableFunctions/decisiones';
 import { useRouter } from 'next/navigation';
 import EditableTable from '../common/EditableTable';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -42,6 +42,7 @@ import { getLocalizacion } from '../../api/TableFunctions/localizacion';
 import { getTActividadTipo } from '../../api/TableFunctions/actividadTipos';
 import { getLocalizacionPersonas } from '../../api/TableFunctions/localizacionPersona';
 import { getTDemandaVinculadas } from '../../api/TableFunctions/demandasVinculadas';
+import { RectangleHorizontal } from 'lucide-react';
 
 
 const dataGroups = {
@@ -197,8 +198,6 @@ export function EvaluacionesContent() {
     generalInfo: {},
     Domicilio: {},
     Actividades: {},
-    nnyaInfo: [],
-    AdultosInfo: {},
     NNyAConvivientes: {},
     NNyANoConvivientes: {},
     AdultosConvivientes: {},
@@ -206,8 +205,7 @@ export function EvaluacionesContent() {
     Antecedentes: {},
     Motivos: {},
     indicadores: {},
-    medidasProteccion: [],
-    resenaActuado: {},
+    valoracionProfesional: {},
   });
 
   useEffect(() => {
@@ -221,6 +219,18 @@ export function EvaluacionesContent() {
 
         // Fetching general info
         const demandaInfo = await getDemand(demandaId); // Assume `id` is available from `useParams`
+        
+        const decisiones = await getTDecisiones({ demanda: demandaId });
+        const decisionesArray = [];
+        formData.valoracionProfesional = {
+          decisionSugerida: decisiones[0]?.decision,
+          razon: decisiones[0]?.justificacion,
+
+        };
+        console.log('Valorc:', formData.valoracionProfesional);
+
+
+
          // Fetch evaluations linked to the current demanda
         const evaluaciones = await getTEvaluaciones({ demanda: demandaId });
         const indicadores = await getTIndicadoresValoracions();
