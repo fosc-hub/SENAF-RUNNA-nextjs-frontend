@@ -28,8 +28,6 @@ import { createLocalizacionPersona } from '../../../api/TableFunctions/localizac
 import { createTPersonaCondicionesVulnerabilidad } from '../../../api/TableFunctions/personaCondicionesVulnerabilidad'
 import { toast } from 'react-toastify'
 import {createTVinculoPersonaPersona} from '../../../api/TableFunctions/vinculospersonaspersonas'
-import { renderFormFields } from '../Form/renderFormFields'
-import { formFields } from '../Form/FormFields'
 import { MultiStepForm } from '../Form/MultiStepForm'
 const steps = ['Ingreso', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Condiciones de Vulnerabilidad']
 const initialTouched = {};
