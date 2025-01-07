@@ -792,64 +792,7 @@ export function EvaluacionesContent() {
   }, [fetchNNYAData, id]);
   return (
     <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 3, overflow: 'auto' }}>
-      <Box
-        sx={{
-          mt: 3,
-          maxHeight: 400,
-          overflowY: 'auto',
-          borderRadius: 2,
-          border: '1px solid #ddd',
-          padding: 3,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-        }}>
-        {loadingTableData ? (
-          // Show a spinner or loading message while data is being fetched
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          // Render the tabs and EditableTable when data is ready
-          <>
-            <Tabs
-              value={activeTab}
-              onChange={handleTabChange}
-              sx={{ mb: 4 }}
-              variant="scrollable"
-            >
-              {Object.entries(dataGroups).map(([key, group]) => (
-                <Tab key={key} label={group.title} value={key} />
-              ))}
-            </Tabs>
-            {Object.entries(dataGroups).map(
-              ([key, group]) =>
-                activeTab === key && (
-                  <EditableTable
-                    key={key}
-                    groupKey={key}
-                    group={group}
-                    data={formData}
-                    onDataChange={handleDataChange}
-                  />
-                )
-            )}
-          </>
-        )}
-      </Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-      <Button
-        variant="contained"
-        color="primary"
-        sx={{
-          fontSize: '1.1rem',
-          padding: '6px 50px',
-        }}
-        onClick={handleDownloadReport}
-      >
-        Generar Informe
-      </Button>
-      </Box>
+
 
       <Box
         sx={{
@@ -1110,6 +1053,64 @@ export function EvaluacionesContent() {
           ))}
         </Box>
       )}
+            <Box
+        sx={{
+          mt: 3,
+          maxHeight: 400,
+          overflowY: 'auto',
+          borderRadius: 2,
+          border: '1px solid #ddd',
+          padding: 3,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+        }}>
+        {loadingTableData ? (
+          // Show a spinner or loading message while data is being fetched
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          // Render the tabs and EditableTable when data is ready
+          <>
+            <Tabs
+              value={activeTab}
+              onChange={handleTabChange}
+              sx={{ mb: 4 }}
+              variant="scrollable"
+            >
+              {Object.entries(dataGroups).map(([key, group]) => (
+                <Tab key={key} label={group.title} value={key} />
+              ))}
+            </Tabs>
+            {Object.entries(dataGroups).map(
+              ([key, group]) =>
+                activeTab === key && (
+                  <EditableTable
+                    key={key}
+                    groupKey={key}
+                    group={group}
+                    data={formData}
+                    onDataChange={handleDataChange}
+                  />
+                )
+            )}
+          </>
+        )}
+      </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+      <Button
+        variant="contained"
+        color="primary"
+        sx={{
+          fontSize: '1.1rem',
+          padding: '6px 50px',
+        }}
+        onClick={handleDownloadReport}
+      >
+        Generar Informe
+      </Button>
+      </Box>
     </Box>
   );
 }
