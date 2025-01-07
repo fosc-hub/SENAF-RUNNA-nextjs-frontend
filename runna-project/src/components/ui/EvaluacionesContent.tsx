@@ -43,6 +43,9 @@ import { getTActividadTipo } from '../../api/TableFunctions/actividadTipos';
 import { getLocalizacionPersonas } from '../../api/TableFunctions/localizacionPersona';
 import { getTDemandaVinculadas } from '../../api/TableFunctions/demandasVinculadas';
 import { RectangleHorizontal } from 'lucide-react';
+import { getTBarrios } from '../../api/TableFunctions/barrios';
+import { getTLocalidads } from '../../api/TableFunctions/localidades';
+import { getTCPCs } from '../../api/TableFunctions/cpcs';
 
 
 const dataGroups = {
@@ -378,9 +381,28 @@ export function EvaluacionesContent() {
           subOrigen: demandaInfo.sub_origen || "",
           Institucion: demandaInfo.institucion || "",
         };
+
         const localizacionInfo = await getLocalizacion(demandaInfo.localizacion);
         console.log('Localizacion:', demandaInfo.localizacion);
         console.log('LocalizacionInfo:', localizacionInfo);
+
+        const barrios = await getTBarrios();
+        const localidades = await getTLocalidads();
+        const cpcs = await getTCPCs();
+        const barrioMap = barrios.reduce((acc: { [key: number]: string }, barrio) => {
+          acc[barrio.id] = barrio.nombre;
+          return acc;
+        }, {});
+  
+        const localidadMap = localidades.reduce((acc: { [key: number]: string }, localidad) => {
+          acc[localidad.id] = localidad.nombre;
+          return acc;
+        }, {});
+  
+        const cpcMap = cpcs.reduce((acc: { [key: number]: string }, cpc) => {
+          acc[cpc.id] = cpc.nombre;
+          return acc;
+        }, {});
         formData.Domicilio = {
           callePrincipal: localizacionInfo.calle || "",
           tipoCalle: localizacionInfo.tipo_calle || "",
@@ -389,9 +411,9 @@ export function EvaluacionesContent() {
           manzana: localizacionInfo.mza || "",
           numeroCasa: localizacionInfo.casa_nro || "",
           referenciaGeografica: localizacionInfo.referencia_geo || "",
-          barrio: localizacionInfo.barrio || "",
-          localidad: localizacionInfo.localidad || "",
-          cpc: localizacionInfo.cpc || "",
+          barrio: localizacionInfo.barrio ? barrioMap[localizacionInfo.barrio] || "N/A" : "N/A", // Get name from map
+          localidad: localidadMap[localizacionInfo.localidad] || "N/A", // Get name from map
+          cpc: localizacionInfo.cpc ? cpcMap[localizacionInfo.cpc] || "N/A" : "N/A", // Get name from map
         }; 
         console.log('General Info:', formData.generalInfo);
         console.log('Domicilio:', formData.Domicilio);
