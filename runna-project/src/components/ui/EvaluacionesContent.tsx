@@ -121,7 +121,7 @@ const dataGroups = {
       { key: "dni", label: "N° de DNI" },
       { key: "vinculo", label: "Vinculo con NNyA principal" },
       { key: "legajoRunna", label: "N° de Legajo RUNNA" },
-      { key: "domicilio", label: "Domicilio relacionado" },
+      //{ key: "domicilio", label: "Domicilio relacionado" },
     ],
   },
   AdultosConvivientes: {
@@ -142,7 +142,7 @@ const dataGroups = {
       { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
       { key: "dni", label: "N° de DNI" },
       { key: "vinculo", label: "Vinculo con NNyA principal" },
-      { key: "domicilio", label: "Domicilio relacionado" },
+      //{ key: "domicilio", label: "Domicilio relacionado" },
     ],
   },
   Antecedentes: {
