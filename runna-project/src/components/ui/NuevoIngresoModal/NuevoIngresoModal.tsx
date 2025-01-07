@@ -28,12 +28,15 @@ import { createLocalizacionPersona } from '../../../api/TableFunctions/localizac
 import { createTPersonaCondicionesVulnerabilidad } from '../../../api/TableFunctions/personaCondicionesVulnerabilidad'
 import { toast } from 'react-toastify'
 import {createTVinculoPersonaPersona} from '../../../api/TableFunctions/vinculospersonaspersonas'
+import { MultiStepForm } from '../Form/MultiStepForm'
 const steps = ['Ingreso', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración', 'Condiciones de Vulnerabilidad']
 const initialTouched = {};
 
 export default function NuevoIngresoModal({ isOpen, onClose, onSubmit }) {
 const isFieldEmpty = (value) => value === undefined || value === null || value === "";
   const [activeStep, setActiveStep] = useState(0)
+  const [errors, setErrors] = useState({});
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
   const [debugInfo, setDebugInfo] = useState([])
@@ -125,6 +128,10 @@ const isFieldEmpty = (value) => value === undefined || value === null || value =
       formData.presuntaVulneracion.categoriaMotivos.includes(submotivo.motivo)
     )
   }, [apiData.categoriaSubmotivos, formData.presuntaVulneracion.categoriaMotivos])
+  const handleBlur = (fieldName: any) => {
+    setTouched((prev) => ({ ...prev, [fieldName]: true }));
+  };
+  
   const validateStep0 = () => {
     const missingFields = [];
   
@@ -196,65 +203,6 @@ const isFieldEmpty = (value) => value === undefined || value === null || value =
   };
   
   const handleNext = () => {
-    const missingFields = [];
-  
-    switch (activeStep) {
-      case 0:
-        if (!validateStep0()) {
-          return; // Stop if validation fails
-        }
-        break;
-  
-      case 1:
-        formData.ninosAdolescentes.forEach((_, index) => {
-          if (!formData.ninosAdolescentes[index].nombre) missingFields.push(`Nombre del NNyA [${index}]`);
-          if (!formData.ninosAdolescentes[index].apellido) missingFields.push(`Apellido del NNyA [${index}]`);
-          if (!formData.ninosAdolescentes[index].situacionDni) missingFields.push(`Situación DNI del NNyA [${index}]`);
-          if (!formData.ninosAdolescentes[index].genero) missingFields.push(`Género del NNyA [${index}]`);
-          if (!formData.ninosAdolescentes[index].educacion?.curso) missingFields.push(`Curso del NNyA [${index}]`);
-          if (!formData.ninosAdolescentes[index].educacion?.nivel) missingFields.push(`Nivel educativo del NNyA [${index}]`);
-          if (!formData.ninosAdolescentes[index].educacion?.turno) missingFields.push(`Turno educativo del NNyA [${index}]`);
-          if (!formData.ninosAdolescentes[index].salud?.institucion_sanitaria) missingFields.push(`Institución sanitaria del NNyA [${index}]`);
-        });
-        break;
-  
-      case 2:
-        formData.adultosConvivientes.forEach((_, index) => {
-          if (!formData.adultosConvivientes[index].nombre) missingFields.push(`Nombre del adulto conviviente [${index}]`);
-          if (!formData.adultosConvivientes[index].apellido) missingFields.push(`Apellido del adulto conviviente [${index}]`);
-          if (!formData.adultosConvivientes[index].situacionDni) missingFields.push(`Situación DNI del adulto conviviente [${index}]`);
-          if (!formData.adultosConvivientes[index].genero) missingFields.push(`Género del adulto conviviente [${index}]`);
-          if (!formData.adultosConvivientes[index].vinculacion?.vinculo) missingFields.push(`Vínculo del adulto conviviente [${index}]`);
-        });
-        break;
-  
-        case 3:
-          formData.vulneraciones.forEach((vulneracion, index) => {
-            if (isFieldEmpty(vulneracion.categoria_motivo)) missingFields.push(`Categoría de motivo [${index}]`);
-            if (isFieldEmpty(vulneracion.categoria_submotivo)) missingFields.push(`Subcategoría [${index}]`);
-            if (isFieldEmpty(vulneracion.gravedad_vulneracion)) missingFields.push(`Gravedad de la vulneración [${index}]`);
-            if (isFieldEmpty(vulneracion.urgencia_vulneracion)) missingFields.push(`Urgencia de la vulneración [${index}]`);
-            if (isFieldEmpty(vulneracion.nnya)) missingFields.push(`NNyA relacionado con la vulneración [${index}]`);
-          });
-          break;
-        
-  
-      case 4:
-        formData.condicionesVulnerabilidad.forEach((_, index) => {
-          if (!formData.condicionesVulnerabilidad[index].persona) missingFields.push(`Persona en condiciones de vulnerabilidad [${index}]`);
-          if (!formData.condicionesVulnerabilidad[index].condicion_vulnerabilidad) missingFields.push(`Condición de vulnerabilidad [${index}]`);
-        });
-        break;
-  
-      default:
-        break;
-    }
-  
-    if (missingFields.length > 0) {
-      alert(`Por favor, complete los siguientes campos obligatorios antes de continuar:\n\n${missingFields.join("\n")}`);
-      return;
-    }
-  
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
   };
   
@@ -629,34 +577,15 @@ addDebugInfo(`Created ${demandaPersonaResponses.length} demanda-persona entries`
         overflowY: 'auto',
       }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6">Nuevo Ingreso</Typography>
+          <Typography variant="h6">Nuevo Registro</Typography>
           <X onClick={onClose} style={{ cursor: 'pointer' }} />
         </Box>
         {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
-        <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-          {steps.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
+
         <form onSubmit={handleSubmit}>
           <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-            {renderStepContent({
-              activeStep,
-              formData,
-              handleInputChange,
-              addNinoAdolescente,
-              addAdultoConviviente,
-              addVinculacion,
-              removeVinculacion,
-              addVulneraciontext,
-              addCondicionVulnerabilidad,
-              removeCondicionVulnerabilidad,
-              ...apiData,
-              addVulneracionApi: apiData.addVulneracion,
+          {activeStep === 0 && <MultiStepForm onSubmit={handleSubmit} apiData={apiData} />}
 
-            })}
           </LocalizationProvider>
           <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
             <Button onClick={handleBack} disabled={activeStep === 0}>

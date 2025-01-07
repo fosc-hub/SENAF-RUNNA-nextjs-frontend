@@ -25,6 +25,7 @@ import {
   ListItemText,
   IconButton,
   Skeleton,
+  Link,
 } from '@mui/material'
 import { DataGrid, GridRowParams, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { Search, FilterList } from '@mui/icons-material'
@@ -49,6 +50,7 @@ import { getOrigens } from '../../api/TableFunctions/origenDemanda';
 import { TOrigen } from '../../api/interfaces';
 import { Check, Archive, ImageOffIcon as PersonOffIcon, UserCheckIcon as PersonCheckIcon, ClipboardCheck, Star, FileCheck, Mail, MailOpen } from 'lucide-react'
 import { AlertCircle } from 'lucide-react'
+import router from 'next/router';
 
 
 const origenOptions = [
@@ -296,8 +298,8 @@ export function MainContent({
   
 
   const handleNuevoRegistro = useCallback(() => {
-    setIsNuevoIngresoModalOpen(true)
-  }, [])
+    router.push('/nuevo-ingreso')
+  }, [router])
 
   const handleCloseNuevoIngreso = useCallback(() => {
     setIsNuevoIngresoModalOpen(false)
@@ -601,13 +603,19 @@ const getRowClassName = (params: GridRowParams) => {
       ) : (
         <>
           {(user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tdemanda')) && (
-            <Button
-              variant="contained"
-              onClick={handleNuevoRegistro}
-              sx={{ bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' } }}
-            >
-              + Nuevo Registro
-            </Button>
+          <Link href="/nuevo-ingreso" passHref>
+          <Button
+            component="a"
+          variant="contained"
+          variant="contained"
+          onClick={handleNuevoRegistro}
+            variant="contained"
+          onClick={handleNuevoRegistro}
+            sx={{ bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' } }}
+          >
+            + Nuevo Registro
+          </Button>
+        </Link>
           )}
 
           <Button

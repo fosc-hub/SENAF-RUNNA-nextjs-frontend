@@ -27,7 +27,7 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx"
-, "src/app/test/page.tsx"  ],
+, "src/app/test/page.tsx", "src/components/ui/Form/renderFormFields.jsx"  ],
   "exclude": [
     "node_modules"
   ]
