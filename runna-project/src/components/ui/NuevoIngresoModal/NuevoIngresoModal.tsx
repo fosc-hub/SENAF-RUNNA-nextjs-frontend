@@ -579,7 +579,7 @@ addDebugInfo(`Created ${demandaPersonaResponses.length} demanda-persona entries`
         overflowY: 'auto',
       }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6">Nuevo Ingreso</Typography>
+          <Typography variant="h6">Nuevo Registro</Typography>
           <X onClick={onClose} style={{ cursor: 'pointer' }} />
         </Box>
         {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}

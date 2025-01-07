@@ -9,8 +9,6 @@ const steps = [
   'Ingreso',
   'Adultos Convivientes',
   'Niños y Adolescentes',
-  'Presunta Vulneración',
-  'Condiciones de Vulnerabilidad'
 ];
 
 export const MultiStepForm: React.FC = () => {

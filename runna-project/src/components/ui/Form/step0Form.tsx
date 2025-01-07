@@ -2,16 +2,18 @@ import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Grid, Typography, FormControlLabel, Switch } from '@mui/material';
+import { Grid, Typography, FormControlLabel, Switch, Box } from '@mui/material';
 import { FormField } from './FormField';
 import { LocalizacionFields } from './LocalizacionFields';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { es } from 'date-fns/locale';
+import { DatePicker } from '@mui/x-date-pickers';
 
 const step0Schema = z.object({
-  fecha_y_hora_ingreso: z.date().nullable(),
+  fecha_oficio_documento: z.date().nullable(),
+  fecha_ingreso_senaf: z.date().nullable(),
   origen: z.string().nonempty('Este campo es requerido'),
   sub_origen: z.string().nonempty('Este campo es requerido'),
   institucion: z.string().nonempty('Este campo es requerido'),
@@ -20,6 +22,9 @@ const step0Schema = z.object({
   nro_suac: z.string().optional(),
   nro_historia_clinica: z.string().optional(),
   nro_oficio_web: z.string().optional(),
+  ambito_vulneracion: z
+  .enum(['FAMILIAR', 'INSTITUCIONAL', 'ENTRE_PARES', 'OTRO']),
+  autos_caratulados: z.string().nonempty('Este campo es requerido'),
   descripcion: z.string().optional(),
   presuntaVulneracion: z.object({
     motivos: z.string().nonempty('Este campo es requerido'),
@@ -58,7 +63,8 @@ export const Step0Form: React.FC<Step0FormProps> = ({ onSubmit, apiData, initial
   const { control, handleSubmit, watch, formState: { errors } } = useForm<Step0FormData>({
     resolver: zodResolver(step0Schema),
     defaultValues: initialData || {
-      fecha_y_hora_ingreso: null,
+      fecha_oficio_documento: null,
+      fecha_ingreso_senaf: null,
       origen: '',
       sub_origen: '',
       institucion: '',
@@ -67,6 +73,8 @@ export const Step0Form: React.FC<Step0FormProps> = ({ onSubmit, apiData, initial
       nro_suac: '',
       nro_historia_clinica: '',
       nro_oficio_web: '',
+      ambito_vulneracion: undefined,
+      autos_caratulados: '',
       descripcion: '',
       presuntaVulneracion: { motivos: '' },
       localizacion: {
@@ -99,28 +107,56 @@ export const Step0Form: React.FC<Step0FormProps> = ({ onSubmit, apiData, initial
       <Grid container spacing={2}>
         <Grid item xs={12}>
           <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-            <Controller
-              name="fecha_y_hora_ingreso"
-              control={control}
-              render={({ field, fieldState: { error } }) => (
-                <DateTimePicker
-                  {...field}
-                  label="Fecha y hora de ingreso *"
-                  renderInput={(params) => (
-                    <FormField
-                      {...params}
-                      name="fecha_y_hora_ingreso"
-                      control={control}
-                      label="Fecha y hora de ingreso"
-                      type="text"
-                      required
-                      error={!!error}
-                      helperText={error?.message}
-                    />
-                  )}
-                />
-              )}
-            />
+          <Box>
+      <Controller
+        name="fecha_oficio_documento"
+        control={control}
+        render={({ field, fieldState: { error } }) => (
+          <DatePicker
+            {...field}
+            label="Fecha de oficio/documento *"
+            renderInput={(params) => (
+              <FormField
+                {...params}
+                name="fecha_oficio_documento"
+                control={control}
+                label="Fecha de oficio/documento"
+                type="text"
+                required
+                error={!!error}
+                helperText={error?.message}
+              />
+            )}
+          />
+        )}
+      />
+
+      {/* Add some spacing between fields */}
+      <Box mt={2} />
+
+      <Controller
+        name="fecha_ingreso_senaf"
+        control={control}
+        render={({ field, fieldState: { error } }) => (
+          <DatePicker
+            {...field}
+            label="Fecha de ingreso SENAF *"
+            renderInput={(params) => (
+              <FormField
+                {...params}
+                name="fecha_ingreso_senaf"
+                control={control}
+                label="Fecha de ingreso SENAF"
+                type="text"
+                required
+                error={!!error}
+                helperText={error?.message}
+              />
+            )}
+          />
+        )}
+      />
+    </Box>
           </LocalizationProvider>
         </Grid>
         <Grid item xs={12}>
@@ -150,8 +186,7 @@ export const Step0Form: React.FC<Step0FormProps> = ({ onSubmit, apiData, initial
             name="institucion"
             control={control}
             label="Institución"
-            type="select"
-            options={(apiData) => apiData.institucionesDemanda.map((institucion) => ({ id: institucion.id, label: institucion.nombre }))}
+            type="text"
             required
             apiData={apiData}
           />
@@ -196,6 +231,31 @@ export const Step0Form: React.FC<Step0FormProps> = ({ onSubmit, apiData, initial
             type="number"
           />
         </Grid>
+
+        <Grid item xs={12}>
+          <FormField
+            name="autos_caratulados"
+            control={control}
+            label="Autos Caratulados"
+            type="text"
+            required
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <FormField
+            name="ambito_vulneracion"
+            control={control}
+            label="Ámbito de Vulneración"
+            type="select"
+            options={[
+              { id: 'FAMILIAR', label: 'Familiar' },
+              { id: 'INSTITUCIONAL', label: 'Institucional' },
+              { id: 'ENTRE_PARES', label: 'Entre Pares' },
+              { id: 'OTRO', label: 'Otro' },
+            ]}
+            required
+          />
+        </Grid>
         <Grid item xs={12}>
           <FormField
             name="descripcion"
@@ -211,6 +271,17 @@ export const Step0Form: React.FC<Step0FormProps> = ({ onSubmit, apiData, initial
             name="presuntaVulneracion.motivos"
             control={control}
             label="Motivo de Intervención"
+            type="select"
+            options={(apiData) => apiData.motivosIntervencion.map((motivo) => ({ id: motivo.id, label: motivo.nombre }))}
+            required
+            apiData={apiData}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <FormField
+            name="presuntaVulneracion.subMotivos"
+            control={control}
+            label="subMotivo de Intervención"
             type="select"
             options={(apiData) => apiData.motivosIntervencion.map((motivo) => ({ id: motivo.id, label: motivo.nombre }))}
             required
