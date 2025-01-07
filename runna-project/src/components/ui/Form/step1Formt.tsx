@@ -22,7 +22,6 @@ const adultoConvivienteSchema = z.object({
   conviviente: z.boolean(),
   supuesto_autordv: z.boolean(),
   garantiza_proteccion: z.boolean(),
-  botonAntipanico: z.boolean(),
   observaciones: z.string().optional(),
   useDefaultLocalizacion: z.boolean(),
   localizacion: z.object({
@@ -213,21 +212,6 @@ export const AdultosConvivientesForm: React.FC<AdultosConvivientesFormProps> = (
               </Grid>
             </Grid>
 
-            <FormControlLabel
-              control={
-                <Controller
-                  name={`adultosConvivientes.${index}.botonAntipanico`}
-                  control={control}
-                  render={({ field: { onChange, value } }) => (
-                    <Switch
-                      checked={value}
-                      onChange={(e) => onChange(e.target.checked)}
-                    />
-                  )}
-                />
-              }
-              label="Botón Antipánico"
-            />
 
             <FormField
               name={`adultosConvivientes.${index}.observaciones`}
