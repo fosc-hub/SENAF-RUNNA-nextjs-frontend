@@ -19,7 +19,7 @@ import { TIndicadoresValoracion } from '../../api/interfaces';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useParams } from 'next/navigation';
-import { createTEvaluacion } from '../../api/TableFunctions/evaluaciones';
+import { createTEvaluacion, getTEvaluaciones } from '../../api/TableFunctions/evaluaciones';
 import { getTDemandaPersonas } from '../../api/TableFunctions/demandaPersonas';
 import { TDemandaPersona } from '../../api/interfaces';
 import { getTSuggestDecisions } from '../../api/TableFunctions/suggestDecision';
@@ -157,14 +157,15 @@ const dataGroups = {
     ],
   },
 
-
-
-
-
   indicadores: {
-    title: "Indicadores de vulneracion de la evaluacion",
+    title: "Indicadores de Evaluación",
     multiRow: true, // Allows multiple rows
-    fields: [{ key: "indicador", label: "Indicadores" }],
+    fields: [
+      { key: "nombre", label: "Nombre del Indicador" },
+      { key: "descripcion", label: "Descripción" },
+      { key: "peso", label: "Peso" },
+      { key: "evaluado", label: "Evaluado" }, // Show evaluation status (Yes/No/Null)
+    ],
   },
   valoracionProfesional: {
     title: "Valoración Profesional/ Conclusiones",
@@ -204,6 +205,7 @@ export function EvaluacionesContent() {
     AdultosNoConvivientes: {},
     Antecedentes: {},
     Motivos: {},
+    indicadores: {},
     medidasProteccion: [],
     resenaActuado: {},
   });
@@ -219,7 +221,32 @@ export function EvaluacionesContent() {
 
         // Fetching general info
         const demandaInfo = await getDemand(demandaId); // Assume `id` is available from `useParams`
+         // Fetch evaluations linked to the current demanda
+        const evaluaciones = await getTEvaluaciones({ demanda: demandaId });
+        const indicadores = await getTIndicadoresValoracions();
 
+        // Map evaluations to indicators
+        const indicadoresData = indicadores.map((indicador) => {
+          const evaluation = evaluaciones.find(
+            (evalItem) => evalItem.indicador === indicador.id
+          );
+        
+          return {
+            id: indicador.id,
+            nombre: indicador.nombre,
+            descripcion: indicador.descripcion,
+            peso: indicador.peso,
+            evaluado: evaluation
+              ? evaluation.si_no
+                ? "si" // Convert true to "si"
+                : "no" // Convert false to "no"
+              : "no evaluado", // Handle cases where evaluation doesn't exist
+          };
+        });
+  
+        console.log("Indicadores Data:", indicadoresData);
+
+        formData.indicadores = indicadoresData;
         const demandaVinculadas = await getTDemandaVinculadas({});
 
       const antecedentesArray = [];
