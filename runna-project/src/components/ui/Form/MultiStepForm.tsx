@@ -2,14 +2,21 @@ import React, { useState } from 'react';
 import { Box, Stepper, Step, StepLabel, Button } from '@mui/material';
 import { Step0Form } from './step0Form'
 import { ChildAdolescentForm } from './step1Form';
-import { useApiData } from '../NuevoIngresoModal/useApiData';
 import { AdultosConvivientesForm } from './step2Formt';
+import { useApiData } from '../NuevoIngresoModal/useApiData';
 
-
-const steps = ['Ingreso', 'Adultos Convivientes', 'Niños y Adolescentes', 'Presunta Vulneración', 'Condiciones de Vulnerabilidad'];
+const steps = [
+  'Ingreso',
+  'Adultos Convivientes',
+  'Niños y Adolescentes',
+  'Presunta Vulneración',
+  'Condiciones de Vulnerabilidad'
+];
 
 export const MultiStepForm: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
+
+  // Centralized form state
   const [formData, setFormData] = useState<{
     ingreso: any;
     adultosConvivientes: any[];
@@ -17,45 +24,25 @@ export const MultiStepForm: React.FC = () => {
   }>({
     ingreso: {},
     adultosConvivientes: [],
-    ninosAdolescentes: [],
+    ninosAdolescentes: []
   });
+
   const apiData = useApiData();
 
   const handleNext = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep + 1);
+    setActiveStep((prev) => prev + 1);
   };
 
   const handleBack = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep - 1);
+    setActiveStep((prev) => prev - 1);
   };
 
-  const handleStepSubmit = (stepData: any) => {
+  const handleStepSubmit = (stepKey: string, stepData: any) => {
     setFormData((prevData) => ({
       ...prevData,
-      [steps[activeStep].toLowerCase().replace(/ /g, '')]: stepData,
+      [stepKey]: stepData
     }));
     handleNext();
-  };
-
-
-  const getStepContent = (step: number) => {
-    switch (step) {
-      case 0:
-        return <Step0Form onSubmit={handleStepSubmit} apiData={apiData} initialData={formData.ingreso} />;
-      case 1:
-        return <AdultosConvivientesForm onSubmit={handleStepSubmit} apiData={apiData} initialData={formData.adultosConvivientes} />;
-      case 2:
-        return (
-          <ChildAdolescentForm 
-            onSubmit={handleStepSubmit} 
-            apiData={apiData} 
-            adultosConvivientes={formData.adultosConvivientes || []}
-            initialData={formData.ninosAdolescentes}
-          />
-        );
-      default:
-        return <div>Unknown step</div>;
-    }
   };
 
   const handleFinalSubmit = () => {
@@ -72,15 +59,66 @@ export const MultiStepForm: React.FC = () => {
           </Step>
         ))}
       </Stepper>
+
       <Box sx={{ mt: 2 }}>
         {activeStep === steps.length ? (
+          // If all steps completed
           <Box>
             <p>All steps completed - you&apos;re finished</p>
             <Button onClick={handleFinalSubmit}>Submit</Button>
           </Box>
         ) : (
-          <Box>
-            {getStepContent(activeStep)}
+          <>
+            {/* 
+              STEP 0: 
+              Keep it mounted, but hide if not active. 
+              Notice we pass 'ingreso' as stepKey to handleStepSubmit.
+            */}
+            <Box
+              sx={{
+                display: activeStep === 0 ? 'block' : 'none'
+              }}
+            >
+              <Step0Form
+                onSubmit={(data: any) => handleStepSubmit('ingreso', data)}
+                apiData={apiData}
+                initialData={formData.ingreso}
+              />
+            </Box>
+
+            {/* STEP 1 */}
+            <Box
+              sx={{
+                display: activeStep === 1 ? 'block' : 'none'
+              }}
+            >
+              <AdultosConvivientesForm
+                onSubmit={(data: any) => handleStepSubmit('adultosConvivientes', data)}
+                apiData={apiData}
+                initialData={formData.adultosConvivientes}
+              />
+            </Box>
+
+            {/* STEP 2 */}
+            <Box
+              sx={{
+                display: activeStep === 2 ? 'block' : 'none'
+              }}
+            >
+              <ChildAdolescentForm
+                onSubmit={(data: any) => handleStepSubmit('ninosAdolescentes', data)}
+                apiData={apiData}
+                adultosConvivientes={formData.adultosConvivientes || []}
+                initialData={formData.ninosAdolescentes}
+              />
+            </Box>
+
+            {/* 
+              You can continue this pattern for steps 3, 4, etc.
+              Keep each step's component mounted, but hide when not active.
+            */}
+
+            {/* Step navigation buttons */}
             <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
               <Button
                 color="inherit"
@@ -95,10 +133,9 @@ export const MultiStepForm: React.FC = () => {
                 {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
               </Button>
             </Box>
-          </Box>
+          </>
         )}
       </Box>
     </Box>
   );
 };
-
