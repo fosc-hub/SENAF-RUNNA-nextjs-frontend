@@ -31,6 +31,7 @@ const adultoConvivienteSchema = z.object({
   vinculacion: z.object({
     vinculo: z.string().nonempty('Este campo es obligatorio'),
   }),
+  condicionesVulnerabilidad: z.array(z.string()).optional(),
 });
 
 const adultosConvivientesSchema = z.array(adultoConvivienteSchema);
@@ -47,7 +48,7 @@ export const AdultosConvivientesForm: React.FC<AdultosConvivientesFormProps> = (
   const { control, handleSubmit, watch, setValue } = useForm<{ adultosConvivientes: AdultosConvivientesFormData }>({
     resolver: zodResolver(z.object({ adultosConvivientes: adultosConvivientesSchema })),
     defaultValues: {
-      adultosConvivientes: initialData || [{}],
+      adultosConvivientes: initialData || [{ condicionesVulnerabilidad: [] }],
     },
   });
 
@@ -57,7 +58,7 @@ export const AdultosConvivientesForm: React.FC<AdultosConvivientesFormProps> = (
   });
 
   const addAdultoConviviente = () => {
-    append({});
+    append({ condicionesVulnerabilidad: [] });
   };
 
   return (
@@ -275,6 +276,18 @@ export const AdultosConvivientesForm: React.FC<AdultosConvivientesFormProps> = (
                 type="select"
                 options={(apiData) => apiData.vinculoPersonas.map((vinculo) => ({ id: vinculo.id, label: vinculo.nombre }))}
                 required
+                apiData={apiData}
+              />
+            </Box>
+
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="subtitle1" gutterBottom>Condiciones de Vulnerabilidad</Typography>
+              <FormField
+                name={`adultosConvivientes.${index}.condicionesVulnerabilidad`}
+                control={control}
+                label="Condiciones de Vulnerabilidad"
+                type="multiselect"
+                options={(apiData) => apiData.condicionesVulnerabilidadAdultos.map((cv) => ({ id: cv.id, label: `${cv.nombre} - ${cv.descripcion}` }))}
                 apiData={apiData}
               />
             </Box>
