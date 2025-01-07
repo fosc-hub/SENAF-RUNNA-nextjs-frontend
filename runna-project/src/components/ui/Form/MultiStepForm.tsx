@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Box, Stepper, Step, StepLabel, Button } from '@mui/material';
 import { Step0Form } from './step0Form'
-import { ChildAdolescentForm } from './step1Form';
-import { AdultosConvivientesForm } from './step2Formt';
+import { ChildAdolescentForm } from './step2Form';
+import { AdultosConvivientesForm } from './step1Formt';
 import { useApiData } from '../NuevoIngresoModal/useApiData';
 
 const steps = [
