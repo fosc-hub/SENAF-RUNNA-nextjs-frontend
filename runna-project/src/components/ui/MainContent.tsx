@@ -17,7 +17,8 @@ import {
   InputLabel, 
   Select, 
   MenuItem,
-  SelectChangeEvent 
+  SelectChangeEvent, 
+  Link
 } from '@mui/material'
 import { DataGrid, GridRowParams, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { Search } from '@mui/icons-material'
@@ -38,6 +39,7 @@ import { useAuth } from '../../context/AuthContext';
 import axiosInstance from '../../api/utils/axiosInstance';
 import { Slide, toast } from 'react-toastify';
 import { get } from 'axios';
+import router from 'next/router';
 const origenOptions = [
   { value: 'todos', label: 'Todos' },
   { value: 'web', label: 'Web' },
@@ -234,8 +236,8 @@ export function MainContent({
   console.log("Enriched Demands:", enrichedDemands);
 
   const handleNuevoRegistro = useCallback(() => {
-    setIsNuevoIngresoModalOpen(true)
-  }, [])
+    router.push('/nuevo-ingreso')
+  }, [router])
 
   const handleCloseNuevoIngreso = useCallback(() => {
     setIsNuevoIngresoModalOpen(false)
@@ -501,13 +503,19 @@ const getRowClassName = (params: GridRowParams) => {
     <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 3, overflow: 'auto' }}>
 <Box sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', mb: 3, gap: 2 }}>
         {(user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tdemanda')) && (
-          <Button
+          <Link href="/nuevo-ingreso" passHref>
+            <Button
+              component="a"
+            variant="contained"
             variant="contained"
             onClick={handleNuevoRegistro}
-            sx={{ bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' } }}
-          >
-            + Nuevo Registro
-          </Button>
+              variant="contained"
+            onClick={handleNuevoRegistro}
+              sx={{ bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' } }}
+            >
+              + Nuevo Registro
+            </Button>
+          </Link>
         )}
         <Button
           variant={filterState.todos ? "contained" : "outlined"}
