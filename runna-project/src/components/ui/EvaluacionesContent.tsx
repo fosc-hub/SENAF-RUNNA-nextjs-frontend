@@ -19,12 +19,12 @@ import { TIndicadoresValoracion } from '../../api/interfaces';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useParams } from 'next/navigation';
-import { createTEvaluacion } from '../../api/TableFunctions/evaluaciones';
+import { createTEvaluacion, getTEvaluaciones } from '../../api/TableFunctions/evaluaciones';
 import { getTDemandaPersonas } from '../../api/TableFunctions/demandaPersonas';
 import { TDemandaPersona } from '../../api/interfaces';
 import { getTSuggestDecisions } from '../../api/TableFunctions/suggestDecision';
 import { TsuggestDecision } from '../../api/interfaces';
-import { createTDecision } from '../../api/TableFunctions/decisiones';
+import { createTDecision, getTDecision, getTDecisiones } from '../../api/TableFunctions/decisiones';
 import { useRouter } from 'next/navigation';
 import EditableTable from '../common/EditableTable';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -38,6 +38,17 @@ import { getTMotivoIntervencion, getTMotivoIntervencions } from '../../api/Table
 import { getTDemandaMotivoIntervencion, getTDemandaMotivoIntervencions } from '../../api/TableFunctions/demandasMotivoIntervencion';
 import { getTActividad, getTActividades } from '../../api/TableFunctions/actividades';
 import { el } from 'date-fns/locale';
+import { getLocalizacion } from '../../api/TableFunctions/localizacion';
+import { getTActividadTipo } from '../../api/TableFunctions/actividadTipos';
+import { getLocalizacionPersonas } from '../../api/TableFunctions/localizacionPersona';
+import { getTDemandaVinculadas } from '../../api/TableFunctions/demandasVinculadas';
+import { RectangleHorizontal } from 'lucide-react';
+import { getTBarrios } from '../../api/TableFunctions/barrios';
+import { getTLocalidads } from '../../api/TableFunctions/localidades';
+import { getTCPCs } from '../../api/TableFunctions/cpcs';
+import { getOrigens } from '../../api/TableFunctions/origenDemanda';
+import { getSubOrigens } from '../../api/TableFunctions/subOrigen';
+import { getTVinculos } from '../../api/TableFunctions/vinculos';
 
 
 const dataGroups = {
@@ -50,105 +61,127 @@ const dataGroups = {
       { key: "cargo", label: "Cargo/Función" },
       { key: "nombreApellido", label: "Nombre y Apellido" },
       { key: "refNumero", label: "N° de Sticker SUAC" },
+      { key: "sac", label: "N° de Sticker sac" },
+      { key: "oficio", label: "N° de Oficio Web" },
+      { key: "origen", label: "Origen" },
+      { key: "subOrigen", label: "Suborigen" },
+      { key: "Institucion", label: "Institucion" },
     ],
   },
-  nnyaInfo: {
-    title: "Información del NNyA",
+  Domicilio: {
+    title: "Datos de Localización",
+    multiRow: false, // Allows multiple rows
+    fields: [
+      { key: "callePrincipal", label: "Calle *" },
+      { key: "tipoCalle", label: "Tipo de Calle" },
+      { key: "pisoDepto", label: "Piso/Depto" },
+      { key: "lote", label: "Lote" },
+      { key: "manzana", label: "Manzana" },
+      { key: "numeroCasa", label: "Número de Casa" },
+      { key: "referenciaGeografica", label: "Referencia Geográfica *" },
+      { key: "barrio", label: "Barrio" },
+      { key: "localidad", label: "Localidad *" },
+      { key: "cpc", label: "CPC" },
+    ],
+  },
+  descripcionSituacion: {
+    title: "Descripción de la Situación Inicial",
+    multiRow: false, // Single row only
+    fields: [
+      { key: "descripcion", label: "Descripción de la situación inicial" },
+    ],
+  },
+  Actividades: {
+    title: "Actividades",
     multiRow: true, // Allows multiple rows
+    fields: [
+      { key: "actividadTipo", label: "Actividad" },
+      { key: "fecha", label: "Fecha" },
+      { key: "institucion", label: "Institucion" },
+      { key: "observacion", label: "Observaciones" },
+    ],
+  },
+  NNyAConvivientes: {
+    title: "NNyA Convivientes",
+    multiRow: true,
     fields: [
       { key: "apellidoNombre", label: "Apellido y Nombre" },
       { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
       { key: "dni", label: "N° de DNI" },
+      { key: "vinculo", label: "Vinculo con NNyA principal" },
       { key: "legajoRunna", label: "N° de Legajo RUNNA" },
     ],
   },
-  mpiInfo:{
-    title: "Información MPI",
-    multiRow: false, // Single row only
-    fields: [
-      { key: "dia", label: "Dia" },
-      { key: "mes", label: "Mes" },
-      { key: "año", label: "Año" },
-    ],
-  },
-  grupoFamiliarNNyA: {
-    title: "Datos del Grupo Familiar Conviviente (NNyAs)",
-    multiRow: true, // Allows multiple rows
+  NNyANoConvivientes: {
+    title: "NNyA No Convivientes",
+    multiRow: true,
     fields: [
       { key: "apellidoNombre", label: "Apellido y Nombre" },
       { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
       { key: "dni", label: "N° de DNI" },
+      { key: "vinculo", label: "Vinculo con NNyA principal" },
+      { key: "legajoRunna", label: "N° de Legajo RUNNA" },
+      //{ key: "domicilio", label: "Domicilio relacionado" },
     ],
   },
-  grupoFamiliarProgrenitor:{
-    title: "Datos del Grupo Familiar Conviviente (Progenitores)",
-    multiRow: true, // Allows multiple rows
+  AdultosConvivientes: {
+    title: "Adultos Convivientes",
+    multiRow: true,
     fields: [
       { key: "apellidoNombre", label: "Apellido y Nombre" },
       { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
       { key: "dni", label: "N° de DNI" },
-      { key: "domicilio", label: "Domicilio Completo" },
-      { key: "telefono", label: "Teléfono" },
+      { key: "vinculo", label: "Vinculo con NNyA principal" },
     ],
   },
-  familiaExtensaMaterna: {
-    title: "Datos de la Familia Extensa Materna",
-    multiRow: true, // Allows multiple rows
+  AdultosNoConvivientes: {
+    title: "Adultos No Convivientes",
+    multiRow: true,
     fields: [
-      { key: "vinculo", label: "Vínculo" },
       { key: "apellidoNombre", label: "Apellido y Nombre" },
       { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
       { key: "dni", label: "N° de DNI" },
-      { key: "domicilio", label: "Domicilio Completo" },
-      { key: "telefono", label: "Teléfono" },
+      { key: "vinculo", label: "Vinculo con NNyA principal" },
+      //{ key: "domicilio", label: "Domicilio relacionado" },
     ],
   },
-  familiaExtensaPaterna: {
-    title: "Datos de la Familia Extensa Paterna",
-    multiRow: true, // Allows multiple rows
-    fields: [
-      { key: "vinculo", label: "Vínculo" },
-      { key: "apellidoNombre", label: "Apellido y Nombre" },
-      { key: "fechaNacimiento", label: "Fecha de Nacimiento" },
-      { key: "dni", label: "N° de DNI" },
-      { key: "domicilio", label: "Domicilio Completo" },
-      { key: "telefono", label: "Teléfono" },
-    ],
-  },
-  motivoActuacion: {
-    title: "Motivo de las Actuaciones",
+  Antecedentes: {
+    title: "Antecedentes de la demanda",
     multiRow: true, // Single row only
-    fields: [{ key: "motivo", label: "Motivo" }],
+    fields: [
+      { key: "IdDemanda", label: "Id de la demanda vinculada" },
+      { key: "refNumero", label: "N° de Sticker SUAC" },
+      { key: "sac", label: "N° de Sticker sac" },
+      { key: "oficio", label: "N° de Oficio Web" },
+    ],
   },
-  antecedentes: {
-    title: "Antecedentes de Actuación",
+  Motivos: {
+    title: "Motivos de la actuacion",
+    multiRow: true, // Single row only
+    fields: [
+      { key: "motivo", label: "Motivo de la actuacion" },
+    ],
+  },
+
+  indicadores: {
+    title: "Indicadores de Evaluación",
     multiRow: true, // Allows multiple rows
-    fields: [{ key: "antecedentes", label: "Antecedentes" }],
+    fields: [
+      { key: "nombre", label: "Nombre del Indicador" },
+      { key: "descripcion", label: "Descripción" },
+      { key: "peso", label: "Peso" },
+      { key: "evaluado", label: "Evaluado" }, // Show evaluation status (Yes/No/Null)
+    ],
   },
-  medidasProteccion: {
-    title: "Otras Medidas de Protección",
-    multiRow: true, // Allows multiple rows
-    fields: [{ key: "medidas", label: "Medidas de Protección" }],
-  },
-  resenaActuado: {
-    title: "Reseña de lo Actuado",
+  valoracionProfesional: {
+    title: "Valoración Profesional/ Conclusiones",
     multiRow: false, // Allows multiple rows
     fields: [
-      { key: "intervencionPrincipal", label: "Intervención Principal" },
-      { key: "informacion", label: "informacion" },
+      { key: "decisionSugerida", label: "Decision sugerida" },
+      { key: "razon", label: "Razon" },
     ],
   },
-  entrevistas: {
-    title: "Entrevistas",
-    multiRow: true, // Allows multiple rows
-    fields: [
-      { key: "propietario", label: "propietario" },
-      { key: "dia", label: "dia" },
-      { key: "mes", label: "mes" },
-      { key: "año", label: "año" },
-      { key: "conclusion", label: "Conclusion" },
-    ],
-  },
+
 };
 
 
@@ -168,17 +201,16 @@ export function EvaluacionesContent() {
 
   const [formData, setFormData] = useState({
     generalInfo: {},
-    nnyaInfo: [],
-    mpiInfo: {},
-    grupoFamiliarNNyA: [],
-    grupoFamiliarProgrenitor: [],
-    familiaExtensaMaterna: [],
-    familiaExtensaPaterna: [],
-    motivoActuacion: {},
-    antecedentes: [],
-    medidasProteccion: [],
-    resenaActuado: {},
-    entrevistas: [],
+    Domicilio: {},
+    Actividades: {},
+    NNyAConvivientes: {},
+    NNyANoConvivientes: {},
+    AdultosConvivientes: {},
+    AdultosNoConvivientes: {},
+    Antecedentes: {},
+    Motivos: {},
+    indicadores: {},
+    valoracionProfesional: {},
   });
 
   useEffect(() => {
@@ -192,20 +224,254 @@ export function EvaluacionesContent() {
 
         // Fetching general info
         const demandaInfo = await getDemand(demandaId); // Assume `id` is available from `useParams`
+        
+        const decisiones = await getTDecisiones({ demanda: demandaId });
+        const decisionesArray = [];
+        formData.valoracionProfesional = {
+          decisionSugerida: decisiones[0]?.decision,
+          razon: decisiones[0]?.justificacion,
 
+        };
+        console.log('Valorc:', formData.valoracionProfesional);
+
+
+
+         // Fetch evaluations linked to the current demanda
+        const evaluaciones = await getTEvaluaciones({ demanda: demandaId });
+        const indicadores = await getTIndicadoresValoracions();
+
+        // Map evaluations to indicators
+        const indicadoresData = indicadores.map((indicador) => {
+          const evaluation = evaluaciones.find(
+            (evalItem) => evalItem.indicador === indicador.id
+          );
+        
+          return {
+            id: indicador.id,
+            nombre: indicador.nombre,
+            descripcion: indicador.descripcion,
+            peso: indicador.peso,
+            evaluado: evaluation
+              ? evaluation.si_no
+                ? "si" // Convert true to "si"
+                : "no" // Convert false to "no"
+              : "no evaluado", // Handle cases where evaluation doesn't exist
+          };
+        });
+  
+        console.log("Indicadores Data:", indicadoresData);
+
+        formData.indicadores = indicadoresData;
+        const demandaVinculadas = await getTDemandaVinculadas({});
+
+      const antecedentesArray = [];
+
+      for (const vinculada of demandaVinculadas) {
+        let linkedDemandaId;
+
+        if (vinculada.demanda_1 === demandaId) {
+          linkedDemandaId = vinculada.demanda_2;
+        } else if (vinculada.demanda_2 === demandaId) {
+          linkedDemandaId = vinculada.demanda_1;
+        }
+
+        // Fetch details of the related demand if it exists
+        if (linkedDemandaId) {
+          const linkedDemandaInfo = await getDemand(linkedDemandaId);
+
+          antecedentesArray.push({
+            IdDemanda: vinculada.id,
+            refNumero: linkedDemandaInfo.nro_suac || "N/A",
+            sac: linkedDemandaInfo.nro_sac || "N/A",
+            oficio: linkedDemandaInfo.nro_oficio_web || "N/A",
+          });
+        }
+      }
+
+      console.log("Antecedentes Data:", antecedentesArray);
+
+      formData.Antecedentes = antecedentesArray;
+
+        const mainLocalizacion = demandaInfo.localizacion;
+        const demandaPersonas = await getTDemandaPersonas({ demanda: demandaId });
+        const nnyaConvivientes = [];
+        const nnyaNoConvivientes = [];
+        const vinculos = await getTVinculos();
+        const vinculoMap = vinculos.reduce((acc, vinculo) => {
+          acc[vinculo.id] = vinculo.nombre;
+          return acc;
+        }, {});
+        const vinculoPersonaPersonas = await getTVinculoPersonaPersonas();
+
+
+        
+        for (const personaData of demandaPersonas) {
+          const personaDetails = await getTPersona(personaData.persona);
+  
+          if (personaDetails.nnya) {
+            // Find vinculo related to the current persona
+            const vinculoData = vinculoPersonaPersonas.find(
+              (vp) =>
+                vp.persona_2 === personaDetails.id 
+            );
+  
+            // If persona_1, vinculo is N/A
+            const vinculoName = vinculoData
+              ? vinculoMap[vinculoData.vinculo] || "N/A"
+              : "N/A";
+  
+            const localizacionPersona = await getLocalizacionPersonas({ persona: personaDetails.id });
+            const hasMatchingLocalization = localizacionPersona.some(
+              (loc) => loc.localizacion === mainLocalizacion
+            );
+  
+            if (hasMatchingLocalization) {
+              nnyaConvivientes.push({
+                apellidoNombre: `${personaDetails.nombre} ${personaDetails.apellido}`,
+                fechaNacimiento: personaDetails.fecha_nacimiento || "",
+                dni: personaDetails.dni || "",
+                vinculo: vinculoName,
+                domicilio: "Principal",
+              });
+            } else {
+              nnyaNoConvivientes.push({
+                apellidoNombre: `${personaDetails.nombre} ${personaDetails.apellido}`,
+                fechaNacimiento: personaDetails.fecha_nacimiento || "",
+                dni: personaDetails.dni || "",
+                vinculo: vinculoName,
+                domicilio: localizacionPersona[0]?.localizacion || "Otro",
+              });
+            }
+          }
+        }
+  
+        console.log('NNyA Convivientes:', nnyaConvivientes);
+        console.log('NNyA No Convivientes:', nnyaNoConvivientes);
+        formData.NNyAConvivientes = nnyaConvivientes;
+        formData.NNyANoConvivientes = nnyaNoConvivientes;
+        
+        const adultosConvivientes = [];
+        const adultosNoConvivientes = [];
+
+
+      for (const personaData of demandaPersonas) {
+        const personaDetails = await getTPersona(personaData.persona);
+
+        if (!personaDetails.nnya) {
+          const vinculoData = vinculoPersonaPersonas.find(
+            (vp) =>
+              (vp.persona_1 === personaDetails.id || vp.persona_2 === personaDetails.id)
+          );
+
+          const vinculoName = vinculoMap[vinculoData?.vinculo] || "N/A";
+
+          const localizacionPersona = await getLocalizacionPersonas({ persona: personaDetails.id });
+          const hasMatchingLocalization = localizacionPersona.some(
+            (loc) => loc.localizacion === mainLocalizacion
+          );
+
+          if (hasMatchingLocalization) {
+            adultosConvivientes.push({
+              apellidoNombre: `${personaDetails.nombre} ${personaDetails.apellido}`,
+              fechaNacimiento: personaDetails.fecha_nacimiento || "",
+              dni: personaDetails.dni || "",
+              vinculo: vinculoName,
+            });
+          } else {
+            adultosNoConvivientes.push({
+              apellidoNombre: `${personaDetails.nombre} ${personaDetails.apellido}`,
+              fechaNacimiento: personaDetails.fecha_nacimiento || "",
+              dni: personaDetails.dni || "",
+              vinculo: vinculoName,
+              domicilio: localizacionPersona[0]?.localizacion || "Otro",
+            });
+          }
+        }
+      }
+  
+        console.log("Adultos Convivientes:", adultosConvivientes);
+        console.log("Adultos No Convivientes:", adultosNoConvivientes);
+        
+        formData.AdultosConvivientes = adultosConvivientes;
+        formData.AdultosNoConvivientes = adultosNoConvivientes;
+
+        const origens = await getOrigens();
+        const subOrigens = await getSubOrigens();
+        const origenMap = origens.reduce((acc: { [key: number]: string }, origen) => {
+          acc[origen.id] = origen.nombre;
+          return acc;
+        }, {});
+  
+        const subOrigenMap = subOrigens.reduce((acc: { [key: number]: string }, subOrigen) => {
+          acc[subOrigen.id] = subOrigen.nombre;
+          return acc;
+        }, {});
+  
         formData.generalInfo = {
           localidad: user.localidad || "",
           fecha: currentDate || "",
           cargo: user.is_superuser ? "superuser" : ( user.groups[0] || ""),
           nombreApellido: user.first_name + ' ' + user.last_name || "",
           refNumero: demandaInfo.nro_suac || "",
+          sac: demandaInfo.nro_sac || "",
+          oficio: demandaInfo.nro_oficio_web || "",
+          origen: origenMap[Number(demandaInfo.origen)] || "N/A", // Get name from map
+          subOrigen: subOrigenMap[Number(demandaInfo.sub_origen)] || "N/A", // Get name from map
+          Institucion: demandaInfo.institucion || "",
         };
 
-        formData.mpiInfo = {
-          dia: currentDate.split('-')[2],
-          mes: currentDate.split('-')[1],
-          año: currentDate.split('-')[0],
-        };
+        const localizacionInfo = await getLocalizacion(demandaInfo.localizacion);
+        console.log('Localizacion:', demandaInfo.localizacion);
+        console.log('LocalizacionInfo:', localizacionInfo);
+
+        const barrios = await getTBarrios();
+        const localidades = await getTLocalidads();
+        const cpcs = await getTCPCs();
+        const barrioMap = barrios.reduce((acc: { [key: number]: string }, barrio) => {
+          acc[barrio.id] = barrio.nombre;
+          return acc;
+        }, {});
+  
+        const localidadMap = localidades.reduce((acc: { [key: number]: string }, localidad) => {
+          acc[localidad.id] = localidad.nombre;
+          return acc;
+        }, {});
+  
+        const cpcMap = cpcs.reduce((acc: { [key: number]: string }, cpc) => {
+          acc[cpc.id] = cpc.nombre;
+          return acc;
+        }, {});
+        formData.Domicilio = {
+          callePrincipal: localizacionInfo.calle || "",
+          tipoCalle: localizacionInfo.tipo_calle || "",
+          pisoDepto: localizacionInfo.piso_depto || "",
+          lote: localizacionInfo.lote || "",
+          manzana: localizacionInfo.mza || "",
+          numeroCasa: localizacionInfo.casa_nro || "",
+          referenciaGeografica: localizacionInfo.referencia_geo || "",
+          barrio: localizacionInfo.barrio ? barrioMap[localizacionInfo.barrio] || "N/A" : "N/A", // Get name from map
+          localidad: localidadMap[localizacionInfo.localidad] || "N/A", // Get name from map
+          cpc: localizacionInfo.cpc ? cpcMap[localizacionInfo.cpc] || "N/A" : "N/A", // Get name from map
+        }; 
+        console.log('General Info:', formData.generalInfo);
+        console.log('Domicilio:', formData.Domicilio);
+
+        const actividades = await getTActividades({ demanda: id });
+        const actividadesArray = [];
+        for (const actividad of actividades) {
+          const actividadTipo = await getTActividadTipo(actividad.tipo); // Fetch activity type name
+          actividadesArray.push({
+            actividadTipo: actividadTipo?.nombre || "N/A", // Map activity type name
+            fecha: actividad.fecha_y_hora?.split('T')[0] || "", // Format the date
+            institucion: actividad.institucion, // Replace with institution name if needed
+            observacion: actividad.descripcion || "",
+          });
+        }
+        formData.Actividades = actividadesArray;
+        
+        console.log("Final Actividades Data:", formData.Actividades);
+        
+
 
         const demandaMotivos = await getTDemandaMotivoIntervencions({ demanda: demandaId });
         const motivosArray = [];
@@ -216,20 +482,8 @@ export function EvaluacionesContent() {
           );
         }
 
-        const entrevistas = await getTActividades({ demanda: demandaId });
-        const entrevistasArray = [];
-        for (const entrevista of entrevistas) {
-          entrevistasArray.push({
-            propietario: "",
-            dia: entrevista.fecha_y_hora.split('-').pop().split('T')[0],
-            mes: entrevista.fecha_y_hora.split('-')[1],
-            año: entrevista.fecha_y_hora.split('-')[0],
-            conclusion: entrevista.descripcion || "",
-          });
-        }
 
         // Fetch all related personas
-        const demandaPersonas = await getTDemandaPersonas({ demanda: demandaId });
 
         // Initialize arrays for categorization
         const nnyaInfoArray = [];
@@ -266,11 +520,7 @@ export function EvaluacionesContent() {
           }
         }
 
-        formData.nnyaInfo = nnyaInfoArray;
-        formData.grupoFamiliarNNyA = grupoFamiliarNNyAArray;
-        formData.grupoFamiliarProgrenitor = grupoFamiliarProgenitorArray;
-        formData.motivoActuacion = motivosArray;
-        formData.entrevistas = entrevistasArray;
+        formData.Motivos = motivosArray;
 
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -295,7 +545,8 @@ export function EvaluacionesContent() {
   const handleDownloadReport = async () => {
     try {
       // Send formData to the webhook
-      const response = await fetch("https://hook.us1.make.com/4i15ke3vtipnd9m6na287lm9q5nuagx9", {
+      //      const response = await fetch("https://hook.us1.make.com/4i15ke3vtipnd9m6na287lm9q5nuagx9", {
+      const response = await fetch("https://hook.us1.make.com/930ptf2mcpxfsr1npugjb7shy3a3t71b", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData), // Form data to be sent
@@ -542,64 +793,7 @@ export function EvaluacionesContent() {
   }, [fetchNNYAData, id]);
   return (
     <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 3, overflow: 'auto' }}>
-      <Box
-        sx={{
-          mt: 3,
-          maxHeight: 400,
-          overflowY: 'auto',
-          borderRadius: 2,
-          border: '1px solid #ddd',
-          padding: 3,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-        }}>
-        {loadingTableData ? (
-          // Show a spinner or loading message while data is being fetched
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          // Render the tabs and EditableTable when data is ready
-          <>
-            <Tabs
-              value={activeTab}
-              onChange={handleTabChange}
-              sx={{ mb: 4 }}
-              variant="scrollable"
-            >
-              {Object.entries(dataGroups).map(([key, group]) => (
-                <Tab key={key} label={group.title} value={key} />
-              ))}
-            </Tabs>
-            {Object.entries(dataGroups).map(
-              ([key, group]) =>
-                activeTab === key && (
-                  <EditableTable
-                    key={key}
-                    groupKey={key}
-                    group={group}
-                    data={formData}
-                    onDataChange={handleDataChange}
-                  />
-                )
-            )}
-          </>
-        )}
-      </Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-      <Button
-        variant="contained"
-        color="primary"
-        sx={{
-          fontSize: '1.1rem',
-          padding: '6px 50px',
-        }}
-        onClick={handleDownloadReport}
-      >
-        Generar Informe
-      </Button>
-      </Box>
+
 
       <Box
         sx={{
@@ -860,6 +1054,66 @@ export function EvaluacionesContent() {
           ))}
         </Box>
       )}
+            <Box
+        sx={{
+          mt: 3,
+          maxHeight: 400,
+          overflowY: 'auto',
+          borderRadius: 2,
+          border: '1px solid #ddd',
+          padding: 3,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+        }}>
+        {loadingTableData ? (
+          // Show a spinner or loading message while data is being fetched
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          // Render the tabs and EditableTable when data is ready
+          <>
+            <Tabs
+              value={activeTab}
+              onChange={handleTabChange}
+              sx={{ mb: 4 }}
+              variant="scrollable"
+            >
+              {Object.entries(dataGroups).map(([key, group]) => (
+                <Tab key={key} label={group.title} value={key} />
+              ))}
+            </Tabs>
+            {Object.entries(dataGroups).map(
+              ([key, group]) =>
+                activeTab === key && (
+                  <EditableTable
+                    key={key}
+                    groupKey={key}
+                    group={group}
+                    data={formData}
+                    onDataChange={handleDataChange}
+                  />
+                )
+            )}
+          </>
+        )}
+      </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+      <Button
+        variant="contained"
+        color="primary"
+        sx={{
+          fontSize: '1.1rem',
+          padding: '6px 50px',
+        }}
+        onClick={handleDownloadReport}
+      >
+        Generar Informe
+      </Button>
+      </Box>
     </Box>
   );
 }
+
+
