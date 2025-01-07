@@ -151,11 +151,9 @@ const dataGroups = {
   },
   Motivos: {
     title: "Motivos de la actuacion",
-    multiRow: false, // Single row only
+    multiRow: true, // Single row only
     fields: [
-      { key: "Nombre y Apellido", label: "Nombre y Apellido del niño" },
-      { key: "Motivo", label: "Motivo de la actuacion" },
-      { key: "subMotivo", label: "subMotivo de la actuacion" },
+      { key: "motivo", label: "Motivo de la actuacion" },
     ],
   },
 
@@ -205,7 +203,7 @@ export function EvaluacionesContent() {
     AdultosConvivientes: {},
     AdultosNoConvivientes: {},
     Antecedentes: {},
-    motivoActuacion: {},
+    Motivos: {},
     medidasProteccion: [],
     resenaActuado: {},
   });
@@ -425,9 +423,7 @@ export function EvaluacionesContent() {
           }
         }
 
-        formData.AdultosInfo = grupoFamiliarProgenitorArray;
-        formData.motivoActuacion = motivosArray;
-        formData.entrevistas = entrevistasArray;
+        formData.Motivos = motivosArray;
 
       } catch (error) {
         console.error('Error fetching data:', error);
