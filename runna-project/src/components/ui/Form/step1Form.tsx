@@ -2,7 +2,7 @@ import React from 'react';
 import { useFieldArray, useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Box, Typography, Grid, FormControlLabel, Switch, Button, Checkbox, Radio, RadioGroup, FormControl, InputLabel, Select, MenuItem, FormHelperText } from '@mui/material';
+import { Box, Typography, Grid, FormControlLabel, Switch, Button, Checkbox } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { FormField } from './FormField';
 import { LocalizacionFields } from './LocalizacionFields';
@@ -22,9 +22,7 @@ const vulneracionSchema = z.object({
 });
 
 const condicionVulnerabilidadSchema = z.object({
-  persona: z.string().nonempty('Este campo es obligatorio'),
-  condicion_vulnerabilidad: z.string().nonempty('Este campo es obligatorio'),
-  si_no: z.boolean(),
+  condicion_vulnerabilidad: z.array(z.string()).nonempty('Seleccione al menos una condición de vulnerabilidad'),
 });
 
 const childAdolescentSchema = z.object({
@@ -64,7 +62,7 @@ const childAdolescentSchema = z.object({
     observaciones: z.string().optional(),
   }),
   vulneraciones: z.array(vulneracionSchema),
-  condicionesVulnerabilidad: z.array(condicionVulnerabilidadSchema),
+  condicionesVulnerabilidad: condicionVulnerabilidadSchema,
 });
 
 const childrenAdolescentsSchema = z.array(childAdolescentSchema);
@@ -79,10 +77,10 @@ interface ChildAdolescentFormProps {
 }
 
 export const ChildAdolescentForm: React.FC<ChildAdolescentFormProps> = ({ onSubmit, apiData, adultosConvivientes = [], initialData }) => {
-  const { control, handleSubmit, watch, formState: { errors, touched } } = useForm<{ ninosAdolescentes: ChildAdolescentFormData }>({
+  const { control, handleSubmit, watch, formState: { errors } } = useForm<{ ninosAdolescentes: ChildAdolescentFormData }>({
     resolver: zodResolver(z.object({ ninosAdolescentes: childrenAdolescentsSchema })),
     defaultValues: {
-      ninosAdolescentes: initialData || [{ vulneraciones: [{}], condicionesVulnerabilidad: [{}] }],
+      ninosAdolescentes: initialData || [{ vulneraciones: [{}], condicionesVulnerabilidad: { condicion_vulnerabilidad: [] } }],
     },
   });
 
@@ -92,7 +90,7 @@ export const ChildAdolescentForm: React.FC<ChildAdolescentFormProps> = ({ onSubm
   });
 
   const addNinoAdolescente = () => {
-    append({ vulneraciones: [{}], condicionesVulnerabilidad: [{}] });
+    append({ vulneraciones: [{}], condicionesVulnerabilidad: { condicion_vulnerabilidad: [] } });
   };
 
   return (
@@ -312,6 +310,17 @@ export const ChildAdolescentForm: React.FC<ChildAdolescentFormProps> = ({ onSubm
               rows={2}
             />
 
+            <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Condiciones de Vulnerabilidad</Typography>
+            <FormField
+              name={`ninosAdolescentes.${index}.condicionesVulnerabilidad.condicion_vulnerabilidad`}
+              control={control}
+              label="Condiciones de Vulnerabilidad"
+              type="multiselect"
+              options={(apiData) => apiData.condicionesVulnerabilidadNNyA.map((cv) => ({ id: cv.id, label: `${cv.nombre} - ${cv.descripcion}` }))}
+              required
+              apiData={apiData}
+            />
+
             <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Presunta Vulneración de Derechos informada</Typography>
             <Controller
               name={`ninosAdolescentes.${index}.vulneraciones`}
@@ -321,7 +330,7 @@ export const ChildAdolescentForm: React.FC<ChildAdolescentFormProps> = ({ onSubm
                   {field.value.map((vulneracion, vulIndex) => (
                     <Box key={vulIndex} sx={{ mb: 2, p: 2, border: '1px solid #ccc', borderRadius: '4px' }}>
                       <Typography variant="subtitle1" gutterBottom>Vulneración {vulIndex + 1}</Typography>
-                      
+
                       <FormField
                         name={`ninosAdolescentes.${index}.vulneraciones.${vulIndex}.categoria_motivo`}
                         control={control}
@@ -414,124 +423,6 @@ export const ChildAdolescentForm: React.FC<ChildAdolescentFormProps> = ({ onSubm
                     sx={{ mt: 1, color: 'primary.main' }}
                   >
                     Añadir otra vulneración
-                  </Button>
-                </>
-              )}
-            />
-
-            <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Condiciones de Vulnerabilidad</Typography>
-            <Controller
-              name={`ninosAdolescentes.${index}.condicionesVulnerabilidad`}
-              control={control}
-              render={({ field }) => (
-                <>
-                  {field.value.map((condicion, condIndex) => (
-                    <Box key={condIndex} sx={{ mb: 2, p: 2, border: '1px solid #ccc', borderRadius: '4px' }}>
-                      <Typography variant="subtitle1" gutterBottom>Condición de Vulnerabilidad {condIndex + 1}</Typography>
-
-                      <FormControl
-                        fullWidth
-                        margin="normal"
-                      >
-                        <InputLabel>
-                          Persona <span style={{ color: "red" }}>*</span>
-                        </InputLabel>
-                        <Controller
-                          name={`ninosAdolescentes.${index}.condicionesVulnerabilidad.${condIndex}.persona`}
-                          control={control}
-                          render={({ field }) => (
-                            <Select
-                              {...field}
-                              label="Persona"
-                            >
-                              <MenuItem value="">
-                                <em>Seleccione una opción</em>
-                              </MenuItem>
-                              {fields.map((nino, ninoIndex) => (
-                                <MenuItem key={`nino-${ninoIndex}`} value={`nino-${ninoIndex}`}>
-                                  {watch(`ninosAdolescentes.${ninoIndex}.nombre`)} {watch(`ninosAdolescentes.${ninoIndex}.apellido`)} (NNyA)
-                                </MenuItem>
-                              ))}
-                              {adultosConvivientes.map((adulto, adultoIndex) => (
-                                <MenuItem key={`adulto-${adultoIndex}`} value={`adulto-${adultoIndex}`}>
-                                  {adulto.nombre} {adulto.apellido} (Adulto)
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          )}
-                        />
-                      </FormControl>
-
-                      <FormControl
-                        fullWidth
-                        margin="normal"
-                      >
-                        <InputLabel>
-                          Condición de Vulnerabilidad <span style={{ color: "red" }}>*</span>
-                        </InputLabel>
-                        <Controller
-                          name={`ninosAdolescentes.${index}.condicionesVulnerabilidad.${condIndex}.condicion_vulnerabilidad`}
-                          control={control}
-                          render={({ field }) => (
-                            <Select
-                              {...field}
-                              label="Condición de Vulnerabilidad"
-                            >
-                              <MenuItem value="">
-                                <em>Seleccione una opción</em>
-                              </MenuItem>
-                              {(condicion.persona && condicion.persona.startsWith('adulto-')
-                                ? apiData.condicionesVulnerabilidadAdultos
-                                : apiData.condicionesVulnerabilidadNNyA
-                              ).map((cv) => (
-                                <MenuItem key={cv.id} value={cv.id}>
-                                  {cv.nombre} - {cv.descripcion}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          )}
-                        />
-                      </FormControl>
-
-                      <FormControl component="fieldset" margin="normal">
-                        <Typography variant="subtitle1" gutterBottom>¿Aplica esta condición?</Typography>
-                        <Controller
-                          name={`ninosAdolescentes.${index}.condicionesVulnerabilidad.${condIndex}.si_no`}
-                          control={control}
-                          render={({ field }) => (
-                            <RadioGroup
-                              row
-                              {...field}
-                              onChange={(e) => field.onChange(e.target.value === 'true')}
-                            >
-                              <FormControlLabel value={true} control={<Radio />} label="Sí" />
-                              <FormControlLabel value={false} control={<Radio />} label="No" />
-                            </RadioGroup>
-                          )}
-                        />
-                      </FormControl>
-
-                      <Box sx={{ mt: 2 }}>
-                        <Button 
-                          variant="outlined" 
-                          color="secondary" 
-                          onClick={() => {
-                            const newValue = [...field.value];
-                            newValue.splice(condIndex, 1);
-                            field.onChange(newValue);
-                          }}
-                        >
-                          Eliminar Condición de Vulnerabilidad
-                        </Button>
-                      </Box>
-                    </Box>
-                  ))}
-                  <Button
-                    startIcon={<AddIcon />}
-                    onClick={() => field.onChange([...field.value, {}])}
-                    sx={{ mt: 1, color: 'primary.main' }}
-                  >
-                    Añadir otra Condición de Vulnerabilidad
                   </Button>
                 </>
               )}

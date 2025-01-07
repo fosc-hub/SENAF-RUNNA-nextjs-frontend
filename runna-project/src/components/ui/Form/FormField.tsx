@@ -13,6 +13,7 @@ import {
   RadioGroup,
   Radio,
   Typography,
+  ListItemText,
 } from '@mui/material';
 
 interface FormFieldProps {
@@ -76,6 +77,31 @@ export const FormField: React.FC<FormFieldProps> = ({
                   {getOptions().map((option) => (
                     <MenuItem key={option.id} value={option.id}>
                       {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {error && <FormHelperText>{error.message}</FormHelperText>}
+              </FormControl>
+            );
+          case 'multiselect':
+            return (
+              <FormControl fullWidth error={!!error}>
+                <InputLabel>{label}</InputLabel>
+                <Select
+                  {...field}
+                  multiple
+                  renderValue={(selected) => {
+                    if (!selected || selected.length === 0) return '';
+                    return getOptions()
+                      .filter((option) => selected.includes(option.id))
+                      .map((option) => option.label)
+                      .join(', ');
+                  }}
+                >
+                  {getOptions().map((option) => (
+                    <MenuItem key={option.id} value={option.id}>
+                      <Checkbox checked={field.value?.includes(option.id)} />
+                      <ListItemText primary={option.label} />
                     </MenuItem>
                   ))}
                 </Select>

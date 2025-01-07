@@ -91,7 +91,52 @@ export function renderFormFields(
     </FormControl>
       );
     }
-    
+    if (field.type === "multiselect") {
+      const options =
+        typeof field.options === "function" ? field.options(apiData) : field.options;
+
+      // Para asegurarnos de que sea array al menos
+      const value = Array.isArray(formData[field.name])
+        ? formData[field.name]
+        : [];
+
+      return (
+        <FormControl
+          key={key}
+          fullWidth
+          margin="normal"
+          error={!!errors[field.name]}
+        >
+          <InputLabel>{field.label}</InputLabel>
+          <Select
+            name={field.name}
+            multiple
+            value={value}
+            onChange={(e) => handleInputChange(field.name, e.target.value)}
+            onBlur={() => handleBlur(field.name)}
+            renderValue={(selected) => {
+              // selected es un array de IDs, usamos su label
+              // para mostrarlo en la "etiqueta" del Select
+              if (!selected.length) return "";
+              const labels = selected.map(
+                (val) => options.find((opt) => opt.id === val)?.label || val
+              );
+              return labels.join(", ");
+            }}
+          >
+            {options.map((option) => (
+              <MenuItem key={option.id} value={option.id}>
+                <Checkbox checked={value.includes(option.id)} />
+                <ListItemText primary={option.label} />
+              </MenuItem>
+            ))}
+          </Select>
+          {!!errors[field.name] && (
+            <FormHelperText>{errors[field.name]}</FormHelperText>
+          )}
+        </FormControl>
+      );
+    }
     if (field.type === "checkbox") {
       return (
         <FormControlLabel
