@@ -41,6 +41,7 @@ import { el } from 'date-fns/locale';
 import { getLocalizacion } from '../../api/TableFunctions/localizacion';
 import { getTActividadTipo } from '../../api/TableFunctions/actividadTipos';
 import { getLocalizacionPersonas } from '../../api/TableFunctions/localizacionPersona';
+import { getTDemandaVinculadas } from '../../api/TableFunctions/demandasVinculadas';
 
 
 const dataGroups = {
@@ -140,7 +141,7 @@ const dataGroups = {
   },
   Antecedentes: {
     title: "Antecedentes de la demanda",
-    multiRow: false, // Single row only
+    multiRow: true, // Single row only
     fields: [
       { key: "IdDemanda", label: "Id de la demanda vinculada" },
       { key: "refNumero", label: "N° de Sticker SUAC" },
@@ -203,8 +204,8 @@ export function EvaluacionesContent() {
     NNyANoConvivientes: {},
     AdultosConvivientes: {},
     AdultosNoConvivientes: {},
+    Antecedentes: {},
     motivoActuacion: {},
-    antecedentes: [],
     medidasProteccion: [],
     resenaActuado: {},
   });
@@ -220,6 +221,37 @@ export function EvaluacionesContent() {
 
         // Fetching general info
         const demandaInfo = await getDemand(demandaId); // Assume `id` is available from `useParams`
+
+        const demandaVinculadas = await getTDemandaVinculadas({});
+
+      const antecedentesArray = [];
+
+      for (const vinculada of demandaVinculadas) {
+        let linkedDemandaId;
+
+        if (vinculada.demanda_1 === demandaId) {
+          linkedDemandaId = vinculada.demanda_2;
+        } else if (vinculada.demanda_2 === demandaId) {
+          linkedDemandaId = vinculada.demanda_1;
+        }
+
+        // Fetch details of the related demand if it exists
+        if (linkedDemandaId) {
+          const linkedDemandaInfo = await getDemand(linkedDemandaId);
+
+          antecedentesArray.push({
+            IdDemanda: vinculada.id,
+            refNumero: linkedDemandaInfo.nro_suac || "N/A",
+            sac: linkedDemandaInfo.nro_sac || "N/A",
+            oficio: linkedDemandaInfo.nro_oficio_web || "N/A",
+          });
+        }
+      }
+
+      console.log("Antecedentes Data:", antecedentesArray);
+
+      formData.Antecedentes = antecedentesArray;
+
         const mainLocalizacion = demandaInfo.localizacion;
         const demandaPersonas = await getTDemandaPersonas({ demanda: demandaId });
         const nnyaConvivientes = [];
