@@ -9,7 +9,7 @@ const getCSRFToken = () => {
 
 // Create an Axios instance
 const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api',
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://web-production-c6370.up.railway.app/api',
   withCredentials: true,
 });
 
