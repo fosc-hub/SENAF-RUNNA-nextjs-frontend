@@ -608,9 +608,6 @@ const getRowClassName = (params: GridRowParams) => {
           <Button
             component="a"
           variant="contained"
-          variant="contained"
-          onClick={handleNuevoRegistro}
-            variant="contained"
           onClick={handleNuevoRegistro}
             sx={{ bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' } }}
           >
