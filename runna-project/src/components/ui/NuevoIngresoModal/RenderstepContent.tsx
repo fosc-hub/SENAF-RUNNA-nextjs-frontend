@@ -188,7 +188,7 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
     </Grid>
   </>
 )
-export const renderStepContent = ({
+export const RenderStepContent = ({
   activeStep,
   formData,
   handleInputChange,
