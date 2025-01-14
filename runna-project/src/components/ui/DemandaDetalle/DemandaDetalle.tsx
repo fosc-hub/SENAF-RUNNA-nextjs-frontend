@@ -40,7 +40,7 @@ import { createTActividad, getTActividades, updateTActividad, deleteTActividad }
 // Assume these are imported from their respective files
 import { useFormData } from './useFormData'
 import { useApiData } from './useApiData'
-import { RenderStepContent } from './RenderstepContent'
+import { renderStepContent } from './RenderstepContent'
 import { getTActividadTipo } from '../../../api/TableFunctions/actividadTipos';
 import { getTInstitucionActividad } from '../../../api/TableFunctions/institucionActividades';
 import { getDemand, updateDemand } from '../../../api/TableFunctions/demands';
@@ -851,7 +851,7 @@ export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAll
 
               <form onSubmit={handleSubmit}>
               <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-  {RenderStepContent({
+  {renderStepContent({
     activeStep,
     formData,
     handleInputChange,

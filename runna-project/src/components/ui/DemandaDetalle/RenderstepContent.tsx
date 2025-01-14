@@ -188,7 +188,7 @@ const renderLocalizacionFields = (prefix, data = {}, handleInputChange, barrios,
   </>
 );
 
-export const RenderStepContent = ({
+export const renderStepContent = ({
   activeStep,
   formData,
   handleInputChange,
