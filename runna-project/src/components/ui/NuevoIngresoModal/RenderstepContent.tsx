@@ -34,7 +34,7 @@ const getCategoriaMotivosNombre = (motivoId: number, categoriaMotivos: any[]) =>
 
 
 
-const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, localidades, cpcs,   errors = {}) => (
+const RenderLocalizacionFields = (prefix, data, handleInputChange, barrios, localidades, cpcs,   errors = {}) => (
   <>
     <Grid item xs={6}>
     <TextField
@@ -188,7 +188,7 @@ const renderLocalizacionFields = (prefix, data, handleInputChange, barrios, loca
     </Grid>
   </>
 )
-export const renderStepContent = ({
+export const RenderStepContent = ({
   activeStep,
   formData,
   handleInputChange,
@@ -428,7 +428,7 @@ const handleBlur = (field) => {
           <Grid item xs={12}>
             <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Datos de Localización</Typography>
           </Grid>
-          {renderLocalizacionFields('localizacion', formData.localizacion, handleInputChange, barrios, localidades, cpcs)}
+          {RenderLocalizacionFields('localizacion', formData.localizacion, handleInputChange, barrios, localidades, cpcs)}
 
           <Grid item xs={12}>
   <Typography color="primary" sx={{ mt: 2, mb: 1 }}>Informante</Typography>
@@ -785,7 +785,7 @@ const handleBlur = (field) => {
           <Typography variant="subtitle1">
             Localización específica
           </Typography>
-          {renderLocalizacionFields(
+          {RenderLocalizacionFields(
             `ninosAdolescentes[${index}].localizacion`,
             nino.localizacion,
             handleInputChange,
@@ -1199,7 +1199,7 @@ const handleBlur = (field) => {
                   {!adulto.useDefaultLocalizacion && (
         <Box sx={{ mt: 2 }}>
           <Typography variant="subtitle1">Localización específica</Typography>
-          {renderLocalizacionFields(
+          {RenderLocalizacionFields(
             `adultosConvivientes[${index}].localizacion`,
             adulto.localizacion,
             handleInputChange,
