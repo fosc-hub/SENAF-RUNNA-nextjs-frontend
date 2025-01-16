@@ -73,24 +73,21 @@ function MesaDeEntradas() {
   }
 
   // Si no hay un usuario autenticado, mostrar un mensaje de login requerido
-  if (!user) {
-    return <div>Please log in to access this page.</div>;
-  }
-
+ 
   // Renderizado del componente principal
   return (
     <div className="flex flex-col h-screen">
       {/* Componente de cabecera con información del usuario */}
       <Header
         user={{
-          initials: user.initials || user.first_name.charAt(0) + user.last_name.charAt(0),
-          name: user.username,
-          role: user.is_superuser
+          initials: user?.initials || user?.first_name.charAt(0) + user?.last_name.charAt(0),
+          name: user?.username,
+          role: user?.is_superuser
             ? 'Administrador del Sistema'
-            : user.groups.length > 0
-            ? user.groups[0]['name']
+            : user?.groups.length > 0
+            ? user?.groups[0]['name']
             : 'Usuario',
-          legajo: user.telefono,
+          legajo: user?.telefono,
         }}
       />
       
