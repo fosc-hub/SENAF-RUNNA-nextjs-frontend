@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { cookies } from "next/headers";
+import { getSession } from './auth/index';
 
-export function middleware(req: NextRequest) {
-  const sessionId = req.cookies.get('sessionid'); // Get the session cookie
+export async function middleware(req: NextRequest) {
+  const session = await getSession(); // Get the session cookie
+  console.log('Session ID:', session);
 
   const { pathname } = req.nextUrl;
 
@@ -16,7 +19,7 @@ export function middleware(req: NextRequest) {
   }
 
   // Redirect to login if sessionid cookie is missing
-  if (!sessionId) {
+  if (!session) {
     const loginUrl = new URL('/login', req.url);
     return NextResponse.redirect(loginUrl);
   }

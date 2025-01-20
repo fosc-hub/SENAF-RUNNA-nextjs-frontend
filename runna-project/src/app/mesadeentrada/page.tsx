@@ -8,6 +8,7 @@ import { MainContent } from '../../components/ui/MainContent';
 import { AuthProvider, useAuth } from '../../context/AuthContext';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { useRouter } from 'next/navigation';
+import { useUser } from '../../auth/userZustand';
 
 // Configuración del tema de Material UI
 const theme = createTheme({
@@ -45,6 +46,9 @@ export default function AppWrapper() {
 
 // Componente MesaDeEntradas que contiene la lógica principal
 function MesaDeEntradas() {
+  const user2:any = useUser((state: any) => state.user);
+  console.log('User:', user2);
+
   const [demands, setDemands] = useState([]); // Estado para almacenar las demandas
   const router = useRouter(); // Hook useRouter para la navegación
   const { user, loading } = useAuth(); // Hook useAuth para obtener el usuario y el estado de carga
@@ -80,14 +84,14 @@ function MesaDeEntradas() {
       {/* Componente de cabecera con información del usuario */}
       <Header
         user={{
-          initials: user?.initials || user?.first_name.charAt(0) + user?.last_name.charAt(0),
-          name: user?.username,
-          role: user?.is_superuser
+          initials: user2?.initials || user2?.first_name.charAt(0) + user2?.last_name.charAt(0),
+          name: user2?.username,
+          role: user2?.is_superuser
             ? 'Administrador del Sistema'
-            : user?.groups.length > 0
-            ? user?.groups[0]['name']
+            : user2?.groups.length > 0
+            ? user2?.groups[0]['name']
             : 'Usuario',
-          legajo: user?.telefono,
+          legajo: user2?.telefono,
         }}
       />
       

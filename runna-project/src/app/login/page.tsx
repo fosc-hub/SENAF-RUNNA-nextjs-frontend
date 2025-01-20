@@ -10,7 +10,12 @@ import { getUsers } from '../../api/TableFunctions/user_me';
 import { errorMessages } from '../../utils/errorMessages';
 import { handleApiError } from '../../api/utils/errorHandler';
 import axiosInstance from '../../api/utils/axiosInstance';
+import { login } from '../../auth/index';
+import { useUser } from '../../auth/userZustand';
+
 export default function LoginPage() {
+  const setUser = useUser((state: any) => state.setUser);
+
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errorDetails, setErrorDetails] = useState(''); // Para los detalles del error
@@ -18,7 +23,7 @@ export default function LoginPage() {
 
   
 
-  const login = async (username: string, password: string): Promise<void> => {
+  const loginBack = async (username: string, password: string): Promise<void> => {
     try {
       const response =  await axiosInstance.post('/login/', { username, password },
         { withCredentials: true }
@@ -60,13 +65,17 @@ export default function LoginPage() {
       console.log('password', password);
 
       // Log in
-      await login(username, password);
+      await loginBack(username, password);
 
       const userData = await getUsers();
       console.log('UserData:', userData);
 
+      setUser(userData);
+
+      await login(userData);
+
       // Save user data to localStorage or a global context
-      localStorage.setItem('user', JSON.stringify(userData));
+      // localStorage.setItem('user', JSON.stringify(userData));
 
       // Redirect to the main page
       router.push('/mesadeentrada');
