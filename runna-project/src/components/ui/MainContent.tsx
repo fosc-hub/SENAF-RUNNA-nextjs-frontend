@@ -42,6 +42,8 @@ import { getTDemandaAsignados } from '../../api/TableFunctions/DemandaAsignados'
 import { getTPrecalificacionDemanda, createTPrecalificacionDemanda, updateTPrecalificacionDemanda, getTPrecalificacionDemandas } from '../../api/TableFunctions/precalificacionDemanda'
 import { getTDemandaScores } from '../../api/TableFunctions/demandaScores'
 
+import { useUser } from '../../auth/userZustand';
+
 import { useAuth } from '../../context/AuthContext';
 import axiosInstance from '../../api/utils/axiosInstance';
 import { Slide, toast } from 'react-toastify';
@@ -107,7 +109,9 @@ export function MainContent({
   const [showDemandaDetalle, setShowDemandaDetalle] = useState(false)
   const [showActividadesRegistradas, setShowActividadesRegistradas] = useState(false)
   const [origen, setOrigen] = useState('todos')
-  const { user, loading } = useAuth();
+
+  const user:any = useUser((state: any) => state.user);
+
   const [assignDemandId, setAssignDemandId] = useState<number | null>(null); 
   const [allDemands, setAllDemands] = useState<TDemanda[]>([])
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
@@ -156,7 +160,7 @@ export function MainContent({
 
       let demandsData: TDemanda[] = [];
 
-      if (user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tdemandaasignado')) {
+      if (user.is_superuser || user.all_permissions.some((p) => p.codename === 'add_tdemandaasignado')) {
         demandsData = await getDemands({});
       } else {
         const assignedDemands = await getTDemandaAsignados({ user: user.id });
@@ -515,7 +519,7 @@ const columns: GridColDef[] = useMemo(() => {
       headerName: 'Precalificación',
       width: 180,
       RenderCell: (params: GridRenderCellParams<TDemanda>) => {
-        const isEditable = (user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tprecalificaciondemanda'));
+        const isEditable = (user.is_superuser || user.all_permissions.some((p) => p.codename === 'add_tprecalificaciondemanda'));
         return (
           <FormControl fullWidth size="small">
             <Select
@@ -548,7 +552,7 @@ const columns: GridColDef[] = useMemo(() => {
   ];
 
   
-  if (user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tdemandaasignado')) {
+  if (user.is_superuser || user.all_permissions.some((p) => p.codename === 'add_tdemandaasignado')) {
     baseColumns.push({
       field: 'Asignar',
       headerName: 'Asignar',
@@ -603,7 +607,7 @@ const getRowClassName = (params: GridRowParams) => {
         </>
       ) : (
         <>
-          {(user?.is_superuser || user?.all_permissions.some((p) => p.codename === 'add_tdemanda')) && (
+          {(user.is_superuser || user.all_permissions.some((p) => p.codename === 'add_tdemanda')) && (
           <Link href="/nuevo-ingreso" passHref>
           <Button
             component="a"
@@ -814,7 +818,7 @@ const getRowClassName = (params: GridRowParams) => {
                 )}
               </ListItem>
 
-              {!user?.is_superuser && !user?.all_permissions.some((p) => p.codename === 'add_tdemandaasignado') && (
+              {!user.is_superuser && !user.all_permissions.some((p) => p.codename === 'add_tdemandaasignado') && (
                 <>
                   <ListItem sx={{ py: 1.5, px: 2 }}>
                     <Typography variant="subtitle2" color="text.secondary">
