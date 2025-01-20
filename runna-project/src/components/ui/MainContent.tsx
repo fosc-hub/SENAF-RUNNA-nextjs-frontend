@@ -53,7 +53,65 @@ import { TOrigen } from '../../api/interfaces';
 import { Check, Archive, ImageOffIcon as PersonOffIcon, UserCheckIcon as PersonCheckIcon, ClipboardCheck, Star, FileCheck, Mail, MailOpen } from 'lucide-react'
 import { AlertCircle } from 'lucide-react'
 import router from 'next/router';
+import { format as formatDate } from "date-fns"
 
+const ScoreCell: React.FC<{ demandaId: number }> = ({ demandaId }) => {
+  const [score, setScore] = useState<number | null>(null)
+
+  useEffect(() => {
+    const fetchScore = async () => {
+      try {
+        const scoreData = await getTDemandaScores({ demanda: demandaId })
+        setScore(scoreData[0].score)
+      } catch (error) {
+        console.error("Error fetching score:", error)
+      }
+    }
+
+    fetchScore()
+  }, [demandaId])
+
+  return <Typography>{score}</Typography>
+}
+
+// New component for the origin cell
+const OriginCell: React.FC<{ originId: string; origins: Record<string, TOrigen> }> = ({ originId, origins }) => {
+  const origin = origins[originId]
+  return <Typography>{origin?.nombre || "N/A"}</Typography>
+}
+
+// New component for the precalification cell
+const PrecalificationCell: React.FC<{
+  value: string
+  demandId: number
+  isEditable: boolean
+  handlePrecalificacionChange: (demandId: number, newValue: string) => void
+}> = ({ value, demandId, isEditable, handlePrecalificacionChange }) => {
+  return (
+    <FormControl fullWidth size="small">
+      <Select
+        value={value || ""}
+        onChange={(e: SelectChangeEvent) => handlePrecalificacionChange(demandId, e.target.value as string)}
+        disabled={!isEditable}
+      >
+        {precalificacionOptions.map((option) => (
+          <MenuItem key={option.value} value={option.value}>
+            {option.label}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+  )
+}
+
+// New component for the last update cell
+const LastUpdateCell: React.FC<{ value: string | null }> = ({ value }) => {
+  if (!value) return <Typography>N/A</Typography>
+
+  const date = new Date(value)
+  const formattedDate = formatDate(date, "dd/MM/yyyy HH:mm")
+  return <Typography>{formattedDate}</Typography>
+}
 
 const origenOptions = [
   { value: 'todos', label: 'Todos' },
@@ -472,37 +530,18 @@ const columns: GridColDef[] = useMemo(() => {
       },
     },
     {
-      field: 'score',
-      headerName: 'Score',
+      field: "score",
+      headerName: "Score",
       width: 130,
-      renderCell: (params: GridRenderCellParams<TDemanda>) => {
-        const [score, setScore] = useState<number | null>(null);
-
-        useEffect(() => {
-          const fetchScore = async () => {
-            try {
-              const scoreData = await getTDemandaScores({ demanda: params.row.id });
-              setScore(scoreData[0].score);
-            } catch (error) {
-              console.error('Error fetching score:', error);
-            }
-          };
-
-          fetchScore();
-        }, [params.row.id]);
-        return (
-          <Typography>{score}</Typography>
-        );
-      },
+      renderCell: (params: GridRenderCellParams<TDemanda>) => <ScoreCell demandaId={params.row.id!} />,
     },
     {
-      field: 'origen',
-      headerName: 'Origen',
+      field: "origen",
+      headerName: "Origen",
       width: 130,
-      renderCell: (params: GridRenderCellParams<TDemanda>) => {
-          const origin = origins[params.value];
-          return <Typography>{origin?.nombre || 'N/A'}</Typography>;
-        },
+      renderCell: (params: GridRenderCellParams<TDemanda>) => (
+        <OriginCell originId={params.value} origins={origins} />
+      ),
     },
     {
       field: 'nombre',
@@ -515,40 +554,28 @@ const columns: GridColDef[] = useMemo(() => {
       width: 130,
     },
     {
-      field: 'precalificacion',
-      headerName: 'Precalificación',
+      field: "precalificacion",
+      headerName: "Precalificación",
       width: 180,
       renderCell: (params: GridRenderCellParams<TDemanda>) => {
-        const isEditable = (user.is_superuser || user.all_permissions.some((p) => p.codename === 'add_tprecalificaciondemanda'));
+        const isEditable =
+          user.is_superuser || user.all_permissions.some((p) => p.codename === "add_tprecalificaciondemanda")
         return (
-          <FormControl fullWidth size="small">
-            <Select
-              value={params.value || ''}
-              onChange={(e: SelectChangeEvent) => handlePrecalificacionChange(params.row.id!, e.target.value as string)}
-              disabled={!isEditable} 
-            >
-              {precalificacionOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        );
+          <PrecalificationCell
+            value={params.value}
+            demandId={params.row.id!}
+            isEditable={isEditable}
+            handlePrecalificacionChange={handlePrecalificacionChange}
+          />
+        )
       },
     },
     {
-        field: 'ultima_actualizacion',
-        headerName: 'Última Actualización',
-        width: 180,
-        renderCell: (params: GridRenderCellParams<TDemanda>) => {
-          if (!params.value) return <Typography>N/A</Typography>;
-          
-          const date = new Date(params.value);
-          const formattedDate = format(date, 'dd/MM/yyyy HH:mm');
-          return <Typography>{formattedDate}</Typography>;
-        },
-      },
+      field: "ultima_actualizacion",
+      headerName: "Última Actualización",
+      width: 180,
+      renderCell: (params: GridRenderCellParams<TDemanda>) => <LastUpdateCell value={params.value} />,
+    },
   ];
 
   
