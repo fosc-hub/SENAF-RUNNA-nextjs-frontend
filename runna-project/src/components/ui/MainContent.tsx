@@ -439,7 +439,7 @@ const columns: GridColDef[] = useMemo(() => {
       field: 'id',
       headerName: 'ID',
       width: 100,
-      RenderCell: (params: GridRenderCellParams<TDemanda>) => {
+      renderCell: (params: GridRenderCellParams<TDemanda>) => {
         const isUrgent = params.row.precalificacion === 'URGENTE';
         return (
           <Box sx={{ 
@@ -475,7 +475,7 @@ const columns: GridColDef[] = useMemo(() => {
       field: 'score',
       headerName: 'Score',
       width: 130,
-      RenderCell: (params: GridRenderCellParams<TDemanda>) => {
+      renderCell: (params: GridRenderCellParams<TDemanda>) => {
         const [score, setScore] = useState<number | null>(null);
 
         useEffect(() => {
@@ -499,7 +499,7 @@ const columns: GridColDef[] = useMemo(() => {
       field: 'origen',
       headerName: 'Origen',
       width: 130,
-      RenderCell: (params: GridRenderCellParams<TDemanda>) => {
+      renderCell: (params: GridRenderCellParams<TDemanda>) => {
           const origin = origins[params.value];
           return <Typography>{origin?.nombre || 'N/A'}</Typography>;
         },
@@ -518,7 +518,7 @@ const columns: GridColDef[] = useMemo(() => {
       field: 'precalificacion',
       headerName: 'Precalificación',
       width: 180,
-      RenderCell: (params: GridRenderCellParams<TDemanda>) => {
+      renderCell: (params: GridRenderCellParams<TDemanda>) => {
         const isEditable = (user.is_superuser || user.all_permissions.some((p) => p.codename === 'add_tprecalificaciondemanda'));
         return (
           <FormControl fullWidth size="small">
@@ -541,7 +541,7 @@ const columns: GridColDef[] = useMemo(() => {
         field: 'ultima_actualizacion',
         headerName: 'Última Actualización',
         width: 180,
-        RenderCell: (params: GridRenderCellParams<TDemanda>) => {
+        renderCell: (params: GridRenderCellParams<TDemanda>) => {
           if (!params.value) return <Typography>N/A</Typography>;
           
           const date = new Date(params.value);
@@ -557,7 +557,7 @@ const columns: GridColDef[] = useMemo(() => {
       field: 'Asignar',
       headerName: 'Asignar',
       width: 180,
-      RenderCell: (params: GridRenderCellParams<TDemanda>) => (
+      renderCell: (params: GridRenderCellParams<TDemanda>) => (
         <Button
           variant="outlined"
           startIcon={<PersonIcon />}
@@ -578,7 +578,7 @@ const columns: GridColDef[] = useMemo(() => {
       field: 'Evaluar',
       headerName: 'Evaluar',
       width: 160,
-      RenderCell: (params: GridRenderCellParams<TDemanda>) => (
+      renderCell: (params: GridRenderCellParams<TDemanda>) => (
         <EvaluarButton
           id={params.row.id} 
           onClick={onEvaluacionClick} 
