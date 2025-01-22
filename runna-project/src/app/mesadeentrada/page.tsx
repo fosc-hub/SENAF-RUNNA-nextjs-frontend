@@ -70,10 +70,13 @@ function MesaDeEntradas() {
     setIsClient(true); // Marca que estamos en el cliente para evitar problemas con useRouter
   }, []);
 
-  // Mostrar un spinner o indicador de carga mientras se obtienen los datos del usuario
-  // if (loading) {
-  //   return <div>Loading...</div>;
-  // }
+  if (!user) {
+    return <div>Loading user data...</div>;
+  }
+
+  if (!demands.length) {
+      return <div>No demands available</div>;
+  }
 
   // Si no hay un usuario autenticado, mostrar un mensaje de login requerido
  

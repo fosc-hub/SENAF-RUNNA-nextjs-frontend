@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { cookies } from "next/headers";
-import { getSession } from './auth/index';
 
 export async function middleware(req: NextRequest) {
-  const session = await getSession(); // Get the session cookie
+  const session = await cookies().get("accessToken")?.value;; // Get the session cookie
 
   const { pathname } = req.nextUrl;
 
@@ -29,5 +28,5 @@ export async function middleware(req: NextRequest) {
 
 // Apply middleware to specific routes
 export const config = {
-  matcher: ['/mesadeentrada/:path*', '/another-protected-route'], // Add your protected routes
+  matcher: ['/mesadeentrada/:path*', '/another-protected-route'],
 };

@@ -4,11 +4,6 @@ import { getSession } from '../../auth/index';
 
 const secretKey = process.env.MYSECRETKEY || "Bearer";
 
-// Function to extract CSRF token from cookies
-const getCSRFToken = () => {
-  const match = document.cookie.match(/csrftoken=([^;]*)/); // Default Django cookie name
-  return match ? match[1] : null;
-};
 
 // Create an Axios instance
 const axiosInstance = axios.create({

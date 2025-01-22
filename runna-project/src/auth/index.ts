@@ -1,16 +1,8 @@
 "use server";
-import { jwtVerify } from "jose";
 import jwt from 'jsonwebtoken';
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { NextRequest, NextResponse } from "next/server";
-import { cache } from "react";
-import { TUser } from '../api/interfaces';
-import { TupleKeys } from "react-hook-form/dist/types/path/common";
 import axiosInstance from '../api/utils/axiosInstance';
 
-const SECRET_KEY = process.env.MYSECRETKEY || "Bearer";
-// const key = new TextEncoder().encode(secretKey);
 
 export async function decodeToken(accessToken?: string) {
   try {
