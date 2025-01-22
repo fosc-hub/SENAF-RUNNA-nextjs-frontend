@@ -6,21 +6,15 @@ import { toast } from 'react-toastify'; // Ensure react-toastify is installed
 import 'react-toastify/dist/ReactToastify.css'; // Toast styles
 import axiosInstance from '../../api/utils/axiosInstance';
 import Cookies from 'js-cookie';
+import { logout } from '../../auth/index';
+
 
 export default function Header({ user }) {
   const [showMenu, setShowMenu] = useState(false);
 
   const handleLogout = async () => {
     try {
-      // Call the backend logout endpoint
-      await axiosInstance.post('/logout/'); // Adjust the URL to match your backend route
-  
-      // Remove local user data
-      localStorage.removeItem('user');
-  
-      // Clear cookies on the client-side (optional, for redundancy)
-      Cookies.remove('csrftoken');
-      Cookies.remove('sessionid');
+      await logout();
   
       // Show success toast
       toast.success('Successfully logged out');
