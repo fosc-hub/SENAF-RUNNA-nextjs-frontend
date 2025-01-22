@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
+import React from 'react';
 import Header from '../../components/ui/Header';
 import Sidebar from '../../components/ui/Sidebar';
 import { MainContent } from '../../components/ui/MainContent';
@@ -49,13 +49,14 @@ function MesaDeEntradas() {
   const user:any = useUser((state: any) => state.user);
 
   const [demands, setDemands] = useState([]); // Estado para almacenar las demandas
+  const [loadingUser, setLoadingUser] = useState(true); // Estado para manejar la carga del usuario
   const router = useRouter(); // Hook useRouter para la navegación
 
   const [isClient, setIsClient] = useState(false); // Estado para verificar si el componente está en el cliente
 
   // Función para manejar la actualización de las demandas
   const handleUpdateDemands = (updatedDemands: any) => {
-    setDemands(updatedDemands);
+    setDemands(updatedDemands); // Marcar que las demandas han sido cargadas
   };
 
   // Función para manejar el clic en la evaluación
@@ -70,16 +71,18 @@ function MesaDeEntradas() {
     setIsClient(true); // Marca que estamos en el cliente para evitar problemas con useRouter
   }, []);
 
-  if (!user) {
+  // useEffect para manejar la carga del usuario
+  useEffect(() => {
+    if (user) {
+      setLoadingUser(false); // Marcar que el usuario ha sido cargado
+    }
+  }, [user]);
+
+  if (loadingUser) {
     return <div>Loading user data...</div>;
   }
 
-  if (!demands.length) {
-      return <div>No demands available</div>;
-  }
 
-  // Si no hay un usuario autenticado, mostrar un mensaje de login requerido
- 
   // Renderizado del componente principal
   return (
     <div className="flex flex-col h-screen">
