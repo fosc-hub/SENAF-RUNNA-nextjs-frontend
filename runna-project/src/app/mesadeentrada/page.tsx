@@ -46,12 +46,11 @@ export default function AppWrapper() {
 
 // Componente MesaDeEntradas que contiene la lógica principal
 function MesaDeEntradas() {
-  const user2:any = useUser((state: any) => state.user);
-  console.log('User:', user2);
+  const user:any = useUser((state: any) => state.user);
 
   const [demands, setDemands] = useState([]); // Estado para almacenar las demandas
   const router = useRouter(); // Hook useRouter para la navegación
-  const { user, loading } = useAuth(); // Hook useAuth para obtener el usuario y el estado de carga
+
   const [isClient, setIsClient] = useState(false); // Estado para verificar si el componente está en el cliente
 
   // Función para manejar la actualización de las demandas
@@ -72,9 +71,9 @@ function MesaDeEntradas() {
   }, []);
 
   // Mostrar un spinner o indicador de carga mientras se obtienen los datos del usuario
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  // if (loading) {
+  //   return <div>Loading...</div>;
+  // }
 
   // Si no hay un usuario autenticado, mostrar un mensaje de login requerido
  
@@ -84,14 +83,14 @@ function MesaDeEntradas() {
       {/* Componente de cabecera con información del usuario */}
       <Header
         user={{
-          initials: user2?.initials || user2?.first_name.charAt(0) + user2?.last_name.charAt(0),
-          name: user2?.username,
-          role: user2?.is_superuser
+          initials: user?.initials || user?.first_name.charAt(0) + user?.last_name.charAt(0),
+          name: user?.username,
+          role: user?.is_superuser
             ? 'Administrador del Sistema'
-            : user2?.groups.length > 0
-            ? user2?.groups[0]['name']
+            : user?.groups.length > 0
+            ? user?.groups[0]['name']
             : 'Usuario',
-          legajo: user2?.telefono,
+          legajo: user?.telefono,
         }}
       />
       
