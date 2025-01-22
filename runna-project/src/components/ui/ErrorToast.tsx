@@ -1,7 +1,7 @@
 import React from 'react';
 import { toast } from 'react-toastify';
-import { Box, Typography, TextField, Button, Card, CardContent, CardHeader, IconButton } from '@mui/material';
-import { ContentCopy } from '@mui/icons-material'; // Icono para copiar texto
+import { Box, Typography, IconButton } from '@mui/material';
+import ContentCopy from '@mui/icons-material/ContentCopy'; // Icono para copiar texto
 interface ErrorToastProps {
   message: string;
   details: string;
