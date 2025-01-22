@@ -12,7 +12,7 @@ const getCSRFToken = () => {
 
 // Create an Axios instance
 const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000/api'
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL
 });
 
 // Add a request interceptor to attach CSRF token
