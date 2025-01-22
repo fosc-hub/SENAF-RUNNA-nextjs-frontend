@@ -10,7 +10,7 @@ import { getUsers } from '../../api/TableFunctions/user_me';
 import { errorMessages } from '../../utils/errorMessages';
 import { handleApiError } from '../../api/utils/errorHandler';
 import axiosInstance from '../../api/utils/axiosInstance';
-import { login } from '../../auth/index';
+import { login, decodeToken } from '../../auth/index';
 import { useUser } from '../../auth/userZustand';
 
 export default function LoginPage() {
@@ -21,13 +21,12 @@ export default function LoginPage() {
   const [errorDetails, setErrorDetails] = useState(''); // Para los detalles del error
   const router = useRouter();
 
-  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const loginBack = async (username: string, password: string): Promise<void> => {
     try {
-      const response =  await axiosInstance.post('/login/', { username, password },
-        { withCredentials: true }
-      );
+
+      await login(username, password);
 
       toast.success('¡Inicio de sesión exitoso!', {
         position: 'top-center',
@@ -40,10 +39,14 @@ export default function LoginPage() {
         transition: Slide,
       });
 
-      console.log('Login successful:', response.data);
+      const user = await decodeToken();
+      setUser(user);
+      
+      // Redirect to the main page
+      router.push('/mesadeentrada');
+
     } catch (error: any) {
       console.error('Error during login:', error);
-
 
       const statusCode = error?.response?.status || 'Desconocido';
       const message = errorMessages[statusCode] || 'Ocurrio un error';
@@ -56,32 +59,7 @@ export default function LoginPage() {
       // Mostrar notificación con botón para ver detalles
       
     }
-  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      console.log('username', username);
-      console.log('password', password);
-
-      // Log in
-      await loginBack(username, password);
-
-      const userData = await getUsers();
-      console.log('UserData:', userData);
-
-      setUser(userData);
-
-      await login(userData);
-
-      // Save user data to localStorage or a global context
-      // localStorage.setItem('user', JSON.stringify(userData));
-
-      // Redirect to the main page
-      router.push('/mesadeentrada');
-    } catch (err) {
-      console.error('Login failed:', err);
-    }
   };
 
   return (

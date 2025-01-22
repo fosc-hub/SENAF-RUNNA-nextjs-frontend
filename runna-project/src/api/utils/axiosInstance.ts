@@ -1,5 +1,8 @@
 import axios from 'axios';
 import { handleApiError } from './errorHandler';
+import { getSession } from '../../auth/index';
+
+const secretKey = process.env.MYSECRETKEY || "Bearer";
 
 // Function to extract CSRF token from cookies
 const getCSRFToken = () => {
@@ -9,15 +12,14 @@ const getCSRFToken = () => {
 
 // Create an Axios instance
 const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://web-production-c6370.up.railway.app/api',
-  withCredentials: true,
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000/api'
 });
 
 // Add a request interceptor to attach CSRF token
-axiosInstance.interceptors.request.use((config) => {
-  const csrfToken = getCSRFToken(); // Retrieve CSRF token
-  if (csrfToken) {
-    config.headers['X-CSRFToken'] = csrfToken; // Attach CSRF token to headers
+axiosInstance.interceptors.request.use(async (config) => {
+  const accessToken = await getSession(); // Get the access token
+  if (accessToken) {
+    config.headers.Authorization = `${secretKey} ${accessToken}`;
   }
   return config;
 });

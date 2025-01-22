@@ -5,7 +5,6 @@ import { getSession } from './auth/index';
 
 export async function middleware(req: NextRequest) {
   const session = await getSession(); // Get the session cookie
-  console.log('Session ID:', session);
 
   const { pathname } = req.nextUrl;
 

@@ -1,47 +1,45 @@
 "use server";
-import { SignJWT, jwtVerify } from "jose";
+import { jwtVerify } from "jose";
+import jwt from 'jsonwebtoken';
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { NextRequest, NextResponse } from "next/server";
 import { cache } from "react";
 import { TUser } from '../api/interfaces';
 import { TupleKeys } from "react-hook-form/dist/types/path/common";
+import axiosInstance from '../api/utils/axiosInstance';
 
-const secretKey = process.env.MYSECRETKEY;
-const key = new TextEncoder().encode(secretKey);
+const SECRET_KEY = process.env.MYSECRETKEY || "Bearer";
+// const key = new TextEncoder().encode(secretKey);
 
-export async function encrypt(payload: any) {
-  return await new SignJWT(payload)
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime("10 hour from now")
-    .sign(key);
-}
-
-export async function decrypt(input: any) {
+export async function decodeToken(accessToken?: string) {
   try {
-    const { payload } = await jwtVerify(input, key, {
-      algorithms: ["HS256"],
-    });
-    return payload;
+    const token = accessToken || await cookies().get("accessToken")?.value;
+    const decoded = jwt.decode(token); // Decodes the payload without verifying
+
+    return decoded;
   } catch (e) {
     return null;
   }
 }
 
+export async function login(username: string, password: string) {
+  const response =  await axiosInstance.post('/token/', { username, password });
 
-export async function login(userData: any) {
-  // Verify credentials && get the user
+  const tokens = {
+    refresh: response.data.refresh,
+    access: response.data.access,
+  };
 
-  const user = userData;
+  // Save the tokens in cookies
+  cookies().set("refreshToken", tokens.refresh, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    secure: true,
+  });
 
-  // Create the session
-  const expires = new Date(Date.now() + 10 * 60 * 60 * 1000);
-  const session = await encrypt({ user, expires });
-
-  // Save the session in a cookie
-  cookies().set("session", session, {
-    expires,
+  cookies().set("accessToken", tokens.access, {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
@@ -50,13 +48,33 @@ export async function login(userData: any) {
 }
 
 export async function getSession() {
-    console.log("Secret Key:", secretKey);
-    const session = await cookies().get("session")?.value;
-    if (!session) return null;
-    return await decrypt(session);
+  const accessToken = await cookies().get("accessToken")?.value;
+  const decodedPayload = await decodeToken(accessToken);
+
+  if (decodedPayload?.exp && Date.now() >= decodedPayload.exp * 1000) {
+    const refreshToken = await cookies().get("refreshToken")?.value;
+    if (refreshToken) {
+      const response = await axiosInstance.post('/token/refresh/', { refresh: refreshToken });
+      const newAccessToken = response.data.access;
+
+      // Save the new access token in cookies
+      cookies().set("accessToken", newAccessToken, {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: true,
+      });
+
+      return newAccessToken;
+    }
   }
 
+  if (!accessToken) return null;
+  return accessToken;
+}
+
 export async function logout() {
-// Destroy the session
-    cookies().delete("session");
+  // Destroy the tokens
+  cookies().delete("refreshToken");
+  cookies().delete("accessToken");
 }
