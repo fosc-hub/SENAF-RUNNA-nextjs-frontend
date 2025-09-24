@@ -34,7 +34,7 @@ import ActividadesRegistradas from '../ui/ActividadesRegistradas/ActividadesRegi
 import PostConstatacionModal from './PostConstatacionModal'
 import NuevoIngresoModal from './NuevoIngresoModal/NuevoIngresoModal'
 import EvaluacionModal from './EvaluacionModal'
-import { getDemands, createDemand, updateDemand, getDemand } from '../../api/TableFunctions/demands'
+import { getDemands, createDemand, updateDemand, getDemand, getDemandFullDetail, TDemandaFullDetail } from '../../api/TableFunctions/demands'
 import { TDemanda, TDemandaPersona, TPersona, TPrecalificacionDemanda, TDemandaAsignado } from '../../api/interfaces'
 import { getTDemandaPersona, getTDemandaPersonas } from '../../api/TableFunctions/demandaPersonas'
 import { getTPersona, getTPersonas } from '../../api/TableFunctions/personas'
@@ -175,6 +175,7 @@ export function MainContent({
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [origins, setOrigins] = useState<Record<string, TOrigen>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [fullDetailData, setFullDetailData] = useState<TDemandaFullDetail | null>(null);
   const handleFilterClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget)
   }
@@ -377,10 +378,21 @@ export function MainContent({
     }
   }, [fetchAllData])
 
-  const handleDemandClick = useCallback((params: GridRowParams<TDemanda>) => {
+  const handleDemandClick = useCallback(async (params: GridRowParams<TDemanda>) => {
     const demandId = params.row.id!;
     toggleLeido(demandId); 
     setSelectedDemand(params.row);
+    
+    // Try to fetch full-detail data
+    try {
+      const fullDetail = await getDemandFullDetail(demandId);
+      setFullDetailData(fullDetail);
+      console.log("Full detail data loaded for demand:", demandId, fullDetail);
+    } catch (error) {
+      console.log("Full-detail endpoint not available for demand:", demandId);
+      setFullDetailData(null);
+    }
+    
     setShowDemandaDetalle(true);
     setShowActividadesRegistradas(true);
   }, []);
@@ -391,6 +403,7 @@ export function MainContent({
     setShowActividadesRegistradas(false)
     setShowPostConstatacion(false)
     setShowEvaluacionModal(false)
+    setFullDetailData(null)
   }, [])
 
   const handleConstatar = useCallback(async () => {
@@ -984,7 +997,8 @@ const getRowClassName = (params: GridRowParams) => {
                   demanda={selectedDemand} 
                   isOpen={showDemandaDetalle} 
                   onClose={handleCloseDetail} 
-                  fetchAllData={fetchAllData} 
+                  fetchAllData={fetchAllData}
+                  fullDetailData={fullDetailData}
                 />
               )}
             </>

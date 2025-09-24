@@ -29,7 +29,7 @@ import { useRouter } from 'next/navigation';
 import EditableTable from '../common/EditableTable';
 import CircularProgress from '@mui/material/CircularProgress';
 
-import { getDemand, getDemands } from '../../api/TableFunctions/demands';
+import { getDemand, getDemands, getDemandFullDetail, TDemandaFullDetail } from '../../api/TableFunctions/demands';
 import { AuthProvider, useAuth } from '../../context/AuthContext';
 import { getTPersona, getTPersonas } from '../../api/TableFunctions/personas';
 import { getTLegajos, getTLegajo } from '../../api/TableFunctions/legajos';
@@ -198,6 +198,7 @@ export function EvaluacionesContent() {
   const router = useRouter();
   const [loadingTableData, setLoadingTableData] = useState(true); // Add loading state
   const { user, loading } = useAuth(); // Now wrapped by AuthProvider
+  const [fullDetailData, setFullDetailData] = useState<TDemandaFullDetail | null>(null);
 
   const [formData, setFormData] = useState({
     generalInfo: {},
@@ -222,8 +223,46 @@ export function EvaluacionesContent() {
 
         const currentDate = new Date().toISOString().split('T')[0];
 
-        // Fetching general info
-        const demandaInfo = await getDemand(demandaId); // Assume `id` is available from `useParams`
+        // Fetch comprehensive demanda details including valoraciones_seleccionadas
+        let fullDetail: TDemandaFullDetail | null = null;
+        let demandaInfo: any = null;
+        let evaluaciones: any[] = [];
+        let indicadores: TIndicadoresValoracion[] = [];
+
+        try {
+          // Try to fetch from full-detail endpoint first
+          fullDetail = await getDemandFullDetail(demandaId);
+          setFullDetailData(fullDetail);
+          demandaInfo = fullDetail;
+          
+          // If full-detail is available, use its data
+          if (fullDetail.indicadores_valoracion) {
+            indicadores = fullDetail.indicadores_valoracion.map(ind => ({
+              id: ind.id,
+              nombre: ind.nombre,
+              descripcion: ind.descripcion,
+              peso: ind.peso
+            }));
+          }
+          
+          // Use valoraciones_seleccionadas if available
+          if (fullDetail.valoraciones_seleccionadas) {
+            const initialSelectedOptions: { [key: string]: string } = {};
+            fullDetail.valoraciones_seleccionadas.forEach(valoracion => {
+              initialSelectedOptions[valoracion.indicador] = valoracion.checked ? 'yes' : 'no';
+            });
+            setSelectedOptions(initialSelectedOptions);
+          }
+          
+          console.log("Full detail data loaded:", fullDetail);
+        } catch (error) {
+          console.log("Full-detail endpoint not available, falling back to individual API calls");
+          
+          // Fallback to individual API calls
+          demandaInfo = await getDemand(demandaId);
+          evaluaciones = await getTEvaluaciones({ demanda: demandaId });
+          indicadores = await getTIndicadoresValoracions();
+        }
         
         const decisiones = await getTDecisiones({ demanda: demandaId });
         const decisionesArray = [];
@@ -234,59 +273,71 @@ export function EvaluacionesContent() {
         };
         console.log('Valorc:', formData.valoracionProfesional);
 
-
-
-         // Fetch evaluations linked to the current demanda
-        const evaluaciones = await getTEvaluaciones({ demanda: demandaId });
-        const indicadores = await getTIndicadoresValoracions();
-
         // Map evaluations to indicators
         const indicadoresData = indicadores.map((indicador) => {
-          const evaluation = evaluaciones.find(
-            (evalItem) => evalItem.indicador === indicador.id
-          );
+          let evaluationStatus = "no evaluado";
+          
+          if (fullDetail?.valoraciones_seleccionadas) {
+            // Use valoraciones_seleccionadas from full-detail if available
+            const valoracion = fullDetail.valoraciones_seleccionadas.find(
+              v => v.indicador === indicador.id
+            );
+            if (valoracion) {
+              evaluationStatus = valoracion.checked ? "si" : "no";
+            }
+          } else {
+            // Fallback to evaluaciones data
+            const evaluation = evaluaciones.find(
+              (evalItem) => evalItem.indicador === indicador.id
+            );
+            if (evaluation) {
+              evaluationStatus = evaluation.si_no ? "si" : "no";
+            }
+          }
         
           return {
             id: indicador.id,
             nombre: indicador.nombre,
             descripcion: indicador.descripcion,
             peso: indicador.peso,
-            evaluado: evaluation
-              ? evaluation.si_no
-                ? "si" // Convert true to "si"
-                : "no" // Convert false to "no"
-              : "no evaluado", // Handle cases where evaluation doesn't exist
+            evaluado: evaluationStatus,
           };
         });
   
         console.log("Indicadores Data:", indicadoresData);
 
         formData.indicadores = indicadoresData;
-        const demandaVinculadas = await getTDemandaVinculadas({});
-
-      const antecedentesArray = [];
-
-      for (const vinculada of demandaVinculadas) {
-        let linkedDemandaId;
-
-        if (vinculada.demanda_1 === demandaId) {
-          linkedDemandaId = vinculada.demanda_2;
-        } else if (vinculada.demanda_2 === demandaId) {
-          linkedDemandaId = vinculada.demanda_1;
+        // Handle linked demands - use full-detail data if available
+        let demandaVinculadas: any[] = [];
+        if (fullDetail?.demandas_vinculadas) {
+          demandaVinculadas = fullDetail.demandas_vinculadas;
+        } else {
+          demandaVinculadas = await getTDemandaVinculadas({});
         }
 
-        // Fetch details of the related demand if it exists
-        if (linkedDemandaId) {
-          const linkedDemandaInfo = await getDemand(linkedDemandaId);
+        const antecedentesArray = [];
 
-          antecedentesArray.push({
-            IdDemanda: vinculada.id,
-            refNumero: linkedDemandaInfo.nro_suac || "N/A",
-            sac: linkedDemandaInfo.nro_sac || "N/A",
-            oficio: linkedDemandaInfo.nro_oficio_web || "N/A",
-          });
+        for (const vinculada of demandaVinculadas) {
+          let linkedDemandaId;
+
+          if (vinculada.demanda_1 === demandaId) {
+            linkedDemandaId = vinculada.demanda_2;
+          } else if (vinculada.demanda_2 === demandaId) {
+            linkedDemandaId = vinculada.demanda_1;
+          }
+
+          // Fetch details of the related demand if it exists
+          if (linkedDemandaId) {
+            const linkedDemandaInfo = await getDemand(linkedDemandaId);
+
+            antecedentesArray.push({
+              IdDemanda: vinculada.id,
+              refNumero: linkedDemandaInfo.nro_suac || "N/A",
+              sac: linkedDemandaInfo.nro_sac || "N/A",
+              oficio: linkedDemandaInfo.nro_oficio_web || "N/A",
+            });
+          }
         }
-      }
 
       console.log("Antecedentes Data:", antecedentesArray);
 

@@ -116,7 +116,13 @@ function CollapsibleSection({ title, children, isOpen, onToggle }: CollapsibleSe
 
 const steps = ['Ingreso', 'Niños y Adolescentes', 'Adultos Convivientes', 'Presunta Vulneración',  'Condiciones de Vulnerabilidad']
 
-export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAllData }) {
+export default function DemandaDetalleModal({ isOpen, onClose, demanda, fetchAllData, fullDetailData }: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  demanda: any; 
+  fetchAllData: () => void; 
+  fullDetailData?: any;
+}) {
   const {
     origenes,
     subOrigenes,
